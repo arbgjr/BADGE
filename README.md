@@ -1,5 +1,13 @@
 # BADGE (Badge Authentication and Dynamic Grading Engine)
 
+## Instalação
+Antes de iniciar a configuração do BADGE, é necessário baixar e executar o script `install.ps1`. Este script automatiza a configuração do ambiente, incluindo a instalação de dependências necessárias e a configuração do projeto no Azure.
+
+### Passos para a Execução do Script:
+1. Baixe o script `install.ps1` do repositório do projeto BADGE.
+2. Execute o script com privilégios de administrador no PowerShell.
+3. Siga as instruções no script para configurar seu ambiente Azure e clonar o repositório do projeto.
+
 ## Descrição
 BADGE é um sistema inovador destinado a autenticar e classificar conquistas por meio de badges digitais. Este sistema permite que empresas e instituições de ensino emitam badges para reconhecer e validar habilidades, realizações e progressos de indivíduos.
 
