@@ -713,31 +713,50 @@ try {
 	}
 
 
+	# Verifique se o Azure Function já foi publicado
 	if ($lastStep -le [ScriptSteps]::AzFuncPublished) {
 		try {
+			# Lista de configurações existentes
 			$existingSettings = az functionapp config appsettings list --name $functionAppName --resource-group $resourceGroupName | ConvertFrom-Json
 
-			$settingName = Read-HostWithCancel "Insira um nome para a sua variável de ambiente" "settingName"
-			$existingSetting = $existingSettings | Where-Object { $_.name -eq $settingName }
+			# Inicialize um array para armazenar as configurações a serem adicionadas
+			$newSettings = @()
 
-			if ($existingSetting) {
-				Write-Host "A configuração '$settingName' já existe com o valor: $($existingSetting.value)" -ForegroundColor Green
-				$updateSetting = Read-HostWithCancel "Deseja atualizar o valor? (S/N)"
-				if ($updateSetting -ne 'S' -and $updateSetting -ne 's') {
-					Write-Host "Mantendo a configuração existente." -ForegroundColor Green
-				} else {
-					Update-EnvFuncSetting $functionAppName $resourceGroupName $settingName
+			while ($true) {
+				$settingName = Read-HostWithCancel "Insira um nome para a sua variável de ambiente (ou pressione Enter para sair)" "settingName"
+
+				if ([string]::IsNullOrWhiteSpace($settingName)) {
+					# O usuário pressionou Enter para sair do loop
+					break
 				}
-			} else {
-				$settingValue = Read-HostWithCancel "Insira o valor da sua variável de ambiente '$settingName'" "settingValue"
-				az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $settingName=$settingValue
-				Write-Host "Configuração: '$settingName' adicionada com sucesso à Azure Function '$functionAppName' com o valor '$settingValue'." -ForegroundColor Green
+
+				$existingSetting = $existingSettings | Where-Object { $_.name -eq $settingName }
+
+				if ($existingSetting) {
+					Write-Host "A configuração '$settingName' já existe com o valor: $($existingSetting.value)" -ForegroundColor Green
+					$updateSetting = Read-HostWithCancel "Deseja atualizar o valor? (S/N)"
+					if ($updateSetting -ne 'S' -and $updateSetting -ne 's') {
+						Write-Host "Mantendo a configuração existente." -ForegroundColor Green
+					} else {
+						$settingValue = Read-HostWithCancel "Insira o novo valor para '$settingName'" "settingValue"
+						$newSettings += @{name=$settingName; value=$settingValue}
+					}
+				} else {
+					$settingValue = Read-HostWithCancel "Insira o valor para '$settingName'" "settingValue"
+					$newSettings += @{name=$settingName; value=$settingValue}
+				}
+			}
+
+			# Adicione as novas configurações
+			foreach ($setting in $newSettings) {
+				az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $setting.name=$setting.value
+				Write-Host "Configuração: '$($setting.name)' adicionada com sucesso à Azure Function '$functionAppName' com o valor '$($setting.value)'." -ForegroundColor Green
 			}
 		} catch {
-			Show-ErrorMessage "Falha ao adicionar ou atualizar a variável de ambiente à Azure Function."
+			Show-ErrorMessage "Falha ao adicionar ou atualizar as variáveis de ambiente à Azure Function."
 			exit
 		}
-		Save-ScriptProgress -step ([int][ScriptSteps]::WebhookCreated)
+		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncEnvCreated)
 	}
 } catch {
 	Show-ErrorMessage -ErrorMessage $_.Exception.Message -ErrorLine $_.InvocationInfo.ScriptLineNumber
