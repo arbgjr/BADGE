@@ -295,15 +295,16 @@ Function Publish-AzureFunction {
 	Write-Host "Azure Function '$functionAppName' publicada com sucesso." -ForegroundColor Green
 }
 
-Function Update-WebhookSetting {
+Function Update-EnvFuncSetting {
 	param (
 		[string]$appName,
 		[string]$resourceGroup,
 		[string]$settingName
 	)
-	$settingValue = Read-HostWithCancel "Insira o novo link do webhook do Google Space" "settingValue"
-	az functionapp config appsettings set --name $appName --resource-group $resourceGroup --settings $settingName=$settingValue
-	Write-Host "Configuração do webhook atualizada: '$settingName'." -ForegroundColor Green
+ 
+ 	$settingValue = Read-HostWithCancel "Insira o valor da sua variável de ambiente '$settingName':" "settingValue"
+	az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $settingName=$settingValue
+	Write-Host "Configuração: '$settingName' atualizada com sucesso na Azure Function '$functionAppName' com o valor '$settingValue'." -ForegroundColor Green
 }
 
 $confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
@@ -713,26 +714,24 @@ try {
 
 
 	if ($lastStep -le [ScriptSteps]::AzFuncPublished) {
-		Write-Host "Para configurar o webhook do Google Spaces, siga as instruções na documentação oficial do Google Chat: https://developers.google.com/chat/how-tos/webhooks?hl=pt-br#create_a_webhook" -ForegroundColor Yellow
 		try {
-			$functionAppName = Get-RegistryValue -Name "functionAppName"
 			$existingSettings = az functionapp config appsettings list --name $functionAppName --resource-group $resourceGroupName | ConvertFrom-Json
 
-			$settingName = Read-HostWithCancel "Insira um nome para o seu webhook" "settingName"
+			$settingName = Read-HostWithCancel "Insira um nome para a sua variável de ambiente" "settingName"
 			$existingSetting = $existingSettings | Where-Object { $_.name -eq $settingName }
 
 			if ($existingSetting) {
-				Write-Host "A configuração do webhook '$settingName' já existe com o valor: $($existingSetting.value)" -ForegroundColor Green
-				$updateSetting = Read-HostWithCancel "Deseja atualizar a configuração do webhook? (S/N)"
+				Write-Host "A configuração '$settingName' já existe com o valor: $($existingSetting.value)" -ForegroundColor Green
+				$updateSetting = Read-HostWithCancel "Deseja atualizar o valor? (S/N)"
 				if ($updateSetting -ne 'S' -and $updateSetting -ne 's') {
-					Write-Host "Mantendo a configuração existente do webhook." -ForegroundColor Green
+					Write-Host "Mantendo a configuração existente." -ForegroundColor Green
 				} else {
-					Update-WebhookSetting $functionAppName $resourceGroupName $settingName
+					Update-EnvFuncSetting $functionAppName $resourceGroupName $settingName
 				}
 			} else {
-				$settingValue = Read-HostWithCancel "Insira o link do webhook do Google Space" "settingValue"
+				$settingValue = Read-HostWithCancel "Insira o valor da sua variável de ambiente '$settingName'" "settingValue"
 				az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $settingName=$settingValue
-				Write-Host "Configuração do webhook: '$settingName' adicionada com sucesso à Azure Function '$functionAppName'." -ForegroundColor Green
+				Write-Host "Configuração: '$settingName' adicionada com sucesso à Azure Function '$functionAppName' com o valor '$settingValue'." -ForegroundColor Green
 			}
 		} catch {
 			Show-ErrorMessage "Falha ao adicionar ou atualizar a variável de ambiente à Azure Function."
