@@ -36,6 +36,30 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
    .\install.ps1
    ```
 
+#### Para Usuários de macOS
+1. Abra o Terminal.
+2. Baixe o script com:
+   ```bash
+   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1
+   ```
+3. Dê permissão de execução e execute o script com:
+   ```bash
+   chmod +x install.ps1
+   sudo ./install.ps1
+   ```
+
+#### Para Usuários de Linux
+1. Abra o Terminal.
+2. Baixe o script com:
+   ```bash
+   wget -O install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1
+   ```
+3. Dê permissão de execução e execute o script com:
+   ```bash
+   chmod +x install.ps1
+   sudo ./install.ps1
+   ```
+
 ### Passos para macOS e Linux
 1. **Abrir Terminal**: Localize e abra o aplicativo Terminal.
 2. **Baixar o Script**:
