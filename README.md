@@ -27,8 +27,14 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 
 ### Passos para Windows
 1. **Abrir PowerShell como Administrador**: Clique com o botão direito no menu Iniciar e selecione "Windows PowerShell (Admin)".
-2. **Baixar o Script**: Digite `curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1` e pressione Enter.
-3. **Executar o Script**: Digite `.\install.ps1` e siga as instruções na tela.
+2. **Baixe o script com o comando**:
+   ```powershell
+   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1
+   ```
+3. Execute o script abaixo é siga as instruções na tela:
+   ```powershell
+   .\install.ps1
+   ```
 
 ### Passos para macOS e Linux
 1. **Abrir Terminal**: Localize e abra o aplicativo Terminal.
