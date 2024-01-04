@@ -43,7 +43,7 @@ enum ScriptSteps {
 	StorageCreated
 	AzFuncCreated
 	AzFuncPublished
-	WebhookCreated
+	AzFuncEnvCreated
 }
 
 Function NumLastStep {
@@ -396,10 +396,6 @@ try {
 	}
 
 	if ($lastStep -le [ScriptSteps]::FunctionCoreToolsAppInstalled) {
-		Save-ScriptProgress -step ([int][ScriptSteps]::AzureFunctionsCoreToolsChecked)
-	}
-
-	if ($lastStep -le [ScriptSteps]::AzureFunctionsCoreToolsChecked) {
 		# Instalar o Git
 		 try {
 			$gitVersion = git --version
@@ -490,8 +486,33 @@ try {
 		$path = Get-RegistryValue -Name "repoPath"
 		Write-Host "5 - Repositório '$url' clonado em '$path'." -ForegroundColor Green
 	}
-	
+
 	if ($lastStep -le [ScriptSteps]::RepoCloned) {
+		Write-Host "6 - Verificando se a função já foi inicializada em disco..." -ForegroundColor Yellow
+
+		# Verifique se o arquivo 'host.json' existe no diretório atual
+		if (Test-Path -Path "host.json") {
+			Write-Host "'host.json' já existe. O comando 'func init' já foi executado." -ForegroundColor Green
+		} else {
+			# Execute o comando 'func init' se 'host.json' não existe
+			Write-Host "Executando 'func init'..." -ForegroundColor Yellow
+			func init . --worker-runtime python
+		}
+
+		# Verifique se o diretório da função existe
+		if (Test-Path -Path $REPO_NAME -PathType Container) {
+			Write-Host "O diretório '$REPO_NAME' já existe. O comando 'func new' já foi executado." -ForegroundColor Green
+		} else {
+			# Execute o comando 'func new' se a pasta não existe
+			Write-Host "Executando 'func new'..." -ForegroundColor Yellow
+			func new --name $REPO_NAME --template "HttpTrigger"
+		}
+		Save-ScriptProgress -step ([int][ScriptSteps]::FuncInitialized)
+	} else {
+		Write-Host "6 - A função já foi inicializada em disco..." -ForegroundColor Yellow
+	}
+
+	if ($lastStep -le [ScriptSteps]::FuncInitialized) {
 		$azAccountJson = az account show --output json | Out-String
 		if (-not $azAccountJson -or $azAccountJson -eq "") {
 			Write-Host "Não está logado." -ForegroundColor Green
@@ -500,7 +521,7 @@ try {
 			try {
 				$azAccount = ConvertFrom-Json $azAccountJson
 				$userName = $azAccount.user.name
-				Write-Host "6 - Já está logado na Azure CLI com a conta: $userName" -ForegroundColor Green
+				Write-Host "7 - Já está logado na Azure CLI com a conta: $userName" -ForegroundColor Green
 				$changeAccount = Read-HostWithCancel "Deseja CONTINUAR com a conta atual? (S/N)"
 				if ($changeAccount -eq 'S' -and $changeAccount -eq 's') {
 					Write-Host "Continuando com a conta atual." -ForegroundColor Green
@@ -514,7 +535,7 @@ try {
 		}
 
 		if ([string]::IsNullOrWhiteSpace($userName)) {
-			Set-AzureAccount "6 - Fazendo login na Azure CLI..."
+			Set-AzureAccount "7 - Fazendo login na Azure CLI..."
 		}
 		
 		Set-RegistryValue -Name "userName" -Value $userName
@@ -522,9 +543,9 @@ try {
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzureCLILoginExecuted)
 	} else {
 		$userName = Get-RegistryValue -Name "userName"
-		Write-Host "6 - Já está logado na Azure CLI com a conta: $userName" -ForegroundColor Green
+		Write-Host "7 - Já está logado na Azure CLI com a conta: $userName" -ForegroundColor Green
 	}
-	
+
 	if ($lastStep -le [ScriptSteps]::AzureCLILoginExecuted) {
 		$currentSubscriptionJson = az account show --query "{name:name, id:id}" --output json | Out-String
 		if (-not $currentSubscriptionJson -or $currentSubscriptionJson -eq "") {
@@ -535,7 +556,7 @@ try {
 				$currentSubscription = ConvertFrom-Json $currentSubscriptionJson
 				$subscriptionName = $currentSubscription.name
 				$subscriptionId = $currentSubscription.id
-				Write-Host "7 - Assinatura atual: $subscriptionName (ID: $subscriptionId)" -ForegroundColor Green
+				Write-Host "8 - Assinatura atual: $subscriptionName (ID: $subscriptionId)" -ForegroundColor Green
 				$changeSubscription = Read-HostWithCancel "Deseja CONTINUAR com a assinatura atual? (S/N)"
 				if ($changeSubscription -eq 'S' -and $changeSubscription -eq 's') {
 					Write-Host "Continuando com a assinatura atual." -ForegroundColor Green
@@ -569,12 +590,12 @@ try {
 	} else{
 		$subscriptionName = Get-RegistryValue -Name "subscriptionName"
 		$subscriptionId = Get-RegistryValue -Name "subscriptionId"
-		Write-Host "7 - Assinatura atual: $subscriptionName (ID: $subscriptionId)" -ForegroundColor Green
+		Write-Host "8 - Assinatura atual: $subscriptionName (ID: $subscriptionId)" -ForegroundColor Green
 	}
 	
 	if ($lastStep -le [ScriptSteps]::SetSubsTenantCreated) {
 		# Criar um Novo Grupo de Recursos
-		$resourceGroupName = Read-HostWithCancel "8 - Insira o nome do grupo de recursos" "resourceGroupName"
+		$resourceGroupName = Read-HostWithCancel "9 - Insira o nome do grupo de recursos" "resourceGroupName"
 		$existingResourceGroup = az group exists --name $resourceGroupName
 
 		while ($existingResourceGroup -eq 'true') {
@@ -619,12 +640,12 @@ try {
 	} else {
 		$resourceGroupName = Get-RegistryValue -Name "resourceGroupName"
 		$location = Get-RegistryValue -Name "location"
-		Write-Host "8 - Usando o grupo de recursos '$resourceGroupName' existente, localizado em '$location'." -ForegroundColor Green
+		Write-Host "9 - Usando o grupo de recursos '$resourceGroupName' existente, localizado em '$location'." -ForegroundColor Green
 	}
 
 	if ($lastStep -le [ScriptSteps]::RGCreated) {
 		# Criar uma conta de armazenamento para Azure Functions
-		$storageAccountName = Read-HostWithCancel "9 - Insira o nome da conta de armazenamento" "storageAccountName"
+		$storageAccountName = Read-HostWithCancel "10 - Insira o nome da conta de armazenamento" "storageAccountName"
 		$existingStorageAccount = az storage account check-name --name $storageAccountName --query 'nameAvailable'
 
 		while ($existingStorageAccount -eq 'false') {
@@ -650,12 +671,12 @@ try {
 		Save-ScriptProgress -step ([int][ScriptSteps]::StorageCreated)
 	} else {
 		$storageAccountName = Get-RegistryValue -Name "storageAccountName"
-		Write-Host "9 - Usando a conta de armazenamento existente: '$storageAccountName'." -ForegroundColor Green
+		Write-Host "10 - Usando a conta de armazenamento existente: '$storageAccountName'." -ForegroundColor Green
 	}
 
 	if ($lastStep -le [ScriptSteps]::StorageCreated) {
 		# Criar uma Azure Function
-		$functionAppName = Read-HostWithCancel "10 - Insira o nome da sua Azure Function" "functionAppName"
+		$functionAppName = Read-HostWithCancel "11 - Insira o nome da sua Azure Function" "functionAppName"
 		$existingFunctionApp = az functionapp show --name $functionAppName --query 'state' --resource-group $resourceGroupName
 
 		while ($existingFunctionApp) {
@@ -681,7 +702,7 @@ try {
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncCreated)
 	} else {
 		$functionAppName = Get-RegistryValue -Name "functionAppName"
-		Write-Host "10 - Azure Function criada: '$functionAppName'." -ForegroundColor Green
+		Write-Host "11 - Azure Function criada: '$functionAppName'." -ForegroundColor Green
 	}
 
 	if ($lastStep -le [ScriptSteps]::AzFuncCreated) {
@@ -689,7 +710,7 @@ try {
 			$functionAppInfo = az functionapp show --name $functionAppName  --resource-group $resourceGroupName --query "{state: state, defaultHostName: defaultHostName}" -o json | ConvertFrom-Json
 
 			if ($functionAppInfo -and $functionAppInfo.state -eq "Running") {
-				Write-Host "11 - A Azure Function '$functionAppName' já está publicada e em execução em: $($functionAppInfo.defaultHostName)" -ForegroundColor Green
+				Write-Host "12 - A Azure Function '$functionAppName' já está publicada e em execução em: $($functionAppInfo.defaultHostName)" -ForegroundColor Green
 				$publishAgain = Read-HostWithCancel "Deseja publicar a Azure Function novamente? (S/N)"
 				if ($publishAgain -eq 'S' -or $publishAgain -eq 's') {
 					Publish-AzureFunction
@@ -709,11 +730,9 @@ try {
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncPublished)
 	} else {
 		$defaultHostName = Get-RegistryValue -Name "defaultHostName"
-		Write-Host "11 - Azure Function publicada e em execução em: '$defaultHostName'." -ForegroundColor Green
+		Write-Host "12 - Azure Function publicada e em execução em: '$defaultHostName'." -ForegroundColor Green
 	}
 
-
-	# Verifique se o Azure Function já foi publicado
 	if ($lastStep -le [ScriptSteps]::AzFuncPublished) {
 		try {
 			# Lista de configurações existentes
@@ -752,6 +771,9 @@ try {
 				az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $setting.name=$setting.value
 				Write-Host "Configuração: '$($setting.name)' adicionada com sucesso à Azure Function '$functionAppName' com o valor '$($setting.value)'." -ForegroundColor Green
 			}
+			
+			Set-RegistryValue -Name "AzFuncEnv" -Value $newSettings
+			
 		} catch {
 			Show-ErrorMessage "Falha ao adicionar ou atualizar as variáveis de ambiente à Azure Function."
 			exit
