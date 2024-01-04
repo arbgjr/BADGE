@@ -37,6 +37,7 @@ enum ScriptSteps {
 	GitInstalled
 	GitConfigured
 	RepoCloned
+	FuncInitialized
 	AzureCLILoginExecuted
 	SetSubsTenantCreated
 	RGCreated
@@ -330,7 +331,7 @@ try {
 			}
 		} catch {
 			try {
-				Write-Host "Instalando Azure CLI..." -ForegroundColor Yellow
+				Write-Host "1 - Instalando Azure CLI..." -ForegroundColor Yellow
 				if ($IsWindows) {
 					# Preferir Winget no Windows
 					winget install --id Microsoft.AzureCLI -e --source winget
@@ -368,7 +369,7 @@ try {
 			Write-Host "2 - Azure Functions Core Tools já está instalado. Versão: $funcVersion" -ForegroundColor Green
 		} catch {
 			try {
-				Write-Host "Instalando Azure Functions Core Tools..." -ForegroundColor Yellow
+				Write-Host "2 - Instalando Azure Functions Core Tools..." -ForegroundColor Yellow
 				if ($IsWindows) {
 					# Preferir Winget no Windows
 					winget install --id Microsoft.AzureFunctionsCoreTools -e --source winget
@@ -402,7 +403,7 @@ try {
 			Write-Host "3 - Git já está instalado. Versão: $gitVersion" -ForegroundColor Green
 		} catch {
 			try {
-				Write-Host "Instalando Git..." -ForegroundColor Yellow
+				Write-Host "3 - Instalando Git..." -ForegroundColor Yellow
 				if ($IsWindows) {
 					# Preferir Winget no Windows
 					winget install --id Git.Git -e --source winget
@@ -677,7 +678,7 @@ try {
 	if ($lastStep -le [ScriptSteps]::StorageCreated) {
 		# Criar uma Azure Function
 		$functionAppName = Read-HostWithCancel "11 - Insira o nome da sua Azure Function" "functionAppName"
-		$existingFunctionApp = az functionapp show --name $functionAppName --query 'state' --resource-group $resourceGroupName
+		$existingFunctionApp = az functionapp show --name $functionAppName --query 'state' --resource-group $resourceGroupName 2>&1
 
 		while ($existingFunctionApp) {
 			$useExistingFunctionApp = Read-HostWithCancel "A Azure Function '$functionAppName' já existe. Deseja utilizá-la? (S/N)"
@@ -742,7 +743,7 @@ try {
 			$newSettings = @()
 
 			while ($true) {
-				$settingName = Read-HostWithCancel "Insira um nome para a sua variável de ambiente (ou pressione Enter para sair)" "settingName"
+				$settingName = Read-HostWithCancel "Insira um nome para a sua variável de ambiente (ou pressione Enter para sair)"
 
 				if ([string]::IsNullOrWhiteSpace($settingName)) {
 					# O usuário pressionou Enter para sair do loop
@@ -757,11 +758,11 @@ try {
 					if ($updateSetting -ne 'S' -and $updateSetting -ne 's') {
 						Write-Host "Mantendo a configuração existente." -ForegroundColor Green
 					} else {
-						$settingValue = Read-HostWithCancel "Insira o novo valor para '$settingName'" "settingValue"
+						$settingValue = Read-HostWithCancel "Insira o novo valor para '$settingName'"
 						$newSettings += @{name=$settingName; value=$settingValue}
 					}
 				} else {
-					$settingValue = Read-HostWithCancel "Insira o valor para '$settingName'" "settingValue"
+					$settingValue = Read-HostWithCancel "Insira o valor para '$settingName'"
 					$newSettings += @{name=$settingName; value=$settingValue}
 				}
 			}
