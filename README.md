@@ -20,48 +20,6 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 2. Clone o repositório e instale as dependências necessárias.
 3. Configure as variáveis de ambiente conforme a documentação.
 
-## Instalação Automatizada com `install.ps1` para o BADGE
-
-### Pré-Requisitos
-- **PowerShell v7+**: Certifique-se de ter o PowerShell v7 ou superior instalado. Para macOS e Linux, [siga as instruções de instalação do PowerShell](https://docs.microsoft.com/pt-br/powershell/scripting/install/installing-powershell).
-
-### Passos para Windows
-1. **Abrir PowerShell como Administrador**: Clique com o botão direito no menu Iniciar e selecione "Windows PowerShell (Admin)".
-2. **Baixe o script com o comando**:
-   ```powershell
-   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1
-   ```
-3. Execute o script abaixo é siga as instruções na tela:
-   ```powershell
-   .\install.ps1
-   ```
-
-#### Para Usuários de macOS
-1. Abra o Terminal.
-2. Baixe o script com:
-   ```bash
-   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1
-   ```
-3. Dê permissão de execução e execute o script com:
-   ```bash
-   chmod +x install.ps1
-   sudo ./install.ps1
-   ```
-
-#### Para Usuários de Linux
-1. Abra o Terminal.
-2. Baixe o script com:
-   ```bash
-   wget -O install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/dev/install.ps1
-   ```
-3. Dê permissão de execução e execute o script com:
-   ```bash
-   chmod +x install.ps1
-   sudo ./install.ps1
-   ```
-
-Siga as instruções no script para configurar seu ambiente Azure e clonar o repositório do projeto BADGE.
-
 ## Contribuições
 Contribuições são bem-vindas! Para contribuir, siga as diretrizes de contribuição no repositório.
 
