@@ -14,7 +14,8 @@ foreach ($moduleFile in $moduleFiles) {
 Initialize-Script
 
 # Verificar se o script está sendo executado com privilégios de administrador
-if (-NOT Test-AdminPrivileges) {
+$isAdmin = Test-AdminPrivileges
+if (-not $isAdmin) {
 	exit
 }
 
@@ -41,7 +42,7 @@ $intLastStep = NumLastStep $lastStep
 $registryPath = "HKCU:\Software\$REPO_NAME\Install"
 $currentPath = Get-Location
 
-$confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
+$confirmRun = Read-HostWithCancel "Deseja efetuar a desinstalação do ambiente de forma automatizada? (S/N)"
 if ($confirmRun -eq 'N' -or $confirmRun -eq 'n') {
 	break
 }
@@ -80,33 +81,30 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao remover as variáveis de ambiente da Azure Function."
-		exit
 	}
 
 	try {
-		$functionAppInfo = az functionapp show --name $functionAppName  --resource-group $resourceGroupName --query "{state: state, defaultHostName: defaultHostName}" -o json | ConvertFrom-Json
-
+		$functionAppInfo = az functionapp show --name $functionAppName  --resource-group $resourceGroupName --query "{state: state, defaultHostName: defaultHostName}" -o json | ConvertFrom-Json 2>&1
 		if ($functionAppInfo -and $functionAppInfo.state -eq "Running") {
-			Write-Host "A Azure Function '$functionAppName' está em execução em: $($functionAppInfo.defaultHostName)" -ForegroundColor Green
+			Write-Host "A Azure Function '$functionAppName' do RG '$resourceGroupName' está em execução em: $($functionAppInfo.defaultHostName)" -ForegroundColor Green
 			$stopFunction = Read-HostWithCancel "Deseja parar a Azure Function? (S/N)"
 			if ($stopFunction -eq 'S' -or $stopFunction -eq 's') {
-				Stop-AzureFunction
+				Stop-AzureFunction $functionAppName $resourceGroupName
 			} else {
 				Write-Host "Mantendo a Azure Function '$functionAppName' em execução." -ForegroundColor Green
 			}
 		} else {
-			Write-Host "A Azure Function '$functionAppName' não está em execução." -ForegroundColor Green
+			Write-Host "A Azure Function $functionAppName não está em execução." -ForegroundColor Green
 		}
 		
 		Remove-RegistryValue -Name "defaultHostName"
 		
 	} catch {
 		Show-ErrorMessage "Falha ao parar a Azure Function '$functionAppName'."
-		exit
 	}
 
 	try {
-		$existingFunctionApp = az functionapp show --name $functionAppName --query 'state' --resource-group $resourceGroupName
+		$existingFunctionApp = az functionapp show --name $functionAppName --query 'state' --resource-group $resourceGroupName 2>&1
 
 		if ($existingFunctionApp) {
 			$functionAppState = $existingFunctionApp.Trim()
@@ -118,7 +116,7 @@ try {
 
 			$deleteFunctionApp = Read-HostWithCancel "Deseja remover a Azure Function '$functionAppName'? (S/N)"
 			if ($deleteFunctionApp -eq 'S' -or $deleteFunctionApp -eq 's') {
-				Remove-AzureFunction
+				Remove-AzureFunction $functionAppName $resourceGroupName
 			} else {
 				Write-Host "Mantendo a Azure Function '$functionAppName' existente." -ForegroundColor Green
 			}
@@ -127,17 +125,16 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao remover a Azure Function '$functionAppName'."
-		exit
 	}
 
 	try {
-		$existingStorageAccount = az storage account check-name --name $storageAccountName --query 'nameAvailable'
+		$existingStorageAccount = az storage account check-name --name $storageAccountName --query 'nameAvailable' 2>&1
 
 		if ($existingStorageAccount -eq 'true') {
 			Write-Host "A conta de armazenamento '$storageAccountName' existe." -ForegroundColor Green
 			$deleteStorageAccount = Read-HostWithCancel "Deseja remover a conta de armazenamento? (S/N)"
 			if ($deleteStorageAccount -eq 'S' -or $deleteStorageAccount -eq 's') {
-				Remove-AzureStorageAccount
+				Remove-AzureStorageAccount $storageAccountName $resourceGroupName
 			} else {
 				Write-Host "Mantendo a conta de armazenamento '$storageAccountName' existente." -ForegroundColor Green
 			}
@@ -146,17 +143,16 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao remover a conta de armazenamento '$storageAccountName'."
-		exit
 	}
 
 	try {
-		$existingResourceGroup = az group exists --name $resourceGroupName
+		$existingResourceGroup = az group exists --name $resourceGroupName 2>&1
 
 		if ($existingResourceGroup -eq 'true') {
 			Write-Host "O grupo de recursos '$resourceGroupName' existe." -ForegroundColor Green
 			$deleteResourceGroup = Read-HostWithCancel "Deseja remover o grupo de recursos '$resourceGroupName'? (S/N)"
 			if ($deleteResourceGroup -eq 'S' -or $deleteResourceGroup -eq 's') {
-				Remove-AzureResourceGroup
+				Remove-AzureResourceGroup $resourceGroupName
 			} else {
 				Write-Host "Mantendo o grupo de recursos '$resourceGroupName' existente." -ForegroundColor Green
 			}
@@ -165,7 +161,6 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao remover o grupo de recursos '$resourceGroupName'."
-		exit
 	}
 
 	try {
@@ -173,20 +168,19 @@ try {
 			Write-Host "As informações de assinatura não estão definidas." -ForegroundColor Green
 		} else {
 			Write-Host "Assinatura atual: $subscriptionName (ID: $subscriptionId)" -ForegroundColor Green
-			$restoreSubscription = Read-HostWithCancel "Deseja REMOVER a assinatura localmente (ela ainda existira no Portal Azure)? (S/N)"
-			if ($restoreSubscription -eq 'S' -or $restoreSubscription -eq 's') {
-				Remove-AzureSubscription
+			$removeSubscription = Read-HostWithCancel "Deseja REMOVER a assinatura localmente (ela ainda existira no Portal Azure)? (S/N)"
+			if ($removeSubscription -eq 'S' -or $removeSubscription -eq 's') {
+				Remove-AzureSubscription $subscriptionId
 			} else {
 				Write-Host "Mantendo a assinatura atual." -ForegroundColor Green
 			}
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao remover as informações de assinatura."
-		exit
 	}
 
 	try {
-		$azAccountJson = az account show --output json | Out-String
+		$azAccountJson = az account show --output json | Out-String 2>&1
 
 		if (-not $azAccountJson -or $azAccountJson -eq "") {
 			Write-Host "Você não está logado na Azure CLI." -ForegroundColor Green
@@ -204,7 +198,6 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao fazer logoff da conta na Azure CLI."
-		exit
 	}
 
 	try {
@@ -225,7 +218,6 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao remover o repositório."
-		exit
 	}
 
 	try {
@@ -245,7 +237,6 @@ try {
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao verificar ou restaurar a configuração do Git."
-		exit
 	}
 
 	try {
@@ -268,13 +259,14 @@ try {
 					exit
 				}
 				Write-Host "Git desinstalado com sucesso." -ForegroundColor Green
+			} else {
+				Write-Host "Instalação do git mantida." -ForegroundColor Green
 			}
 		} else {
 			Write-Host "Git não está instalado." -ForegroundColor Yellow
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao desinstalar Git."
-		exit
 	}
 
 	try {
@@ -299,44 +291,48 @@ try {
 				}
 
 				Write-Host "Azure Functions Core Tools desinstalado com sucesso." -ForegroundColor Green
+			} else {
+				Write-Host "Instalação da Azure Functions Core Tools mantida." -ForegroundColor Green
 			}
 		} else {
 			Write-Host "Azure Functions Core Tools não está instalado." -ForegroundColor Yellow
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao desinstalar Azure Functions Core Tools."
-		exit
 	}
 
 	try {
 		$azureCliInfo = az --version 2>&1
 		if ($LASTEXITCODE -eq 0) {
-			# A Azure CLI está instalada
-			Write-Host "Azure CLI já está instalada." -ForegroundColor Green
-			Write-Host "Desinstalando Azure CLI..." -ForegroundColor Yellow
+			Write-Host "Azure CLI está instalada." -ForegroundColor Green
+			$removeAzCLI = Read-HostWithCancel "Deseja REMOVER o Azure CLI? (S/N)"
+			if ($removeAzCLI -eq 'S' -or $removeAzCLI -eq 's') {
+				Write-Host "Desinstalando Azure CLI..." -ForegroundColor Yellow
 
-			if ($IsWindows) {
-				# Desinstalar Azure CLI usando Winget no Windows
-				winget uninstall --id Microsoft.AzureCLI -e
-			} elseif ($IsMacOS) {
-				# Desinstalar Azure CLI usando Homebrew no macOS
-				brew uninstall azure-cli
-			} elseif ($IsLinux) {
-				# Desinstalar Azure CLI em sistemas baseados em Debian/Ubuntu
-				sudo apt-get remove --purge azure-cli
+				if ($IsWindows) {
+					# Desinstalar Azure CLI usando Winget no Windows
+					winget uninstall --id Microsoft.AzureCLI -e
+				} elseif ($IsMacOS) {
+					# Desinstalar Azure CLI usando Homebrew no macOS
+					brew uninstall azure-cli
+				} elseif ($IsLinux) {
+					# Desinstalar Azure CLI em sistemas baseados em Debian/Ubuntu
+					sudo apt-get remove --purge azure-cli
+				} else {
+					Show-ErrorMessage "Sistema operacional não suportado."
+					exit
+				}
+
+				Write-Host "Azure CLI desinstalada com sucesso." -ForegroundColor Green
 			} else {
-				Show-ErrorMessage "Sistema operacional não suportado."
-				exit
+				Write-Host "Instalação da Azure CLI mantida." -ForegroundColor Green
 			}
-
-			Write-Host "Azure CLI desinstalada com sucesso." -ForegroundColor Green
 		} else {
 			# A Azure CLI não está instalada
 			Write-Host "Azure CLI não está instalada." -ForegroundColor Yellow
 		}
 	} catch {
 		Show-ErrorMessage "Falha ao desinstalar Azure CLI."
-		exit
 	}
 
 } catch {
