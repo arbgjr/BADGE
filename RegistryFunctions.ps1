@@ -58,7 +58,7 @@ function Clear-ScriptProgress {
 
 Function Ask-Clear-ScriptProgress {
 	try {
-		$clearProgress = Read-HostWithCancel "Deseja limpar o progresso do script no registro? Isso pode causar problemas se o script for executado novamente. (S/N)" "N"
+		$clearProgress = Read-HostWithCancel "Deseja limpar o progresso do script no registro? Isso pode causar problemas se o script for executado novamente. (S/N)"
 		if ($clearProgress -eq 'S' -or $clearProgress -eq 's') {
 			try {
 				Clear-ScriptProgress

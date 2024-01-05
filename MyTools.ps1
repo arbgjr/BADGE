@@ -80,17 +80,8 @@ function Initialize-Script {
     Write-Host "Script version: $version" -ForegroundColor Magenta
 }
 
-# Função para gerar uma senha complexa e aleatória
-function Generate-RandomPassword {
-    param (
-        [int]$length = 16,
-        [bool]$includeNumbers = $true,
-        [bool]$includeLowercase = $true,
-        [bool]$includeUppercase = $true,
-        [bool]$beginWithLetter = $true,
-        [string]$includeSymbols = "!@#$%^&*()_-+=<>?/[]{}|"
-    )
 
+<<<<<<< HEAD
     $validChars = @()
 
     if ($includeUppercase) { $validChars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' }
@@ -211,3 +202,5 @@ function Set-AppConfigKeyValue {
     az appconfig kv set --name $azAppConfigName --key $settingName --value $settingValue --yes --label $tag --content-type $contentType
 }
 >>>>>>> 39f11c4 ( On branch dev)
+=======
+>>>>>>> parent of f956466 ( On branch dev)

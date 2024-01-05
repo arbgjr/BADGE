@@ -44,9 +44,12 @@ enum ScriptSteps {
 	StorageCreated
 	AzFuncCreated
 	AzFuncPublished
+<<<<<<< HEAD
 	AzSQLCreated
 	AzSQLDatabaseCreated
 	AzAppConfigCreated
+=======
+>>>>>>> parent of f956466 ( On branch dev)
 	AzFuncEnvCreated
 	AzAppConfigEnvCreated
 }
@@ -312,6 +315,7 @@ Function Update-EnvFuncSetting {
 	Write-Host "Configuração: '$settingName' atualizada com sucesso na Azure Function '$functionAppName' com o valor '$settingValue'." -ForegroundColor Green
 }
 
+<<<<<<< HEAD
 function Get-SqlServerName {
     do {
         $serverName = Read-HostWithCancel "12 - Insira o nome do servidor SQL" "serverName"
@@ -490,6 +494,8 @@ function Set-AppConfigKeyValue {
 }
 
 >>>>>>> 39f11c4 ( On branch dev)
+=======
+>>>>>>> parent of f956466 ( On branch dev)
 $confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
 if ($confirmRun -eq 'N' -or $confirmRun -eq 'n') {
 	break
@@ -930,6 +936,7 @@ try {
 	}
 
 	if ($lastStep -le [ScriptSteps]::AzFuncPublished) {
+<<<<<<< HEAD
 		# Criar um Azure SQL
 		$serverName = Get-SqlServerName
 		
@@ -1066,6 +1073,8 @@ try {
 	}
 
 	if ($lastStep -le [ScriptSteps]::AzSQLDatabaseCreated) {
+=======
+>>>>>>> parent of f956466 ( On branch dev)
 		try {
 			# Verificar se o Azure App Configuration já existe
 			$azAppConfigName = Get-AzAppConfigName
@@ -1225,6 +1234,7 @@ try {
 		}
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncEnvCreated)
 	}
+<<<<<<< HEAD
 
 	if ($lastStep -le [ScriptSteps]::AzFuncEnvCreated) {
 
@@ -1360,6 +1370,8 @@ try {
 		Write-Host "Caso deseje instalar Azure Storage Explorer baixe e instale-o de https://azure.microsoft.com/en-us/products/storage/storage-explorer/"
 	}
 
+=======
+>>>>>>> parent of f956466 ( On branch dev)
 } catch {
 	Show-ErrorMessage -ErrorMessage $_.Exception.Message -ErrorLine $_.InvocationInfo.ScriptLineNumber
 	exit
