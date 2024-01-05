@@ -65,14 +65,3 @@ $AzFuncPrincipalId = Get-RegistryValue -Name "AzFuncPrincipalId"
 
 # INSIRA ABAIXO O SCRIPT A SER TESTADO.
 
-# Azure Functions
-# 	AppConfigConnectionString
-# Azure SQL Database: 
-# Azure App Configuration: 
-# 	AzKVURI
-#	GpgKeyId
-#	BadgeTemplateBase64
-#	BadgeVerificationUrl
-#	SqlConnectionString
-# Azure Key Vault: 
-
