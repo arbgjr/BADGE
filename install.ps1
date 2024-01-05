@@ -47,9 +47,12 @@ enum ScriptSteps {
 <<<<<<< HEAD
 	AzSQLCreated
 	AzSQLDatabaseCreated
+<<<<<<< HEAD
 	AzAppConfigCreated
 =======
 >>>>>>> parent of f956466 ( On branch dev)
+=======
+>>>>>>> parent of 10f12c8 ( On branch dev)
 	AzFuncEnvCreated
 	AzAppConfigEnvCreated
 }
@@ -401,6 +404,7 @@ function Get-ValidInstallerLink {
     return $installScriptUrl
 }
 
+<<<<<<< HEAD
 function Get-AzAppConfigName {
     do {
         $azAppConfigName = Read-HostWithCancel "Digite o nome do Azure App Configuration" "azAppConfigName"
@@ -496,22 +500,11 @@ function Set-AppConfigKeyValue {
 >>>>>>> 39f11c4 ( On branch dev)
 =======
 >>>>>>> parent of f956466 ( On branch dev)
+=======
+>>>>>>> parent of 10f12c8 ( On branch dev)
 $confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
 if ($confirmRun -eq 'N' -or $confirmRun -eq 'n') {
 	break
-}
-
-function Get-AzKeyVaultName {
-    do {
-        $keyVaultName = Read-HostWithCancel "Digite o nome do Azure Key Vault" "keyVaultName"
-        if ([string]::IsNullOrWhiteSpace($keyVaultName)) {
-            Write-Host "O nome do Azure Key Vault é obrigatório." -ForegroundColor Green
-        } elseif (-not ($keyVaultName -match '^[a-z0-9-]+$') -or ($keyVaultName -match '^-$|-$')) {
-            Write-Host "O nome do Azure Key Vault deve conter apenas letras minúsculas 'a'-'z', números 0-9 e hífen (-). O hífen não pode ser o único caractere." -ForegroundColor Red
-        }
-    } while ([string]::IsNullOrWhiteSpace($keyVaultName) -or (-not ($keyVaultName -match '^[a-z0-9-]+$') -or ($keyVaultName -match '^-$|-$')))
-
-    return $keyVaultName
 }
 
 # Recupera de onde o script parou a execução
@@ -961,11 +954,8 @@ try {
 					az sql server create --location $location --resource-group $resourceGroupName --name $serverName --admin-user $userName  --admin-password $password --enable-public-network false
 					if ($LASTEXITCODE -eq 0) {
 						Write-Host "Servidor SQL Azure '$serverName' criado com sucesso." -ForegroundColor Green
-						Write-Host "Login: ' $userName ' Senha: " $password -ForegroundColor Yellow
+						Write-Host "Login: ' $userName ' Senha: " $password -ForegroundColor Green
 						Write-Host "ANOTE OS DADOS ACIMA, POIS ELES NÃO SERÃO SALVOS EM LUGAR NENHUM!" -ForegroundColor Green
-						$azSQLStrConn = az sql db show-connection-string --server "$serverName" --client ado.net --output tsv
-						$azSQLStrConn = $azSQLStrConn -replace "<databasename>", $databaseName -replace "<username>", "$username@$serverName" -replace "<password>", $password
-						Set-RegistryValue -Name "azSQLStrConn" -Value $azSQLStrConn
 						Read-Host "Pressione Enter para continuar..." -ForegroundColor Green
 					} else {
 						Show-ErrorMessage "Falha ao criar o servidor SQL Azure."
@@ -1076,119 +1066,6 @@ try {
 =======
 >>>>>>> parent of f956466 ( On branch dev)
 		try {
-			# Verificar se o Azure App Configuration já existe
-			$azAppConfigName = Get-AzAppConfigName
-			$existingAppConfig = az appconfig list --query "[?name=='$azAppConfigName'].name" -o tsv
-
-			if (-not [string]::IsNullOrWhiteSpace($existingAppConfig)) {
-				Write-Host "14 - O Azure App Configuration '$azAppConfigName' já existe." -ForegroundColor Green
-				$useExistingAppConfig = Read-HostWithCancel "Deseja utilizá-lo? (S/N)"
-
-				if ($useExistingAppConfig -eq 'S' -or $useExistingAppConfig -eq 's') {
-					Write-Host "Usando o Azure App Configuration existente: '$azAppConfigName'." -ForegroundColor Green
-				} else {
-					$azAppConfigName = Get-AzAppConfigName
-				}
-			}
-
-			if ([string]::IsNullOrWhiteSpace($existingAppConfig) -or $azAppConfigName -ne $existingAppConfig) {
-				try {
-					Write-Host "Criando o Azure App Configuration '$azAppConfigName'..." -ForegroundColor Green
-					az appconfig create --name $azAppConfigName --location $location --resource-group $resourceGroupName --sku Free
-					if ($LASTEXITCODE -eq 0) {
-						$azAppConfigStrConn = $(az appconfig credential list --name $azAppConfigName --resource-group $resourceGroupName --query '[0].connectionString' -o tsv)
-						Write-Host "Azure App Configuration '$azAppConfigName' criado com sucesso." -ForegroundColor Green
-						Write-Host "ANOTE OS DADOS DE CONFIGURAÇÃO, POIS ELES NÃO SERÃO SALVOS EM LUGAR NENHUM!" -ForegroundColor Green
-						Write-Host "String Connection do Azure App Configuration: $azAppConfigStrConn" -ForegroundColor Yellow
-						Set-RegistryValue -Name "azAppConfigStrConn" -Value $azAppConfigStrConn
-						Read-Host "Pressione Enter para continuar..."
-						Write-Host "Ativando a Identidade Gerenciada para o Azure Function '$functionAppName' e obtendo o principalId" -ForegroundColor Green
-						az functionapp identity assign --name $functionAppName --resource-group $resourceGroupName
-						$AzFuncPrincipalId = $(az functionapp identity show --name $functionAppName --resource-group $resourceGroupName --query "principalId" -o tsv)
-						Set-RegistryValue -Name "principalId" -Value $AzFuncPrincipalId
-						Write-Host "Definindo permissões no Azure App Configuration '$azAppConfigName' para a Identidade Gerenciada do Azure Function '$functionAppName'" -ForegroundColor Green
-						az role assignment create --assignee $AzFuncPrincipalId --role "Contributor" --scope (az appconfig show --name $azAppConfigName --resource-group $resourceGroupName --query "id" -o tsv)
-						Write-Host "Identidade Gerenciada do Azure App Configuration '$azAppConfigName' configurada para o Azure Function '$functionAppName'" -ForegroundColor Yellow
-					} else {
-						Show-ErrorMessage "Falha ao criar o Azure App Configuration."
-						exit
-					}
-				} catch {
-					Show-ErrorMessage "Falha ao criar o Azure App Configuration."
-					exit
-				}
-			}
-			Save-ScriptProgress -step ([int][ScriptSteps]::AzAppConfigCreated)
-		} catch {
-			Show-ErrorMessage "Falha ao criar o Azure App Configuration."
-			exit
-		}		
-	} else {
-		$azAppConfigName = Get-RegistryValue -Name "azAppConfigName"
-		$azAppConfigStrConn = Get-RegistryValue -Name "azAppConfigStrConn"
-		Write-Host "14 - Azure App Configuration criado em: '$azAppConfigName'." -ForegroundColor Green
-		Write-Host "     String Connection do Azure App Configuration: $azAppConfigStrConn" -ForegroundColor Yellow
-	}
-
-	if ($lastStep -le [ScriptSteps]::AzAppConfigCreated) {
-		try {
-			# Verificar se o Azure Key Vault já existe
-			$AzKeyVaultName = Get-AzKeyVaultName
-			$existingKeyVault = az keyvault list --query "[?name=='$AzKeyVaultName'].name" -o tsv
-	
-			if (-not [string]::IsNullOrWhiteSpace($existingKeyVault)) {
-				Write-Host "15 - O Azure Key Vault '$AzKeyVaultName' já existe." -ForegroundColor Green
-				$useExistingKeyVault = Read-HostWithCancel "Deseja utilizá-lo? (S/N)"
-	
-				if ($useExistingKeyVault -eq 'S' -or $useExistingKeyVault -eq 's') {
-					Write-Host "Usando o Azure Key Vault existente: '$AzKeyVaultName'." -ForegroundColor Green
-				} else {
-					$AzKeyVaultName = Get-AzKeyVaultName
-				}
-			}
-	
-			if ([string]::IsNullOrWhiteSpace($existingKeyVault) -or $AzKeyVaultName -ne $existingKeyVault) {
-				try {
-					Write-Host "15 - Criando o Azure Key Vault '$AzKeyVaultName'..." -ForegroundColor Green
-					az keyvault create --name $AzKeyVaultName --resource-group $resourceGroupName --location $location
-					if ($LASTEXITCODE -eq 0) {
-						$AzKVUri = "https://$AzKeyVaultName.vault.azure.net/"
-						Set-RegistryValue -Name "AzKVUri" -Value $AzKVUri
-						
-						Write-Host "Azure Key Vault '$AzKeyVaultName' criado com sucesso." -ForegroundColor Green
-						Write-Host "ANOTE OS DADOS DE CONFIGURAÇÃO, POIS ELES NÃO SERÃO SALVOS EM LUGAR NENHUM!" -ForegroundColor Green
-						Write-Host "Azure Key Vault URI: $AzKVUri" -ForegroundColor Yellow
-						Read-Host "Pressione Enter para continuar..."
-	
-						Write-Host "Definindo permissões no Azure Key Vault '$AzKeyVaultName' para a Identidade Gerenciada do Azure Function '$functionAppName'" -ForegroundColor Green
-						az keyvault set-policy --name $AzKeyVaultName --object-id $AzFuncPrincipalId --secret-permissions get list set delete --key-permissions get create delete list update --certificate-permissions get list update create delete
-	
-						# Exibir informações da Identidade Gerenciada
-						Write-Host "Identidade Gerenciada do Azure Key Vault '$AzKeyVaultName' configurada para o Azure Function '$functionAppName'" -ForegroundColor Yellow
-						
-					} else {
-						Show-ErrorMessage "Falha ao criar o Azure Key Vault."
-						exit
-					}
-				} catch {
-					Show-ErrorMessage "Falha ao criar o Azure Key Vault."
-					exit
-				}
-			}
-			Save-ScriptProgress -step ([int][ScriptSteps]::AzKeyVaultCreated)
-		} catch {
-			Show-ErrorMessage "Falha ao criar o Azure Key Vault."
-			exit
-		}
-	} else {
-		$AzKeyVaultName = Get-RegistryValue -Name "AzKeyVaultName"
-		$AzKVUri = Get-RegistryValue -Name "AzKVUri"
-		Write-Host "15 - Azure Key Vault criado em: '$AzKeyVaultName'." -ForegroundColor Green
-		Write-Host "     Azure Key Vault URI: '$AzKVUri'" -ForegroundColor Yellow
-	}
-	
-	if ($lastStep -le [ScriptSteps]::AzKeyVaultCreated) {
-		try {
 			# Lista de configurações existentes
 			$existingSettings = az functionapp config appsettings list --name $functionAppName --resource-group $resourceGroupName | ConvertFrom-Json
 
@@ -1222,7 +1099,7 @@ try {
 
 			# Adicione as novas configurações
 			foreach ($setting in $newSettings) {
-				az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings "$($setting.name)=$($setting.value)"
+				az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $setting.name=$setting.value
 				Write-Host "Configuração: '$($setting.name)' adicionada com sucesso à Azure Function '$functionAppName' com o valor '$($setting.value)'." -ForegroundColor Green
 			}
 			

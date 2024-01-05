@@ -143,6 +143,7 @@ function Get-ValidInstallerLink {
     return $installScriptUrl
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 function Get-AzAppConfigName {
@@ -204,3 +205,5 @@ function Set-AppConfigKeyValue {
 >>>>>>> 39f11c4 ( On branch dev)
 =======
 >>>>>>> parent of f956466 ( On branch dev)
+=======
+>>>>>>> parent of 10f12c8 ( On branch dev)

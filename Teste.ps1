@@ -55,16 +55,20 @@ $gitUserName = Get-RegistryValue -Name "gitUserName"
 $gitUserEmail = Get-RegistryValue -Name "gitUserEmail"
 $serverName = Get-RegistryValue -Name "serverName"
 $databaseName = Get-RegistryValue -Name "databaseName"
+<<<<<<< HEAD
 $bdConnectionString = Get-RegistryValue -Name "bdConnectionString"
 $azAppConfigName = Get-RegistryValue -Name "azAppConfigName"
 $azAppConfigStrConn = Get-RegistryValue -Name "azAppConfigStrConn"
 $AzKeyVaultName = Get-RegistryValue -Name "AzKeyVaultName"
 $AzKVUri = Get-RegistryValue -Name "AzKVUri"
 $AzFuncPrincipalId = Get-RegistryValue -Name "AzFuncPrincipalId"
+=======
+>>>>>>> parent of 10f12c8 ( On branch dev)
 
 
 # INSIRA ABAIXO O SCRIPT A SER TESTADO.
 
+<<<<<<< HEAD
 # Azure Functions
 # 	AppConfigConnectionString
 # Azure SQL Database: 
@@ -76,3 +80,5 @@ $AzFuncPrincipalId = Get-RegistryValue -Name "AzFuncPrincipalId"
 #	SqlConnectionString
 # Azure Key Vault: 
 
+=======
+>>>>>>> parent of 10f12c8 ( On branch dev)
