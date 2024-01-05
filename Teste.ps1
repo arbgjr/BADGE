@@ -55,7 +55,25 @@ $gitUserName = Get-RegistryValue -Name "gitUserName"
 $gitUserEmail = Get-RegistryValue -Name "gitUserEmail"
 $serverName = Get-RegistryValue -Name "serverName"
 $databaseName = Get-RegistryValue -Name "databaseName"
+$bdConnectionString = Get-RegistryValue -Name "bdConnectionString"
+$azAppConfigName = Get-RegistryValue -Name "azAppConfigName"
+$azAppConfigStrConn = Get-RegistryValue -Name "azAppConfigStrConn"
+$AzKeyVaultName = Get-RegistryValue -Name "AzKeyVaultName"
+$AzKVUri = Get-RegistryValue -Name "AzKVUri"
+$AzFuncPrincipalId = Get-RegistryValue -Name "AzFuncPrincipalId"
 
 
 # INSIRA ABAIXO O SCRIPT A SER TESTADO.
+
+#Azure Functions
+#	AppConfigConnectionString
+#Azure SQL Database
+#Azure App Configuration
+#	AzKVURI
+#	GpgKeyId
+#	BadgeTemplateBase64
+#	BadgeVerificationUrl
+#	SqlConnectionString
+#Azure Key Vault:
+
 

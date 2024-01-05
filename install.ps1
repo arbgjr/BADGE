@@ -47,6 +47,7 @@ enum ScriptSteps {
 	AzSQLCreated
 	AzSQLDatabaseCreated
 	AzFuncEnvCreated
+	AzAppConfigEnvCreated
 }
 
 Function NumLastStep {
@@ -395,6 +396,54 @@ function Get-ValidInstallerLink {
     return $installScriptUrl
 }
 
+<<<<<<< HEAD
+=======
+function Get-AzAppConfigName {
+    do {
+        $azAppConfigName = Read-HostWithCancel "Digite o nome do Azure App Configuration" "azAppConfigName"
+        if ([string]::IsNullOrWhiteSpace($azAppConfigName)) {
+            Write-Host "O nome do Azure App Configuration é obrigatório." -ForegroundColor Green
+        } elseif (-not ($azAppConfigName -match '^[a-z0-9-]+$') -or ($azAppConfigName -match '^-$|-$')) {
+            Write-Host "O nome do Azure App Configuration deve conter apenas letras minúsculas 'a'-'z', números 0-9 e hífen (-). O hífen não pode ser o único caractere." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($azAppConfigName) -or (-not ($azAppConfigName -match '^[a-z0-9-]+$') -or ($azAppConfigName -match '^-$|-$')))
+
+    return $azAppConfigName
+}
+
+
+function Set-AppConfigKeyValue {
+    param (
+        [string]$azAppConfigName,
+        [string]$settingName,
+        [string]$settingValue,
+        [string]$tag
+    )
+
+    if ([string]::IsNullOrWhiteSpace($settingName)) {
+        Write-Host "O nome da configuração é obrigatório." -ForegroundColor Red
+        return
+    }
+
+    if ([string]::IsNullOrWhiteSpace($settingValue)) {
+        $settingValue = $null
+    }
+
+    # Defina o valor padrão do Content-Type como texto simples
+    $contentType = "text/plain;charset=utf-8"
+
+    # Avalie o Content-Type com base na extensão do nome da chave
+    if ($settingName -match "\.(json|JSON)$") {
+        $contentType = "application/json;charset=utf-8"
+    } elseif ($settingName -match "\.(xml|XML)$") {
+        $contentType = "application/xml;charset=utf-8"
+    }
+
+    # Defina o content-type com base na avaliação acima
+    az appconfig kv set --name $azAppConfigName --key $settingName --value $settingValue --yes --label $tag --content-type $contentType
+}
+
+>>>>>>> 39f11c4 ( On branch dev)
 $confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
 if ($confirmRun -eq 'N' -or $confirmRun -eq 'n') {
 	break
@@ -930,12 +979,12 @@ try {
 			}
 		} while ($true)
 
-		$connectionString = az sql db show-connection-string --server "$serverName" --client ado.net --output tsv
+		$bdConnectionString = az sql db show-connection-string --server "$serverName" --client ado.net --output tsv
 
 		# Verificar se a string de conexão foi obtida com sucesso
-		if (-not [string]::IsNullOrWhiteSpace($connectionString)) {
+		if (-not [string]::IsNullOrWhiteSpace($bdConnectionString)) {
 			Write-Host "String de conexão do banco de dados Azure SQL obtida com sucesso:" -ForegroundColor Green
-			$connectionString = $connectionString -replace "<databasename>", $databaseName -replace "<username>", "$username@$serverName" -replace "<password>", $password
+			$bdConnectionString = $bdConnectionString -replace "<username>", "$username@$serverName" -replace "<password>", $password
 		
 			# Instruções para executar o script 
 			Write-Host "Para executar o script '$scriptFileName' no banco de dados, siga estas etapas:" -ForegroundColor Cyan
@@ -943,9 +992,11 @@ try {
 			Write-Host "   Você pode baixar o SQL Server Management Studio (SSMS) em: https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms" -ForegroundColor Cyan
 			Write-Host "   Ou o Azure Data Studio em: https://docs.microsoft.com/en-us/sql/azure-data-studio/download-azure-data-studio" -ForegroundColor Cyan
 			Write-Host "2. Use a seguinte string de conexão abaixo para se conectar ao banco de dados." -ForegroundColor Cyan
-			Write-Host $connectionString -ForegroundColor Yellow
-			Write-Host "3. Abra o arquivo '$scriptFileName' na ferramenta de gerenciamento de banco de dados." -ForegroundColor Cyan
-			Write-Host "4. Execute o script '$scriptFileName' no contexto do banco de dados para criar as tabelas e realizar as ações necessárias." -ForegroundColor Cyan
+			Write-Host $bdConnectionString -ForegroundColor Yellow
+			Set-RegistryValue -Name "bdConnectionString" -Value $bdConnectionString
+			Write-Host "3. Edite o arquivo '$scriptFileName' e troque <databasename> por '$databaseName'." -ForegroundColor Cyan
+			Write-Host "4. Abra o arquivo '$scriptFileName' na ferramenta de gerenciamento de banco de dados." -ForegroundColor Cyan
+			Write-Host "5. Execute o script '$scriptFileName' no contexto do banco de dados para criar as tabelas e realizar as ações necessárias." -ForegroundColor Cyan
 		} else {
 			Write-Host "Falha ao obter a string de conexão do banco de dados Azure SQL." -ForegroundColor Green
 			Write-Host "Certifique-se de que o servidor e o banco de dados informados estão corretos e que o Azure CLI está configurado corretamente." -ForegroundColor Green
@@ -958,7 +1009,13 @@ try {
 			$existingSettings = az functionapp config appsettings list --name $functionAppName --resource-group $resourceGroupName | ConvertFrom-Json
 
 			# Inicialize um array para armazenar as configurações a serem adicionadas
+<<<<<<< HEAD
 			$newSettings = @()
+=======
+			$newSettings = @(
+				@{name='AppConfigConnectionString'; value=$azAppConfigStrConn}
+			)
+>>>>>>> 39f11c4 ( On branch dev)
 
 			while ($true) {
 				$settingName = Read-HostWithCancel "Insira um nome para a sua variável de ambiente (ou pressione Enter para sair)"
@@ -1000,6 +1057,62 @@ try {
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncEnvCreated)
 	}
 
+	if ($lastStep -le [ScriptSteps]::AzFuncEnvCreated) {
+
+		try {
+			# Lista de configurações existentes no Azure App Configuration
+			$existingSettings = az appconfig kv list --name $azAppConfigName --output json | ConvertFrom-Json
+
+			# Inicialize um array para armazenar as configurações a serem adicionadas
+			$newSettings = @(
+				@{name='GpgKeyId'; value=$null},
+				@{name='BadgeTemplateBase64'; value=$null},
+				@{name='BadgeVerificationUrl'; value=$null},
+				@{name='AzKVURI'; value=$AzKVURI},
+				@{name='SqlConnectionString'; value=$bdConnectionString}
+			)
+
+			while ($true) {
+				$settingName = Read-HostWithCancel "Insira o nome da configuração (ou pressione Enter para sair)"
+
+				if ([string]::IsNullOrWhiteSpace($settingName)) {
+					# O usuário pressionou Enter para sair do loop
+					break
+				}
+
+				$existingSetting = $existingSettings | Where-Object { $_.key -eq $settingName }
+
+				if ($existingSetting) {
+					Write-Host "A configuração '$settingName' já existe com o valor: $($existingSetting.value)" -ForegroundColor Green
+					$updateSetting = Read-HostWithCancel "Deseja atualizar o valor? (S/N)"
+					if ($updateSetting -ne 'S' -and $updateSetting -ne 's') {
+						Write-Host "Mantendo a configuração existente." -ForegroundColor Green
+					} else {
+						$settingValue = Read-HostWithCancel "Insira o novo valor para '$settingName'"
+						$newSettings += @{name=$settingName; value=$settingValue}
+					}
+				} else {
+					$settingValue = Read-HostWithCancel "Insira o valor para '$settingName'"
+					$newSettings += @{name=$settingName; value=$settingValue}
+				}
+			}
+
+			# Adicione as novas configurações
+			foreach ($setting in $newSettings) {
+				Set-AppConfigKeyValue -azAppConfigName $azAppConfigName -settingName $setting.name -settingValue $setting.value -tag $REPO_NAME
+				Write-Host "Configuração: '$($setting.name)' adicionada com sucesso ao Azure App Configuration '$azAppConfigName' com o valor '$($setting.value)'." -ForegroundColor Green
+			}
+			
+			Set-RegistryValue -Name "AzAppConfigSet" -Value $newSettings
+			Write-Host "As configurações foram adicionadas/atualizadas no Azure App Configuration '$azAppConfigName'." -ForegroundColor Green
+			
+			Save-ScriptProgress -step ([int][ScriptSteps]::AzAppConfigEnvCreated)
+		} catch {
+			Show-ErrorMessage "Falha ao adicionar ou atualizar as configurações no Azure App Configuration."
+			exit
+		}
+	}
+
 	# Verificar se o Azure Data Studio está instalado
 	try {
 		$adsVersionInfo = azuredatastudio --version
@@ -1037,6 +1150,45 @@ try {
 			Show-ErrorMessage "Falha ao instalar o Azure Data Studio."
 			exit
 		}
+	}
+
+	# Verificar se o Azure Key Vault Explorer está instalado
+	$installAzKVE = Read-HostWithCancel "[OPCIONAL] Deseja instalar o Azure Key Vault Explorer (S/N)"
+	if ($installAzKVE -eq 'S' -or $installAzKVE -eq 's') {
+		Write-Host "Instalando Azure Key Vault Explorer..." -ForegroundColor Yellow
+		if ($IsWindows) {
+			# Abrir o navegador padrão com o URL de download do Azure Key Vault Explorer
+			Start-Process -FilePath "msedge" -ArgumentList "https://aka.ms/ve"
+		} else {
+			Show-ErrorMessage "Sistema operacional não suportado."
+			exit
+		}
+	} else {
+		Write-Host "Caso deseje instalar o Azure Key Vault Explorer, baixe e instale-o de https://aka.ms/ve" -ForegroundColor Green
+	}
+
+	# Verificar se o Azure Storage Explorer está instalado
+	$installAzStorageExplorer = Read-HostWithCancel "[OPCIONAL] Deseja instalar o Azure Storage Explorer? (S/N)"
+	if ($installAzStorageExplorer -eq 'S' -or $installAzStorageExplorer -eq 's') {
+		Write-Host "Instalando Azure Storage Explorer..." -ForegroundColor Yellow
+		if ($IsWindows) {
+			# Baixar o instalador do Azure Storage Explorer para Windows
+			$installScriptUrl = Get-ValidInstallerLink "https://go.microsoft.com/fwlink/?linkid=2216182&clcid=0x409"
+			Start-Process -FilePath ".\Installer.exe" -ArgumentList "/install /passive /norestart" -Wait
+			Remove-Item -Path ".\Installer.exe" -Force
+		} elseif ($IsMacOS) {
+			# Usar Homebrew no macOS https://go.microsoft.com/fwlink/?linkid=2216184&clcid=0x409
+			brew install --cask azure-storage-explorer
+		} elseif ($IsLinux) {
+			# Baixar o pacote do Azure Storage Explorer para Linux
+			$installScriptUrl = "https://go.microsoft.com/fwlink/?linkid=2216383&clcid=0x409"
+			wget -qO- $installScriptUrl | sudo bash
+		} else {
+			Show-ErrorMessage "Sistema operacional não suportado."
+			exit
+		}
+	} else {
+		Write-Host "Caso deseje instalar Azure Storage Explorer baixe e instale-o de https://azure.microsoft.com/en-us/products/storage/storage-explorer/"
 	}
 
 } catch {
