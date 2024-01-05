@@ -80,4 +80,74 @@ function Initialize-Script {
     Write-Host "Script version: $version" -ForegroundColor Magenta
 }
 
+# Função para gerar uma senha complexa e aleatória
+function Generate-RandomPassword {
+    param (
+        [int]$length = 16,
+        [bool]$includeNumbers = $true,
+        [bool]$includeLowercase = $true,
+        [bool]$includeUppercase = $true,
+        [bool]$beginWithLetter = $true,
+        [string]$includeSymbols = "!@#$%^&*()_-+=<>?/[]{}|"
+    )
 
+    $validChars = @()
+
+    if ($includeUppercase) { $validChars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' }
+    if ($includeLowercase) { $validChars += 'abcdefghijklmnopqrstuvwxyz' }
+    if ($includeNumbers) { $validChars += '0123456789' }
+    if ($includeSpecialChars) { $validChars += '!@#$%^&*()_-+=<>?/[]{}|' }
+
+    if ($validChars.Count -eq 0) {
+        Write-Host "Pelo menos uma categoria de caracteres deve ser selecionada." -ForegroundColor Red
+        return $null
+    }
+
+    $password = ""
+
+    for ($i = 0; $i -lt $length; $i++) {
+        $randomCategoryIndex = Get-Random -Minimum 0 -Maximum $validChars.Count
+        $randomCategory = $validChars[$randomCategoryIndex]
+        $randomCharIndex = Get-Random -Minimum 0 -Maximum $randomCategory.Length
+        $randomChar = $randomCategory[$randomCharIndex]
+        $password += $randomChar
+    }
+
+    return $password
+}
+
+function Get-SqlDatabaseName {
+    param (
+        [string]$repoName
+    )
+
+    do {
+        $databaseName = Read-HostWithCancel "13 - Insira o nome do banco de dados SQL" "databaseName" $repoName
+        if ([string]::IsNullOrWhiteSpace($databaseName)) {
+            Write-Host "O nome do banco de dados SQL é obrigatório." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($databaseName))
+
+    return $databaseName
+}
+
+function Get-ValidInstallerLink {
+    param (
+        [string]$installScriptUrl
+    )
+
+    $validLink = $false
+    while (-not $validLink) {
+        $installScript = Read-HostWithCancel "Insira o link para o instalador desejado" "installScriptUrl" $installScriptUrl
+
+        try {
+            Invoke-WebRequest -Uri $installScript -OutFile "Installer.exe" -UseBasicParsing
+            $validLink = $true
+        } catch {
+            Write-Host "O link fornecido não é válido. Certifique-se de que é um link direto para o instalador." -ForegroundColor Red
+            $validLink = $false
+        }
+    }
+
+    return $installScriptUrl
+}

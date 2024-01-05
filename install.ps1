@@ -44,6 +44,8 @@ enum ScriptSteps {
 	StorageCreated
 	AzFuncCreated
 	AzFuncPublished
+	AzSQLCreated
+	AzSQLDatabaseCreated
 	AzFuncEnvCreated
 }
 
@@ -306,6 +308,91 @@ Function Update-EnvFuncSetting {
  	$settingValue = Read-HostWithCancel "Insira o valor da sua variável de ambiente '$settingName':" "settingValue"
 	az functionapp config appsettings set --name $functionAppName --resource-group $resourceGroupName --settings $settingName=$settingValue
 	Write-Host "Configuração: '$settingName' atualizada com sucesso na Azure Function '$functionAppName' com o valor '$settingValue'." -ForegroundColor Green
+}
+
+function Get-SqlServerName {
+    do {
+        $serverName = Read-HostWithCancel "12 - Insira o nome do servidor SQL" "serverName"
+        if ([string]::IsNullOrWhiteSpace($serverName)) {
+            Write-Host "O nome do servidor SQL é obrigatório." -ForegroundColor Green
+        } elseif (-not ($serverName -match '^[a-z0-9-]+$') -or ($serverName -match '^-$|-$')) {
+            Write-Host "O nome do servidor SQL deve conter apenas letras minúsculas 'a'-'z', números 0-9 e hífen (-). O hífen não pode ser o único caractere." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($serverName) -or (-not ($serverName -match '^[a-z0-9-]+$') -or ($serverName -match '^-$|-$')))
+
+    return $serverName
+}
+
+# Função para gerar uma senha complexa e aleatória
+function Generate-RandomPassword {
+    param (
+        [int]$length = 16,
+        [bool]$includeNumbers = $true,
+        [bool]$includeLowercase = $true,
+        [bool]$includeUppercase = $true,
+        [bool]$beginWithLetter = $true,
+        [string]$includeSymbols = "!@#$%^&*()_-+=<>?/[]{}|"
+    )
+
+    $validChars = @()
+
+    if ($includeUppercase) { $validChars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' }
+    if ($includeLowercase) { $validChars += 'abcdefghijklmnopqrstuvwxyz' }
+    if ($includeNumbers) { $validChars += '0123456789' }
+    if ($includeSpecialChars) { $validChars += '!@#$%^&*()_-+=<>?/[]{}|' }
+
+    if ($validChars.Count -eq 0) {
+        Write-Host "Pelo menos uma categoria de caracteres deve ser selecionada." -ForegroundColor Red
+        return $null
+    }
+
+    $password = ""
+
+    for ($i = 0; $i -lt $length; $i++) {
+        $randomCategoryIndex = Get-Random -Minimum 0 -Maximum $validChars.Count
+        $randomCategory = $validChars[$randomCategoryIndex]
+        $randomCharIndex = Get-Random -Minimum 0 -Maximum $randomCategory.Length
+        $randomChar = $randomCategory[$randomCharIndex]
+        $password += $randomChar
+    }
+
+    return $password
+}
+
+function Get-SqlDatabaseName {
+    param (
+        [string]$repoName
+    )
+
+    do {
+        $databaseName = Read-HostWithCancel "13 - Insira o nome do banco de dados SQL" "databaseName" $repoName
+        if ([string]::IsNullOrWhiteSpace($databaseName)) {
+            Write-Host "O nome do banco de dados SQL é obrigatório." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($databaseName))
+
+    return $databaseName
+}
+
+function Get-ValidInstallerLink {
+    param (
+        [string]$installScriptUrl
+    )
+
+    $validLink = $false
+    while (-not $validLink) {
+        $installScriptUrl = Read-HostWithCancel "Insira o link para o instalador desejado" "installScriptUrl"
+
+        try {
+            Invoke-WebRequest -Uri $installScriptUrl -OutFile "Installer.exe" -UseBasicParsing
+            $validLink = $true
+        } catch {
+            Write-Host "O link fornecido não é válido. Certifique-se de que é um link direto para o instalador." -ForegroundColor Red
+            $validLink = $false
+        }
+    }
+
+    return $installScriptUrl
 }
 
 $confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
@@ -735,6 +822,137 @@ try {
 	}
 
 	if ($lastStep -le [ScriptSteps]::AzFuncPublished) {
+		# Criar um Azure SQL
+		$serverName = Get-SqlServerName
+		
+		# Verificar se o servidor SQL existe
+		try {
+			$existingServer = az sql server show --name $serverName --resource-group $resourceGroupName --query 'name'
+			while ($existingServer -eq $serverName) {
+				$useExistingServer = Read-HostWithCancel "O Azure SQL '$serverName' já existe. Deseja utilizá-la? (S/N)"
+				if ($useExistingServer -eq 'S' -or $useExistingServer -eq 's') {
+					Write-Host "Usando o Azure SQL existente: '$serverName'." -ForegroundColor Green
+					break
+				} else {
+					$serverName = Get-SqlServerName
+					$existingServer = az sql server show --name $serverName --resource-group $resourceGroupName --query 'name'
+				}
+			}
+			
+			if ($existingServer -eq $serverName) {
+				try {
+					Write-Host "Criando o servidor SQL Azure '$serverName'..." -ForegroundColor Green
+					$password = Generate-RandomPassword -length 16 -includeNumbers $true -includeLowercase $true -includeUppercase $true -beginWithLetter $true -includeSymbols "!@#$%^&*()_-"
+					az sql server create --location $location --resource-group $resourceGroupName --name $serverName --admin-user $userName  --admin-password $password --enable-public-network false
+					if ($LASTEXITCODE -eq 0) {
+						Write-Host "Servidor SQL Azure '$serverName' criado com sucesso." -ForegroundColor Green
+						Write-Host "Login: ' $userName ' Senha: " $password -ForegroundColor Green
+						Write-Host "ANOTE OS DADOS ACIMA, POIS ELES NÃO SERÃO SALVOS EM LUGAR NENHUM!" -ForegroundColor Green
+						Read-Host "Pressione Enter para continuar..." -ForegroundColor Green
+					} else {
+						Show-ErrorMessage "Falha ao criar o servidor SQL Azure."
+						exit
+					}
+				} catch {
+					Show-ErrorMessage "Falha ao criar o Azure SQL."
+					exit
+				}
+			}
+		} catch {
+			Show-ErrorMessage "Erro ao verificar a existência do servidor SQL."
+			exit
+		}		
+		Save-ScriptProgress -step ([int][ScriptSteps]::AzSQLCreated)
+	} else {
+		$serverName = Get-RegistryValue -Name "serverName"
+		Write-Host "12 - Azure SQL criado em: '$serverName'." -ForegroundColor Green
+	}
+
+	if ($lastStep -le [ScriptSteps]::AzSQLCreated) {
+		# Criar um Azure SQL Database
+		$databaseName = Get-SqlDatabaseName
+		
+		try {
+			# Verifique se o banco de dados já existe
+			$existingDatabase = az sql db show --name $databaseName --server $serverName --resource-group $resourceGroupName --query 'name'
+			while ($existingDatabase -eq $databaseName) {
+				$useExistingDatabase = Read-HostWithCancel "O Banco de Dados SQL Azure '$databaseName' já existe. Deseja utilizá-la? (S/N)"
+				if ($useExistingDatabase -eq 'S' -or $useExistingDatabase -eq 's') {
+					Write-Host "Usando o Banco de Dados SQL Azure existente: '$databaseName'." -ForegroundColor Green
+					break
+				} else {
+					$databaseName = Get-SqlDatabaseName
+					$existingDatabase = az sql db show --name $databaseName --server $serverName --resource-group $resourceGroupName --query 'name'
+				}
+			}
+			
+			if ($existingDatabase -eq $databaseName) {
+				try {
+					Write-Host "Criando o Banco de Dados SQL Azure '$databaseName'..." -ForegroundColor Green
+					az sql db create --name $databaseName --server $serverName --resource-group $resourceGroupName --edition Free --zone-redundant false --collation SQL_Latin1_General_CP1_CI_AS
+					if ($LASTEXITCODE -eq 0) {
+						Write-Host "Banco de Dados SQL Azure criado com sucesso." -ForegroundColor Green
+					} else {
+						Write-Host "Falha ao criar o Banco de Dados SQL Azure." -ForegroundColor Green
+					}
+				} catch {
+					Show-ErrorMessage "Falha ao criar o Banco de Dados SQL Azure."
+					exit
+				}
+			}
+		} catch {
+			Show-ErrorMessage "Falha ao criar o Banco de Dados SQL Azure."
+			exit
+		}		
+		Save-ScriptProgress -step ([int][ScriptSteps]::AzSQLDatabaseCreated)
+	} else {
+		$databaseName = Get-RegistryValue -Name "databaseName"
+		Write-Host "13 - Banco de Dados SQL Azure criado em: '$databaseName'." -ForegroundColor Green
+	}
+
+	if ($lastStep -le [ScriptSteps]::AzSQLDatabaseCreated) {
+		# Loop para garantir que o nome do arquivo do script SQL seja informado e exista
+		do {
+			$scriptFileName = Read-HostWithCancel "Insira o nome do arquivo de script SQL a ser executado (inclua o caminho completo, se necessário)" "scriptFileName" ".\$REPO_NAME.sql"
+
+			# Verificar se o nome do arquivo de script foi fornecido
+			if ([string]::IsNullOrWhiteSpace($scriptFileName)) {
+				Write-Host "O nome do arquivo de script SQL é obrigatório. Por favor, informe o nome do arquivo." -ForegroundColor Green
+				continue
+			}
+
+			# Verificar se o arquivo de script existe
+			if (-not (Test-Path $scriptFileName)) {
+				Write-Host "O arquivo de script SQL '$scriptFileName' não existe. Verifique o caminho e o nome do arquivo." -ForegroundColor Green
+			}
+			else {
+				break  # Sair do loop somente se o arquivo existir
+			}
+		} while ($true)
+
+		$connectionString = az sql db show-connection-string --server "$serverName" --client ado.net --output tsv
+
+		# Verificar se a string de conexão foi obtida com sucesso
+		if (-not [string]::IsNullOrWhiteSpace($connectionString)) {
+			Write-Host "String de conexão do banco de dados Azure SQL obtida com sucesso:" -ForegroundColor Green
+			$connectionString = $connectionString -replace "<databasename>", $databaseName -replace "<username>", "$username@$serverName" -replace "<password>", $password
+		
+			# Instruções para executar o script 
+			Write-Host "Para executar o script '$scriptFileName' no banco de dados, siga estas etapas:" -ForegroundColor Cyan
+			Write-Host "1. Abra uma ferramenta de gerenciamento de banco de dados compatível com SQL, como o SQL Server Management Studio (SSMS) ou o Azure Data Studio." -ForegroundColor Cyan
+			Write-Host "   Você pode baixar o SQL Server Management Studio (SSMS) em: https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms" -ForegroundColor Cyan
+			Write-Host "   Ou o Azure Data Studio em: https://docs.microsoft.com/en-us/sql/azure-data-studio/download-azure-data-studio" -ForegroundColor Cyan
+			Write-Host "2. Use a seguinte string de conexão abaixo para se conectar ao banco de dados." -ForegroundColor Cyan
+			Write-Host $connectionString -ForegroundColor Yellow
+			Write-Host "3. Abra o arquivo '$scriptFileName' na ferramenta de gerenciamento de banco de dados." -ForegroundColor Cyan
+			Write-Host "4. Execute o script '$scriptFileName' no contexto do banco de dados para criar as tabelas e realizar as ações necessárias." -ForegroundColor Cyan
+		} else {
+			Write-Host "Falha ao obter a string de conexão do banco de dados Azure SQL." -ForegroundColor Green
+			Write-Host "Certifique-se de que o servidor e o banco de dados informados estão corretos e que o Azure CLI está configurado corretamente." -ForegroundColor Green
+		}
+	}
+
+	if ($lastStep -le [ScriptSteps]::AzSQLDatabaseCreated) {
 		try {
 			# Lista de configurações existentes
 			$existingSettings = az functionapp config appsettings list --name $functionAppName --resource-group $resourceGroupName | ConvertFrom-Json
@@ -781,6 +999,46 @@ try {
 		}
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncEnvCreated)
 	}
+
+	# Verificar se o Azure Data Studio está instalado
+	try {
+		$adsVersionInfo = azuredatastudio --version
+		$adsVersion = $adsVersionInfo[0]
+		$adsCommitHash = $adsVersionInfo[1]
+		$adsArchitecture = $adsVersionInfo[2]
+		$formattedVersion = "$adsVersion $adsArchitecture ($adsCommitHash)"
+		Write-Host "Azure Data Studio já está instalado. Versão: $formattedVersion" -ForegroundColor Green
+	} catch {
+		try {
+			$installAzDataStudio = Read-HostWithCancel "[OPCIONAL] O Azure Data Studio não está instalado. Deseja instalá-lo? (S/N)"
+			if ($installAzDataStudio -eq 'S' -or $installAzDataStudio -eq 's') {
+				Write-Host "Instalando Azure Data Studio..." -ForegroundColor Yellow
+				if ($IsWindows) {
+					# Baixar o instalador do Azure Data Studio para Windows
+					$installScriptUrl = Get-ValidInstallerLink "https://go.microsoft.com/fwlink/?linkid=2251733"
+					Start-Process -FilePath ".\Installer.exe" -ArgumentList "/install /passive /norestart" -Wait
+					Remove-Item -Path ".\Installer.exe" -Force
+				} elseif ($IsMacOS) {
+					# Usar Homebrew no macOS
+					brew install --cask azure-data-studio
+				} elseif ($IsLinux) {
+					# Baixar o pacote do Azure Data Studio para Linux
+					$installScriptUrl = "https://go.microsoft.com/fwlink/?linkid=2251643"
+					wget -qO- $installScriptUrl | sudo bash
+				} else {
+					Show-ErrorMessage "Sistema operacional não suportado."
+					exit
+				}
+				$adsVersion = sqlops --version
+			} else {
+				Write-Host "Caso deseje instalar Azure Data Studio baixe e instale-o de https://docs.microsoft.com/en-us/sql/azure-data-studio/download-azure-data-studio"
+			}
+		} catch {
+			Show-ErrorMessage "Falha ao instalar o Azure Data Studio."
+			exit
+		}
+	}
+
 } catch {
 	Show-ErrorMessage -ErrorMessage $_.Exception.Message -ErrorLine $_.InvocationInfo.ScriptLineNumber
 	exit
