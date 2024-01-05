@@ -1,9 +1,12 @@
 # Do not include azure-functions-worker as it may conflict with the Azure Functions platform
 
 azure-functions
-azure-functions-wsgi
 Pillow
 qrcode
-hashlib
 piexif
 python-gnupg
+pyodbc
+flask
+azure-identity
+azure-appconfiguration
+gnupg

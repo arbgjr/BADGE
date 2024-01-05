@@ -9,93 +9,31 @@ from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
-from azure.functions import HttpRequest, HttpResponse
-from azure.functions_wsgi import WsgiMiddleware
+from azure.functions import HttpRequest, HttpResponse as azfunc
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
-from azure.appconfiguration import AppConfigurationClient
+from azure.appconfiguration import AzureAppConfigurationClient
+import helpers
 
 app = Flask(__name__)
 gpg = gnupg.GPG()
 
 # Configuração do cliente Azure App Configuration
 credential = DefaultAzureCredential()
-client = AppConfigurationClient.from_connection_string(os.getenv("AppConfigConnectionString"), credential)
-
-# Funções auxiliares
-def get_app_config_setting(key):
-	return client.get_configuration_setting(key).value
-
-def encrypt_data(data):
-	gpg_key_id = get_app_config_setting('GpgKeyId')
-	encrypted_data = gpg.encrypt(data, recipients=[gpg_key_id])
-	return str(encrypted_data)
-
-def load_image_from_base64(base64_img):
-	img_data = base64.b64decode(base64_img)
-	return Image.open(io.BytesIO(img_data))
-
-def load_font(font_path, size):
-	return ImageFont.truetype(font_path, size)
-
-def generate_image_hash(image):
-	img_hash = hashlib.sha256()
-	img_hash.update(image.tobytes())
-	return img_hash.hexdigest()
-
-def insert_exif(image, exif_data):
-	exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": None}
-	for key, value in exif_data.items():
-		exif_dict[key] = value
-	exif_bytes = piexif.dump(exif_dict)
-	image.save("temp_img.jpg", "jpeg", exif=exif_bytes)
-	return Image.open("temp_img.jpg")
-
-def generate_badge(data):
-	owner_name = data['owner_name']
-	issuer_name = data['issuer_name']
-	badge_template_base64 = get_app_config_setting('BadgeTemplateBase64')
-	badge_template = load_image_from_base64(badge_template_base64)
-	base_url = get_app_config_setting('BadgeVerificationUrl')
-	badge_guid = str(uuid.uuid4())
-	concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
-	encrypted_data = encrypt_data(concatenated_data)
-	draw = ImageDraw.Draw(badge_template)
-	font = load_font("Arial.ttf", 15)
-	draw.text((10, 10), f"Owner: {owner_name}", font=font, fill=(0, 0, 0))
-	draw.text((10, 30), f"Issuer: {issuer_name}", font=font, fill=(0, 0, 0))
-	qr = qrcode.QRCode(version=1, box_size=10, border=5)
-	qr.add_data(f"{base_url}?data={encrypted_data}")
-	qr.make(fit=True)
-	qr_code_img = qr.make_image(fill='black', back_color='white')
-	badge_template.paste(qr_code_img, (10, 50))
-	exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
-	badge_with_exif = insert_exif(badge_template, exif_data)
-	badge_bytes_io = io.BytesIO()
-	badge_with_exif.save(badge_bytes_io, format='JPEG')
-	badge_hash = generate_image_hash(badge_with_exif)
-	badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
-	signed_hash = gpg.sign(badge_hash)
-	conn_str = get_app_config_setting('SqlConnectionString')
-	with pyodbc.connect(conn_str) as conn:
-		cursor = conn.cursor()
-		cursor.execute("INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-					   badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64)
-		conn.commit()
-	return {"guid": badge_guid, "hash": badge_hash}
+client = AzureAppConfigurationClient.from_connection_string(os.getenv("AppConfigConnectionString"), credential)
 
 # Rotas Flask
 @app.route('/emit_badge', methods=['POST'])
 def emit_badge():
 	data = request.json
-	result = generate_badge(data)
+	result = helpers.generate_badge(data)
 	return jsonify(result)
 
 @app.route('/get_badge_image', methods=['GET'])
 def get_badge_image():
 	badge_guid = request.args.get('badge_guid')
 
-	conn_str = get_app_config_setting('SqlConnectionString')
+	conn_str = helpers.get_app_config_setting('SqlConnectionString')
 	with pyodbc.connect(conn_str) as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT BadgeBase64 FROM Badges WHERE GUID = ?", badge_guid)
@@ -116,7 +54,7 @@ def validate_badge():
 
 	badge_guid, owner_name, issuer_name = decrypted_data.data.split("|")
 
-	conn_str = get_app_config_setting('SqlConnectionString')
+	conn_str = helpers.get_app_config_setting('SqlConnectionString')
 	with pyodbc.connect(conn_str) as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT * FROM Badges WHERE GUID = ? AND OwnerName = ? AND IssuerName = ?", badge_guid, owner_name, issuer_name)
@@ -131,7 +69,7 @@ def validate_badge():
 def get_user_badges():
 	user_id = request.args.get('user_id')
 
-	conn_str = get_app_config_setting('SqlConnectionString')
+	conn_str =  helpers.get_app_config_setting('SqlConnectionString')
 	with pyodbc.connect(conn_str) as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT GUID, BadgeName FROM Badges WHERE UserID = ?", user_id)
@@ -150,7 +88,7 @@ def get_user_badges():
 def get_badge_holders():
 	badge_name = request.args.get('badge_name')
 
-	conn_str = get_app_config_setting('SqlConnectionString')
+	conn_str =  helpers.get_app_config_setting('SqlConnectionString')
 	with pyodbc.connect(conn_str) as conn:
 		cursor = conn.cursor()
 		cursor.execute("SELECT UserName FROM Badges WHERE BadgeName = ?", badge_name)
@@ -192,7 +130,7 @@ def hello():
 		except ValueError:
 			pass
 		else:
-			name = req_body.get('name')  # Para parâmetros no corpo da requisição
+			name = req_body.get('owner_name')  # Para parâmetros no corpo da requisição
 
 	if name:
 		return jsonify(message=f"Hello, {name}. This HTTP triggered function executed successfully.")
@@ -201,5 +139,5 @@ def hello():
 
 
 # Função principal para Azure Functions
-def main(req: HttpRequest) -> HttpResponse:
-	return WsgiMiddleware(app.wsgi_app).handle(req)
+def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
+	return azfunc.WsgiMiddleware(app.wsgi_app).handle(req, context)
