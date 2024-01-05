@@ -177,3 +177,34 @@ function Get-AzKeyVaultName {
 
     return $keyVaultName
 }
+
+function Set-AppConfigKeyValue {
+    param (
+        [string]$azAppConfigName,
+        [string]$settingName,
+        [string]$settingValue,
+        [string]$tag
+    )
+
+    if ([string]::IsNullOrWhiteSpace($settingName)) {
+        Write-Host "O nome da configuração é obrigatório." -ForegroundColor Red
+        return
+    }
+
+    if ([string]::IsNullOrWhiteSpace($settingValue)) {
+        $settingValue = "null"
+    }
+
+    # Defina o valor padrão do Content-Type como texto simples
+    $contentType = "text/plain;charset=utf-8"
+
+    # Avalie o Content-Type com base na extensão do nome da chave
+    if ($settingName -match "\.(json|JSON)$") {
+        $contentType = "application/json;charset=utf-8"
+    } elseif ($settingName -match "\.(xml|XML)$") {
+        $contentType = "application/xml;charset=utf-8"
+    }
+
+    # Defina o content-type com base na avaliação acima
+    az appconfig kv set --name $azAppConfigName --key $settingName --value $settingValue --yes --label $tag --content-type $contentType
+}

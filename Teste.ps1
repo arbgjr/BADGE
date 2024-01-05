@@ -55,6 +55,7 @@ $gitUserName = Get-RegistryValue -Name "gitUserName"
 $gitUserEmail = Get-RegistryValue -Name "gitUserEmail"
 $serverName = Get-RegistryValue -Name "serverName"
 $databaseName = Get-RegistryValue -Name "databaseName"
+$bdConnectionString = Get-RegistryValue -Name "bdConnectionString"
 $azAppConfigName = Get-RegistryValue -Name "azAppConfigName"
 $azAppConfigStrConn = Get-RegistryValue -Name "azAppConfigStrConn"
 $AzKeyVaultName = Get-RegistryValue -Name "AzKeyVaultName"
@@ -64,14 +65,15 @@ $AzFuncPrincipalId = Get-RegistryValue -Name "AzFuncPrincipalId"
 
 # INSIRA ABAIXO O SCRIPT A SER TESTADO.
 
-# Azure Functions
-# 	AppConfigConnectionString	Endpoint=https://azappconfigengagement.azconfig.io;Id=pATG;Secret=rbEIMqriiQXCHPHx6fbWZ8jkpjbY25J0T6Yg85Qred0=
-# 	AzKVURI	https://AzKV-Engagement.vault.azure.net/
-# Azure SQL Database: 
-# Azure App Configuration: 
+#Azure Functions
+#	AppConfigConnectionString
+#Azure SQL Database
+#Azure App Configuration
+#	AzKVURI
 #	GpgKeyId
 #	BadgeTemplateBase64
 #	BadgeVerificationUrl
-#	SqlConnectionString	Server=tcp:azsql-engagement.database.windows.net,1433;Initial Catalog=Badge;Persist Security Info=False;User ID=armando.guimaraes@sinqia.com.br@azsql-engagement;Password=1jukDPN1j03jn13o;MultipleActiveResultSets=False;Encrypt=true;TrustServerCertificate=False;Connection Timeout=30;
-# Azure Key Vault: 
+#	SqlConnectionString
+#Azure Key Vault:
+
 
