@@ -20,11 +20,13 @@ gpg = gnupg.GPG()
 
 # Configuração do cliente Azure App Configuration
 credential = DefaultAzureCredential()
-client = AppConfigurationClient.from_connection_string(os.getenv("AppConfigConnectionString"), credential)
+vault_url = os.getenv("AzKVURI")
+client_vault = SecretClient(vault_url=vault_url, credential=credential)
+client_appconfig = AppConfigurationClient.from_connection_string(os.getenv("AppConfigConnectionString"), credential)
 
 # Funções auxiliares
 def get_app_config_setting(key):
-	return client.get_configuration_setting(key).value
+	return client_appconfig.get_configuration_setting(key).value
 
 def encrypt_data(data):
 	gpg_key_id = get_app_config_setting('GpgKeyId')

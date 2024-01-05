@@ -151,3 +151,29 @@ function Get-ValidInstallerLink {
 
     return $installScriptUrl
 }
+
+function Get-AzAppConfigName {
+    do {
+        $azAppConfigName = Read-HostWithCancel "Digite o nome do Azure App Configuration" "azAppConfigName"
+        if ([string]::IsNullOrWhiteSpace($azAppConfigName)) {
+            Write-Host "O nome do Azure App Configuration é obrigatório." -ForegroundColor Green
+        } elseif (-not ($azAppConfigName -match '^[a-z0-9-]+$') -or ($azAppConfigName -match '^-$|-$')) {
+            Write-Host "O nome do Azure App Configuration deve conter apenas letras minúsculas 'a'-'z', números 0-9 e hífen (-). O hífen não pode ser o único caractere." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($azAppConfigName) -or (-not ($azAppConfigName -match '^[a-z0-9-]+$') -or ($azAppConfigName -match '^-$|-$')))
+
+    return $azAppConfigName
+}
+
+function Get-AzKeyVaultName {
+    do {
+        $keyVaultName = Read-HostWithCancel "Digite o nome do Azure Key Vault" "keyVaultName"
+        if ([string]::IsNullOrWhiteSpace($keyVaultName)) {
+            Write-Host "O nome do Azure Key Vault é obrigatório." -ForegroundColor Green
+        } elseif (-not ($keyVaultName -match '^[a-z0-9-]+$') -or ($keyVaultName -match '^-$|-$')) {
+            Write-Host "O nome do Azure Key Vault deve conter apenas letras minúsculas 'a'-'z', números 0-9 e hífen (-). O hífen não pode ser o único caractere." -ForegroundColor Red
+        }
+    } while ([string]::IsNullOrWhiteSpace($keyVaultName) -or (-not ($keyVaultName -match '^[a-z0-9-]+$') -or ($keyVaultName -match '^-$|-$')))
+
+    return $keyVaultName
+}
