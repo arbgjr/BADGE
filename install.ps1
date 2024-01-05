@@ -44,15 +44,9 @@ enum ScriptSteps {
 	StorageCreated
 	AzFuncCreated
 	AzFuncPublished
-<<<<<<< HEAD
 	AzSQLCreated
 	AzSQLDatabaseCreated
-<<<<<<< HEAD
 	AzAppConfigCreated
-=======
->>>>>>> parent of f956466 ( On branch dev)
-=======
->>>>>>> parent of 10f12c8 ( On branch dev)
 	AzFuncEnvCreated
 	AzAppConfigEnvCreated
 }
@@ -318,7 +312,6 @@ Function Update-EnvFuncSetting {
 	Write-Host "Configuração: '$settingName' atualizada com sucesso na Azure Function '$functionAppName' com o valor '$settingValue'." -ForegroundColor Green
 }
 
-<<<<<<< HEAD
 function Get-SqlServerName {
     do {
         $serverName = Read-HostWithCancel "12 - Insira o nome do servidor SQL" "serverName"
@@ -404,7 +397,6 @@ function Get-ValidInstallerLink {
     return $installScriptUrl
 }
 
-<<<<<<< HEAD
 function Get-AzAppConfigName {
     do {
         $azAppConfigName = Read-HostWithCancel "Digite o nome do Azure App Configuration" "azAppConfigName"
@@ -450,58 +442,6 @@ function Set-AppConfigKeyValue {
     az appconfig kv set --name $azAppConfigName --key $settingName --value $settingValue --yes --label $tag --content-type $contentType
 }
 
-<<<<<<< HEAD
-=======
-function Get-AzAppConfigName {
-    do {
-        $azAppConfigName = Read-HostWithCancel "Digite o nome do Azure App Configuration" "azAppConfigName"
-        if ([string]::IsNullOrWhiteSpace($azAppConfigName)) {
-            Write-Host "O nome do Azure App Configuration é obrigatório." -ForegroundColor Green
-        } elseif (-not ($azAppConfigName -match '^[a-z0-9-]+$') -or ($azAppConfigName -match '^-$|-$')) {
-            Write-Host "O nome do Azure App Configuration deve conter apenas letras minúsculas 'a'-'z', números 0-9 e hífen (-). O hífen não pode ser o único caractere." -ForegroundColor Red
-        }
-    } while ([string]::IsNullOrWhiteSpace($azAppConfigName) -or (-not ($azAppConfigName -match '^[a-z0-9-]+$') -or ($azAppConfigName -match '^-$|-$')))
-
-    return $azAppConfigName
-}
-
-
-function Set-AppConfigKeyValue {
-    param (
-        [string]$azAppConfigName,
-        [string]$settingName,
-        [string]$settingValue,
-        [string]$tag
-    )
-
-    if ([string]::IsNullOrWhiteSpace($settingName)) {
-        Write-Host "O nome da configuração é obrigatório." -ForegroundColor Red
-        return
-    }
-
-    if ([string]::IsNullOrWhiteSpace($settingValue)) {
-        $settingValue = $null
-    }
-
-    # Defina o valor padrão do Content-Type como texto simples
-    $contentType = "text/plain;charset=utf-8"
-
-    # Avalie o Content-Type com base na extensão do nome da chave
-    if ($settingName -match "\.(json|JSON)$") {
-        $contentType = "application/json;charset=utf-8"
-    } elseif ($settingName -match "\.(xml|XML)$") {
-        $contentType = "application/xml;charset=utf-8"
-    }
-
-    # Defina o content-type com base na avaliação acima
-    az appconfig kv set --name $azAppConfigName --key $settingName --value $settingValue --yes --label $tag --content-type $contentType
-}
-
->>>>>>> 39f11c4 ( On branch dev)
-=======
->>>>>>> parent of f956466 ( On branch dev)
-=======
->>>>>>> parent of 10f12c8 ( On branch dev)
 $confirmRun = Read-HostWithCancel "Deseja efetuar a configuração do ambiente de forma automatizada? (S/N)"
 if ($confirmRun -eq 'N' -or $confirmRun -eq 'n') {
 	break
@@ -929,7 +869,6 @@ try {
 	}
 
 	if ($lastStep -le [ScriptSteps]::AzFuncPublished) {
-<<<<<<< HEAD
 		# Criar um Azure SQL
 		$serverName = Get-SqlServerName
 		
@@ -1063,8 +1002,6 @@ try {
 	}
 
 	if ($lastStep -le [ScriptSteps]::AzSQLDatabaseCreated) {
-=======
->>>>>>> parent of f956466 ( On branch dev)
 		try {
 			# Lista de configurações existentes
 			$existingSettings = az functionapp config appsettings list --name $functionAppName --resource-group $resourceGroupName | ConvertFrom-Json
@@ -1111,7 +1048,6 @@ try {
 		}
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncEnvCreated)
 	}
-<<<<<<< HEAD
 
 	if ($lastStep -le [ScriptSteps]::AzFuncEnvCreated) {
 
@@ -1247,8 +1183,6 @@ try {
 		Write-Host "Caso deseje instalar Azure Storage Explorer baixe e instale-o de https://azure.microsoft.com/en-us/products/storage/storage-explorer/"
 	}
 
-=======
->>>>>>> parent of f956466 ( On branch dev)
 } catch {
 	Show-ErrorMessage -ErrorMessage $_.Exception.Message -ErrorLine $_.InvocationInfo.ScriptLineNumber
 	exit
