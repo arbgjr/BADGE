@@ -65,13 +65,13 @@ $AzFuncPrincipalId = Get-RegistryValue -Name "AzFuncPrincipalId"
 # INSIRA ABAIXO O SCRIPT A SER TESTADO.
 
 # Azure Functions
-# 	AppConfigConnectionString	Endpoint=https://azappconfigengagement.azconfig.io;Id=pATG;Secret=rbEIMqriiQXCHPHx6fbWZ8jkpjbY25J0T6Yg85Qred0=
-# 	AzKVURI	https://AzKV-Engagement.vault.azure.net/
+# 	AppConfigConnectionString
+# 	AzKVURI
 # Azure SQL Database: 
 # Azure App Configuration: 
 #	GpgKeyId
 #	BadgeTemplateBase64
 #	BadgeVerificationUrl
-#	SqlConnectionString	Server=tcp:azsql-engagement.database.windows.net,1433;Initial Catalog=Badge;Persist Security Info=False;User ID=armando.guimaraes@sinqia.com.br@azsql-engagement;Password=1jukDPN1j03jn13o;MultipleActiveResultSets=False;Encrypt=true;TrustServerCertificate=False;Connection Timeout=30;
+#	SqlConnectionString
 # Azure Key Vault: 
 
