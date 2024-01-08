@@ -123,7 +123,7 @@ def get_linkedin_post():
 
 @app.route('/', methods=['GET', 'POST'])
 def hello():
-	logging.info('Python HTTP trigger function processed a request.')
+	logging.info('Processando Hello.')
 	
 	name = request.args.get('name')  # Para parâmetros na query string
 
