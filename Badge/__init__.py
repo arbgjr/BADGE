@@ -157,7 +157,7 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
 
     # Continua com a execução normal da função
     try:
-	response = func.WsgiMiddleware(application).handle(req, context) 
+        response = func.WsgiMiddleware(application).handle(req, context) 
         # response = func.WsgiMiddleware(app.wsgi_app).handle(req)
         logging.info('Flask app processed the request successfully. Response: {response}')
         return response
