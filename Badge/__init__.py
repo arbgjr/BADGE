@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
-#from azure.functions import HttpRequest, HttpResponse as func
 import azure.functions as func
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
@@ -142,8 +141,22 @@ def hello():
 		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    return func.WsgiMiddleware(app.wsgi_app).handle(req)
+    # Log da solicitação recebida
+    logging.info('Python HTTP trigger function processed a request.')
 
-#def main(req: func.HttpRequest) -> func.HttpResponse:
-#    return func.HttpResponse("Funcionamento básico confirmado.", status_code=200)
+    # Você pode logar informações específicas da solicitação, como o método HTTP e a URL
+    logging.info(f'Request method: {req.method}')
+    logging.info(f'Request URL: {req.url}')
 
+    # Continua com a execução normal da função
+    try:
+        response = func.WsgiMiddleware(app.wsgi_app).handle(req)
+        logging.info('Flask app processed the request successfully.')
+        return response
+    except Exception as e:
+        # Log de erros, se ocorrerem
+        logging.error('Error occurred: ' + str(e))
+        return func.HttpResponse(
+            "An error occurred", status_code=500
+        )
+ 
