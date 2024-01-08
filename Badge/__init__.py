@@ -142,10 +142,4 @@ def hello():
 
 def main(req: azfunc.HttpRequest) -> azfunc.HttpResponse:
     return azfunc.WsgiMiddleware(app.wsgi_app).handle(req)
-	
-# def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
-#    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req)
-	
-# Função principal para Azure Functions
-#def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
-#    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req, context)
+
