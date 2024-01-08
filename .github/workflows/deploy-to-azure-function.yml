@@ -3,7 +3,7 @@ name: Deploy to Azure Function
 on:
   push:
     branches:
-      - main  # Ou a branch que você usa para implantação
+      - dev  # Ou a branch que você usa para implantação
 
 jobs:
   build-and-deploy:
