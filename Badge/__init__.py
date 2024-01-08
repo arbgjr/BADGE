@@ -140,7 +140,25 @@ def hello():
 	else:
 		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
 
+A definição da função no seu código parece estar correta para um cenário onde você está utilizando o Flask com o Azure Functions via WSGI Middleware. A função main atua como um ponto de entrada para as solicitações HTTP que são então passadas para a aplicação Flask através do WsgiMiddleware.
 
-# Função principal para Azure Functions
+Aqui está a estrutura básica do que você tem:
+
+python
+Copy code
+import azure.functions as azfunc
+from flask import Flask
+
+app = Flask(__name__)
+
+# Defina suas rotas Flask aqui
+@app.route('/hello', methods=['GET'])
+def hello():
+    return "Hello World"
+
 def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
-	return azfunc.WsgiMiddleware(app.wsgi_app).handle(req, context)
+    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req)
+	
+# Função principal para Azure Functions
+#def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
+#    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req, context)
