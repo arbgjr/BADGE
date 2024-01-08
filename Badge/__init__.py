@@ -10,7 +10,8 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
 import azure.functions as func
-from ..FlaskApp.wsgi import application 
+from ..FlaskApp.wsgi import application
+from azf_wsgi import AzureFunctionsWsgi 
 #from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
