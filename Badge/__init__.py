@@ -140,8 +140,11 @@ def hello():
 	else:
 		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
 
-def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
-    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req)
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    return func.WsgiMiddleware(app.wsgi_app).handle(req)
+	
+# def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
+#    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req)
 	
 # Função principal para Azure Functions
 #def main(req: azfunc.HttpRequest, context: azfunc.Context) -> azfunc.HttpResponse:
