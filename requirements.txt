@@ -10,3 +10,13 @@ flask
 azure-identity
 azure-appconfiguration
 gnupg
+Flask-SQLAlchemy
+gunicorn
+Jinja2
+MarkupSafe
+python-dateutil
+SQLAlchemy
+webargs
+Werkzeug
+bcrypt
+azf-wsgi
