@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
-from azure.functions import HttpRequest, HttpResponse as func
+#from azure.functions import HttpRequest, HttpResponse as func
+import azure.functions as func
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
@@ -144,4 +145,5 @@ def hello():
 #    return func.WsgiMiddleware(app.wsgi_app).handle(req)
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    return func.HttpResponse("Hello, World!", status_code=200)
+    return func.HttpResponse("Funcionamento básico confirmado.", status_code=200)
+
