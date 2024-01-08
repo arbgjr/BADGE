@@ -20,7 +20,7 @@ gpg = gnupg.GPG()
 
 # Configuração do cliente Azure App Configuration
 credential = DefaultAzureCredential()
-connection_string = os.environ.get("AppConfigConnectionString")
+connection_string = os.environ["CUSTOMCONNSTR_AppConfigConnectionString")
 if connection_string is None:
     raise ValueError("A variável de ambiente 'AppConfigConnectionString' não está definida.")
 client = AzureAppConfigurationClient.from_connection_string(connection_string)
