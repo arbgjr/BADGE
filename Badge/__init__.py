@@ -141,9 +141,9 @@ def hello():
 	else:
 		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
 
-# def main(req: func.HttpRequest) -> func.HttpResponse:
-#    return func.WsgiMiddleware(app.wsgi_app).handle(req)
-
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    return func.HttpResponse("Funcionamento básico confirmado.", status_code=200)
+    return func.WsgiMiddleware(app.wsgi_app).handle(req)
+
+#def main(req: func.HttpRequest) -> func.HttpResponse:
+#    return func.HttpResponse("Funcionamento básico confirmado.", status_code=200)
 
