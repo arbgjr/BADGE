@@ -9,11 +9,10 @@ from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
-from azure.functions import HttpRequest, HttpResponse
-from azure.functions_wsgi import WsgiMiddleware
+from azure.functions import HttpRequest, HttpResponse as azfunc
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
-from azure.appconfiguration import AppConfigurationClient
+from azure.appconfiguration import AzureAppConfigurationClient
 
 # Funções auxiliares
 def get_app_config_setting(key):
