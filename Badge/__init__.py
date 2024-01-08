@@ -10,7 +10,8 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
 import azure.functions as func
-from flask import Flask, jsonify, request
+from ..FlaskApp.wsgi import application 
+#from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from . import helpers
@@ -145,7 +146,7 @@ def test():
     logging.info('Processando Test.') 
     return 'Test route'
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Log da solicitação recebida
     logging.info('Python HTTP trigger function processed a request.')
 
@@ -155,7 +156,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Continua com a execução normal da função
     try:
-        response = func.WsgiMiddleware(app.wsgi_app).handle(req)
+	response = func.WsgiMiddleware(application).handle(req, context) 
+        # response = func.WsgiMiddleware(app.wsgi_app).handle(req)
         logging.info('Flask app processed the request successfully. Response: {response}')
         return response
     except Exception as e:
