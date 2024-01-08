@@ -13,7 +13,7 @@ from azure.functions import HttpRequest, HttpResponse as azfunc
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
-import helpers
+from . import helpers
 
 app = Flask(__name__)
 gpg = gnupg.GPG()
