@@ -140,6 +140,11 @@ def hello():
 	else:
 		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
 
+@app.route('/test', methods=['GET'])
+def test():
+    logging.info('Processando Test.') 
+    return 'Test route'
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
     # Log da solicitação recebida
     logging.info('Python HTTP trigger function processed a request.')
@@ -151,7 +156,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Continua com a execução normal da função
     try:
         response = func.WsgiMiddleware(app.wsgi_app).handle(req)
-        logging.info('Flask app processed the request successfully.')
+        logging.info('Flask app processed the request successfully. Response: {response}')
         return response
     except Exception as e:
         # Log de erros, se ocorrerem
