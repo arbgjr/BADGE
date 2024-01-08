@@ -20,7 +20,7 @@ gpg = gnupg.GPG()
 
 # Configuração do cliente Azure App Configuration
 credential = DefaultAzureCredential()
-client = AzureAppConfigurationClient.from_connection_string(os.getenv("AppConfigConnectionString"), credential)
+client = AzureAppConfigurationClient.from_connection_string(os.getenv("AppConfigConnectionString"))
 
 # Rotas Flask
 @app.route('/emit_badge', methods=['POST'])
