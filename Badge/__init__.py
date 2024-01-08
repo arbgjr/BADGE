@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
-from azure.functions import HttpRequest, HttpResponse as azfunc
+from azure.functions import HttpRequest, HttpResponse as func
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
@@ -140,6 +140,6 @@ def hello():
 	else:
 		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
 
-def main(req: azfunc.HttpRequest) -> azfunc.HttpResponse:
-    return azfunc.WsgiMiddleware(app.wsgi_app).handle(req)
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    return func.WsgiMiddleware(app.wsgi_app).handle(req)
 
