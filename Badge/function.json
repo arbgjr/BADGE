@@ -9,7 +9,8 @@
       "methods": [
         "get",
         "post"
-      ]
+      ],
+      "route": "app/{*route}"
     },
     {
       "type": "http",
