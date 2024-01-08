@@ -10,7 +10,6 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
 import azure.functions as func
-from ..FlaskApp.wsgi import application
 from azf_wsgi import AzureFunctionsWsgi 
 #from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
@@ -157,14 +156,13 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
 
     # Continua com a execução normal da função
     try:
-        response = func.WsgiMiddleware(application).handle(req, context) 
-        # response = func.WsgiMiddleware(app.wsgi_app).handle(req)
+        response = func.WsgiMiddleware(AzureFunctionsWsgi).handle(req, context) 
         logging.info('Flask app processed the request successfully. Response: {response}')
         return response
     except Exception as e:
         # Log de erros, se ocorrerem
-        logging.error('Error occurred: ' + str(e))
+        logging.error('Deu ruim: ' + str(e))
         return func.HttpResponse(
-            "An error occurred", status_code=500
+            "Deu ruim ", status_code=500
         )
  
