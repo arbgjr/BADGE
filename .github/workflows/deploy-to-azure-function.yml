@@ -26,7 +26,7 @@ jobs:
       uses: Azure/functions-action@v1
       id: fa
       with:
-        app-name: <NOME_DA_SUA_AZURE_FUNCTION>  # Substitua pelo nome da sua Azure Function
+        app-name: ${{ secrets.AZURE_FUNCTION_NAME }}  # Configurar nas Secrets do GitHub
         package: .  # Caminho para o diretório ou arquivo zip da sua aplicação
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}  # Configurar nas Secrets do GitHub
 
