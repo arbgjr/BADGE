@@ -1,8 +1,24 @@
-from flask import Flask, request, jsonify
-from flask_restx import Resource, Api
-from flask import Flask, request, jsonify
+import logging
+import os
+import io
+import base64
+import uuid
+import hashlib
 import pyodbc
+from datetime import datetime, timedelta
+from PIL import Image, ImageDraw, ImageFont
+import qrcode
 import gnupg
+import azure.functions as func
+from azf_wsgi import AzureFunctionsWsgi 
+from flask import Flask, jsonify, request
+from azure.identity import DefaultAzureCredential
+from azure.appconfiguration import AzureAppConfigurationClient
+from . import helpers
+from werkzeug.exceptions import HTTPException
+import flask, werkzeug
+from .app import application
+from flask_restx import Resource, Api
 from . import helpers
 
 application = Flask(__name__)
