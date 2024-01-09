@@ -122,7 +122,7 @@ def get_linkedin_post():
 
 	return jsonify({"linkedin_post": post_text})
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/hello', methods=['GET', 'POST'])
 def hello():
 	logging.info('Processando Hello.')
 	
