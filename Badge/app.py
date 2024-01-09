@@ -21,4 +21,19 @@ class Hello(Resource):
             f"Hello Azure Function {user}"
         })
 
-api.add_resource(Hello, "/hello") 
+
+@api.route("/ping")
+class Ping(Resource):
+    @api.doc(
+        responses={
+            200: 'Success',
+            400: 'Validation Error'
+        }
+    )
+    def get(self):
+        return jsonify({
+            f"back"
+        })
+        
+api.add_resource(Hello, "/hello")
+api.add_resource(Ping, "/ping")  
