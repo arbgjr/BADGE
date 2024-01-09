@@ -8,13 +8,13 @@ api = Api(application, doc='/doc/')
 @api.route("/hello")
 class Hello(Resource):
     @api.doc(
-        params={'code' : 'access token'},
+        params={},
         responses={
             200: 'Success',
             400: 'Validation Error'
         }
     )
-    def get(self, code:str):
+    def get(self):
         req_body = request.get_json()
         user = req_body.get('owner_name')
         return jsonify({
