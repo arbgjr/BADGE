@@ -17,8 +17,7 @@ class Hello(Resource):
     def get(self):
         req_body = request.get_json()
         user = req_body.get('owner_name')
-        return jsonify({"message": f"Hello Azure Function {user}"})
-        })
+        return jsonify({"message": f"Hello Azure Function {user}"}) 
 
 @api.route("/ping")
 class Ping(Resource):
