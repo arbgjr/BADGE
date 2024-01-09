@@ -136,31 +136,6 @@ def get_linkedin_post():
 
 	return jsonify({"linkedin_post": post_text})
 
-@app.route('/hello', methods=['GET', 'POST'])
-def hello():
-	logging.info('Processando Hello.')
-	
-	name = request.args.get('name')  # Para parâmetros na query string
-
-	if not name:
-		try:
-			req_body = request.get_json()
-		except ValueError:
-			pass
-		else:
-			name = req_body.get('owner_name')  # Para parâmetros no corpo da requisição
-
-	if name:
-		return jsonify(message=f"Hello, {name}. This HTTP triggered function executed successfully.")
-	else:
-		return jsonify(message="This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.")
-
-@app.route('/test', methods=['GET'])
-def test():
-    logging.info('Processando Test.')
-    raise JSONException() 
-    return 'Test route'
-
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Log da solicitação recebida
     logging.info('Python HTTP trigger function processed a request.')
