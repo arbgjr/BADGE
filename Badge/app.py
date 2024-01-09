@@ -17,8 +17,7 @@ class Hello(Resource):
     def get(self):
         req_body = request.get_json()
         user = req_body.get('owner_name')
-        return jsonify({
-            f"Hello Azure Function {user}"
+        return jsonify({"message": f"Hello Azure Function {user}"})
         })
 
 
@@ -31,9 +30,7 @@ class Ping(Resource):
         }
     )
     def get(self):
-        return jsonify({
-            f"back"
-        })
+        return jsonify({"message": f"back"})
         
 api.add_resource(Hello, "/hello")
 api.add_resource(Ping, "/ping")  
