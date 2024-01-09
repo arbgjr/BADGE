@@ -15,7 +15,8 @@ class Hello(Resource):
         }
     )
     def get(self, user: str):
-        user = request.args.get('user')
+        req_body = request.get_json()
+        user = req_body.get('owner_name')
         return jsonify({
             f"Hello Azure Function {user}"
         })
