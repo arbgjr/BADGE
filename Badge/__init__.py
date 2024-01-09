@@ -15,8 +15,21 @@ from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from . import helpers
+from werkzeug.exceptions import HTTPException
+import flask, werkzeug
+
+logging.info('Flask version: %s' % flask.__version__) 
+logging.info('Werkzeug version: %s' % werkzeug.__version__) 
 
 app = Flask(__name__)
+app.config['PROPAGATE_EXCEPTIONS'] = True
+
+class JSONException(HTTPException):
+    def get_body(self, environ):
+        return json.dumps({a: 1})
+    def get_headers(self, environ):
+        return [('Content-Type', 'application/json')]
+
 gpg = gnupg.GPG()
 
 # Configuração do cliente Azure App Configuration
@@ -143,7 +156,8 @@ def hello():
 
 @app.route('/test', methods=['GET'])
 def test():
-    logging.info('Processando Test.') 
+    logging.info('Processando Test.')
+    raise JSONException() 
     return 'Test route'
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
