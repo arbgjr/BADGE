@@ -20,3 +20,4 @@ webargs
 Werkzeug
 bcrypt
 azf-wsgi
+flask-restx
