@@ -17,7 +17,6 @@ from azure.appconfiguration import AzureAppConfigurationClient
 from . import helpers
 from werkzeug.exceptions import HTTPException
 import flask, werkzeug
-from .app import application
 from flask_restx import Resource, Api
 from . import helpers
 
