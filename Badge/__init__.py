@@ -17,6 +17,7 @@ from azure.appconfiguration import AzureAppConfigurationClient
 from . import helpers
 from werkzeug.exceptions import HTTPException
 import flask, werkzeug
+from .app import application
 
 logging.info('Flask version: %s' % flask.__version__) 
 logging.info('Werkzeug version: %s' % werkzeug.__version__) 
@@ -170,7 +171,8 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
 
     # Continua com a execução normal da função
     try:
-        response = func.WsgiMiddleware(AzureFunctionsWsgi).handle(req, context) 
+	response = func.WsgiMiddleware(application.wsgi_app).handle(req, context)
+        #response = func.WsgiMiddleware(AzureFunctionsWsgi).handle(req, context) 
         logging.info('Flask app processed the request successfully. Response: {response}')
         return response
     except Exception as e:
