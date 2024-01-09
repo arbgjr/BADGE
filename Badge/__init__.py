@@ -171,7 +171,7 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
 
     # Continua com a execução normal da função
     try:
-	response = func.WsgiMiddleware(application.wsgi_app).handle(req, context)
+        response = func.WsgiMiddleware(application.wsgi_app).handle(req, context)
         #response = func.WsgiMiddleware(AzureFunctionsWsgi).handle(req, context) 
         logging.info('Flask app processed the request successfully. Response: {response}')
         return response
