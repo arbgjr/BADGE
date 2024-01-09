@@ -148,7 +148,7 @@ class GetLinkedInPost(Resource):
           " #Conquista #Badge #DesenvolvimentoProfissional"
         )
         
-      return jsonify({"linkedin_post": post_text})
+        return jsonify({"linkedin_post": post_text})
 
 api.add_resource(GetLinkedInPost, '/get_linkedin_post')
 
