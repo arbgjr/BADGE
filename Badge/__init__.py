@@ -11,7 +11,7 @@ import qrcode
 import gnupg
 import azure.functions as func
 from azf_wsgi import AzureFunctionsWsgi 
-#from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from . import helpers
