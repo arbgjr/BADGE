@@ -101,25 +101,26 @@ class EmitBadge(Resource):
 api.add_resource(EmitBadge, '/emit_badge')
 
 
-# Parser para parâmetros de consulta
-parser = reqparse.RequestParser()
-parser.add_argument('badge_guid', type=str, required=True, help="GUID do badge é obrigatório")
+# Modelo de dados específico para GetBadgeImage
+badge_image_model = api.model('BadgeImageRequest', {
+    'badge_guid': fields.String(required=True, description='GUID do badge a ser buscado')
+})
 
 class GetBadgeImage(Resource):
     @api.doc(
-        description="Obter a imagem de um badge específico.",
-        params={'badge_guid': 'GUID do badge a ser buscado'},
+        description="Obter a imagem de um badge específico via JSON.",
         responses={
             200: "Badge encontrado",
+            400: "Dados inválidos",
             404: "Badge não encontrado",
             500: "Erro interno do servidor"
         }
     )
-    @api.expect(parser)
+    @api.expect(badge_image_model, validate=True)
     def get(self):
         """Endpoint para obter a imagem de um badge específico."""
-        args = parser.parse_args()
-        badge_guid = args['badge_guid']
+        req_body = request.get_json()
+        badge_guid = req_body.get('badge_guid')
         
         conn_str = helpers.get_app_config_setting('SqlConnectionString')
         with pyodbc.connect(conn_str) as conn:
@@ -135,28 +136,31 @@ class GetBadgeImage(Resource):
 api.add_resource(GetBadgeImage, '/get_badge_image')
 
 
-# Parser para parâmetros de consulta
-parser = reqparse.RequestParser()
-parser.add_argument('data', type=str, required=True, help="Dados criptografados são obrigatórios")
+# Modelo de dados para a documentação Swagger e validação
+validate_badge_model = api.model('ValidateBadgeRequest', {
+    'data': fields.String(required=True, description='Dados criptografados do badge')
+})
 
 class ValidateBadge(Resource):
     @api.doc(
         description="Validar a autenticidade de um badge.",
-        params={'data': 'Dados criptografados do badge'},
         responses={
             200: "Badge válido",
-            400: "Falha na descriptografia",
+            400: "Falha na descriptografia ou dados inválidos",
             404: "Badge não encontrado ou informações não correspondem",
             500: "Erro interno do servidor"
         }
     )
-    @api.expect(parser)
+    @api.expect(validate_badge_model, validate=True)
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
-        args = parser.parse_args()
-        encrypted_data = args['data']
-        decrypted_data = gpg.decrypt(encrypted_data)
+        req_body = request.get_json()
+        encrypted_data = req_body.get('data')
         
+        if not encrypted_data:
+            return jsonify({"error": "Dados criptografados são obrigatórios"}), 400
+
+        decrypted_data = gpg.decrypt(encrypted_data)
         if not decrypted_data.ok:
             return jsonify({"error": "Falha na descriptografia"}), 400
         
@@ -179,25 +183,30 @@ class ValidateBadge(Resource):
 api.add_resource(ValidateBadge, '/validate_badge')
 
 
-# Parser para parâmetros de consulta
-parser = reqparse.RequestParser()
-parser.add_argument('user_id', type=str, required=True, help="ID do usuário é obrigatório")
+# Modelo de dados para a documentação Swagger e validação
+user_badges_model = api.model('UserBadgesRequest', {
+    'user_id': fields.String(required=True, description='ID do usuário para o qual os badges serão buscados')
+})
 
 class GetUserBadges(Resource):
     @api.doc(
-        description="Obter a lista de badges de um usuário específico.",
-        params={'user_id': 'ID do usuário para o qual os badges serão buscados'},
+        description="Obter a lista de badges de um usuário específico via JSON.",
         responses={
             200: "Lista de badges retornada com sucesso",
+            400: "Dados inválidos",
             404: "Usuário não encontrado",
             500: "Erro interno do servidor"
         }
     )
-    @api.expect(parser)
+    @api.expect(user_badges_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de badges de um usuário específico."""
-        args = parser.parse_args()
-        user_id = args['user_id']
+        req_body = request.get_json()
+        
+        if not req_body or 'user_id' not in req_body:
+            return jsonify({"error": "ID do usuário é obrigatório"}), 400
+
+        user_id = req_body['user_id']
 
         conn_str = helpers.get_app_config_setting('SqlConnectionString')
         with pyodbc.connect(conn_str) as conn:
@@ -220,25 +229,30 @@ class GetUserBadges(Resource):
 api.add_resource(GetUserBadges, '/get_user_badges')
 
 
-# Parser para parâmetros de consulta
-parser = reqparse.RequestParser()
-parser.add_argument('badge_name', type=str, required=True, help="Nome do badge é obrigatório")
+# Modelo de dados para a documentação Swagger e validação
+badge_holders_model = api.model('BadgeHoldersRequest', {
+    'badge_name': fields.String(required=True, description='Nome do badge para buscar os detentores')
+})
 
 class GetBadgeHolders(Resource):
     @api.doc(
-        description="Obter a lista de usuários que possuem um badge específico.",
-        params={'badge_name': 'Nome do badge para buscar os detentores'},
+        description="Obter a lista de usuários que possuem um badge específico via JSON.",
         responses={
             200: "Lista de detentores do badge retornada com sucesso",
+            400: "Dados inválidos",
             404: "Badge não encontrado",
             500: "Erro interno do servidor"
         }
     )
-    @api.expect(parser)
+    @api.expect(badge_holders_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de usuários que possuem um badge específico."""
-        args = parser.parse_args()
-        badge_name = args['badge_name']
+        req_body = request.get_json()
+        
+        if not req_body or 'badge_name' not in req_body:
+            return jsonify({"error": "Nome do badge é obrigatório"}), 400
+
+        badge_name = req_body['badge_name']
 
         conn_str = helpers.get_app_config_setting('SqlConnectionString')
         with pyodbc.connect(conn_str) as conn:
@@ -255,25 +269,30 @@ class GetBadgeHolders(Resource):
 api.add_resource(GetBadgeHolders, '/get_badge_holders')
 
 
-# Parser para parâmetros de consulta
-parser = reqparse.RequestParser()
-parser.add_argument('badge_guid', type=str, required=True, help="GUID do badge é obrigatório")
+# Modelo de dados para a documentação Swagger e validação
+linkedin_post_model = api.model('LinkedInPostRequest', {
+    'badge_guid': fields.String(required=True, description='GUID do badge para gerar a postagem')
+})
 
 class GetLinkedInPost(Resource):
     @api.doc(
-        description="Gerar um texto sugerido para postagem no LinkedIn sobre um badge.",
-        params={'badge_guid': 'GUID do badge para gerar a postagem'},
+        description="Gerar um texto sugerido para postagem no LinkedIn sobre um badge via JSON.",
         responses={
             200: "Postagem gerada com sucesso",
+            400: "Dados inválidos",
             404: "Badge não encontrado",
             500: "Erro interno do servidor"
         }
     )
-    @api.expect(parser)
+    @api.expect(linkedin_post_model, validate=True)
     def get(self):
         """Endpoint para gerar um texto sugerido para postagem no LinkedIn sobre um badge."""
-        args = parser.parse_args()
-        badge_guid = args['badge_guid']
+        req_body = request.get_json()
+        
+        if not req_body or 'badge_guid' not in req_body:
+            return jsonify({"error": "GUID do badge é obrigatório"}), 400
+
+        badge_guid = req_body['badge_guid']
 
         conn_str = helpers.get_app_config_setting('SqlConnectionString')
         with pyodbc.connect(conn_str) as conn:
@@ -300,3 +319,5 @@ class GetLinkedInPost(Resource):
         return jsonify({"linkedin_post": post_text})
 
 api.add_resource(GetLinkedInPost, '/get_linkedin_post')
+
+
