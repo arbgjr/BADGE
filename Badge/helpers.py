@@ -228,12 +228,11 @@ def generate_badge(data):
         badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
         signed_hash = gpg.sign(badge_hash)
 
-        conn_str = get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-          cursor = conn.cursor()
-          cursor.execute("INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-             badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64)
-       conn.commit() 
+        db = Database()
+        success = db.insert_badge(badge_guid, badge_hash, badge_data, owner_name, issuer_name, signed_hash, badge_base64)
+        if not success:
+            current_app.logger.error("Falha ao inserir o badge no banco de dados.")
+            return {"error": "Falha ao inserir o badge no banco de dados"}, 500
 
         return {"guid": badge_guid, "hash": badge_hash}
 
