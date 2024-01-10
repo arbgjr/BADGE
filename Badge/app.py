@@ -9,6 +9,7 @@ from azure.appconfiguration import AzureAppConfigurationClient
 from azure.identity import DefaultAzureCredential
 
 from . import helpers
+from .database import Database
 
 
 # Criação da aplicação Flask
@@ -112,13 +113,9 @@ class GetBadgeImage(Resource):
         """Endpoint para obter a imagem de um badge específico."""
         req_body = request.get_json()
         badge_guid = req_body.get('badge_guid')
-        
-        conn_str = helpers.get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT BadgeBase64 FROM Badges WHERE GUID = ?", badge_guid)
-            row = cursor.fetchone()
-        
+
+        db = Database()
+        row = db.get_badge_image(badge_guid)
         if row:
             return jsonify({"badge_image": row[0]})
         else:
@@ -160,17 +157,13 @@ class ValidateBadge(Resource):
         except ValueError:
             return jsonify({"error": "Dados decodificados inválidos"}), 400
         
-        conn_str = helpers.get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM Badges WHERE GUID = ? AND OwnerName = ? AND IssuerName = ?", badge_guid, owner_name, issuer_name)
-            badge = cursor.fetchone()
-        
+        db = Database()
+        badge = db.validate_badge(badge_guid, owner_name, issuer_name)
         if badge:
             return jsonify({"valid": True, "badge_info": badge})
         else:
             return jsonify({"valid": False, "error": "Badge não encontrado ou informações não correspondem"}), 404
-
+    
 api.add_resource(ValidateBadge, '/validate_badge')
 
 
@@ -199,11 +192,8 @@ class GetUserBadges(Resource):
 
         user_id = req_body['user_id']
 
-        conn_str = helpers.get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT GUID, BadgeName FROM Badges WHERE UserID = ?", user_id)
-            badges = cursor.fetchall()
+        db = Database()
+        badges = db.get_user_badges(user_id)
 
         if not badges:
             return jsonify({"error": "Nenhum badge encontrado para o usuário"}), 404
@@ -245,11 +235,8 @@ class GetBadgeHolders(Resource):
 
         badge_name = req_body['badge_name']
 
-        conn_str = helpers.get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT UserName FROM Badges WHERE BadgeName = ?", badge_name)
-            badge_holders = cursor.fetchall()
+        db = Database()
+        badge_holders = db.get_badge_holders(badge_name)
 
         if not badge_holders:
             return jsonify({"error": "Nenhum detentor de badge encontrado para este nome de badge"}), 404
@@ -285,11 +272,8 @@ class GetLinkedInPost(Resource):
 
         badge_guid = req_body['badge_guid']
 
-        conn_str = helpers.get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT BadgeName, AdditionalInfo FROM Badges WHERE GUID = ?", badge_guid)
-            badge = cursor.fetchone()
+        db = Database()
+        badge_info = db.get_badge_info_for_post(badge_guid)
 
         if not badge:
             return jsonify({"error": "Badge não encontrado"}), 404
