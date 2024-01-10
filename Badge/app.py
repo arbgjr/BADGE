@@ -1,24 +1,15 @@
-import logging
 import os
-import io
-import base64
-import uuid
-import hashlib
+import logging
 import pyodbc
 from datetime import datetime, timedelta
-from PIL import Image, ImageDraw, ImageFont
-import qrcode
-import gnupg
-import azure.functions as func
-from azf_wsgi import AzureFunctionsWsgi 
 from flask import Flask, jsonify, request
-from azure.identity import DefaultAzureCredential
+from flask_restx import Resource, Api, fields
+import gnupg
 from azure.appconfiguration import AzureAppConfigurationClient
+from azure.identity import DefaultAzureCredential
+
 from . import helpers
-from werkzeug.exceptions import HTTPException
-import flask, werkzeug
-from flask_restx import Resource, Api
-from . import helpers
+
 
 # Criação da aplicação Flask
 application = Flask(__name__)
