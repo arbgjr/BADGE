@@ -102,10 +102,11 @@ def generate_badge(data):
         signed_hash = gpg.sign(badge_hash)
 
         conn_str = get_app_config_setting('SqlConnectionString')
-        with pyodbc.connect(conn_str) as conn:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO Badges (...) VALUES (...)", ...)
-            conn.commit()
+	with pyodbc.connect(conn_str) as conn:
+		cursor = conn.cursor()
+		cursor.execute("INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+					   badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64)
+		conn.commit() 
 
         return {"guid": badge_guid, "hash": badge_hash}
 
