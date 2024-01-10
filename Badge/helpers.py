@@ -13,6 +13,9 @@ from azure.functions import HttpRequest, HttpResponse as azfunc
 from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
+import requests
+import logging
+import tempfile
 
 # Configuração do cliente Azure App Configuration
 try:
@@ -114,7 +117,28 @@ def load_image_from_base64(base64_img):
         logging.error(f"Erro ao carregar imagem de base64: {str(e)}")
     return None
 
+def load_font_from_url(url, size):
+    try:
+        # Baixar a fonte da URL
+        response = requests.get(url)
+        response.raise_for_status()
 
+        # Salvar a fonte em um arquivo temporário
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.ttf') as temp_font_file:
+            temp_font_file.write(response.content)
+            temp_font_path = temp_font_file.name
+
+        # Carregar a fonte
+        font = ImageFont.truetype(temp_font_path, size)
+        return font
+    except requests.RequestException as e:
+        logging.error(f"Erro ao baixar a fonte: {e}")
+    except IOError:
+        logging.error(f"Não foi possível carregar a fonte da URL: {url}")
+    except Exception as e:
+        logging.error(f"Erro ao carregar a fonte: {str(e)}")
+    return None
+    
 def load_font(font_path, size):
     try:
         # Carregar a fonte
