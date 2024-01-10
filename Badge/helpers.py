@@ -14,6 +14,13 @@ from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 
+# Configuração do cliente Azure App Configuration
+credential = DefaultAzureCredential()
+connection_string = os.environ["CUSTOMCONNSTR_AppConfigConnectionString"] 
+if connection_string is None:
+    raise ValueError("A variável de ambiente 'AppConfigConnectionString' não está definida.")
+client = AzureAppConfigurationClient.from_connection_string(connection_string)
+
 # Funções auxiliares
 def get_app_config_setting(key):
 	return client.get_configuration_setting(key).value
