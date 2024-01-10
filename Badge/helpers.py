@@ -117,28 +117,32 @@ def load_image_from_base64(base64_img):
         logging.error(f"Erro ao carregar imagem de base64: {str(e)}")
     return None
 
-def load_font_from_url(url, size):
+def load_font_from_google_fonts(css_url, size):
     try:
-        # Baixar a fonte da URL
-        response = requests.get(url)
+        # Baixar o CSS da fonte
+        response = requests.get(css_url)
         response.raise_for_status()
 
-        # Salvar a fonte em um arquivo temporário
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.ttf') as temp_font_file:
-            temp_font_file.write(response.content)
-            temp_font_path = temp_font_file.name
+        # Extrair a URL da fonte do CSS
+        font_url_match = re.search(r"url\((https://fonts.gstatic.com/[^)]+\.ttf)\)", response.text)
+        if not font_url_match:
+            raise Exception("URL da fonte não encontrada no CSS")
+
+        font_url = font_url_match.group(1)
+
+        # Baixar o arquivo da fonte
+        font_response = requests.get(font_url)
+        font_response.raise_for_status()
 
         # Carregar a fonte
-        font = ImageFont.truetype(temp_font_path, size)
+        font = ImageFont.truetype(BytesIO(font_response.content), size)
         return font
     except requests.RequestException as e:
-        logging.error(f"Erro ao baixar a fonte: {e}")
-    except IOError:
-        logging.error(f"Não foi possível carregar a fonte da URL: {url}")
+        print(f"Erro ao baixar a fonte: {e}")
     except Exception as e:
-        logging.error(f"Erro ao carregar a fonte: {str(e)}")
+        print(f"Erro ao carregar a fonte: {e}")
     return None
-    
+
 def load_font(font_path, size):
     try:
         # Carregar a fonte
@@ -234,7 +238,13 @@ def generate_badge(data):
         encrypted_data = encrypt_data(concatenated_data)
         
         draw = ImageDraw.Draw(badge_template)
-        font = load_font("Arial.ttf", 15)
+        css_url = 'https://fonts.googleapis.com/css2?family=Rubik&display=swap'
+        font_size = 15
+        font = load_font_from_google_fonts(css_url, font_size)
+        if font is None:
+            logging.error("Falha ao carregar a fonte Rubik.")
+            return {"error": "Falha ao carregar a fonte Rubik."}, 500 
+
         draw.text((10, 10), f"Owner: {owner_name}", font=font, fill=(0, 0, 0))
         draw.text((10, 30), f"Issuer: {issuer_name}", font=font, fill=(0, 0, 0))
 
