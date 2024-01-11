@@ -199,7 +199,7 @@ def badge_holder(data):
         logging.error(f"Erro ao recuperar detentores do badge: {str(e)}")
         return {"error": "Erro interno no servidor"}, 500
 
-def linkedin_post
+def linkedin_post(data):
     try:
       
         # Validação e análise dos dados recebidos
