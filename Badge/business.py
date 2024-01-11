@@ -1,18 +1,11 @@
 import logging
 import os
 import io
-import base64
 import uuid
-import hashlib
-import pyodbc
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
-from azure.functions import HttpRequest, HttpResponse as azfunc
-from flask import Flask, jsonify, request
-import requests
-import tempfile
 
 from .database import Database
 from . import helpers
