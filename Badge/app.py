@@ -111,15 +111,9 @@ class GetBadgeImage(Resource):
     @api.expect(badge_image_model, validate=True)
     def get(self):
         """Endpoint para obter a imagem de um badge específico."""
-        req_body = request.get_json()
-        badge_guid = req_body.get('badge_guid')
-
-        db = Database()
-        row = db.get_badge_image(badge_guid)
-        if row:
-            return jsonify({"badge_image": row[0]})
-        else:
-            return jsonify({"error": "Badge não encontrado"}), 404
+        data = request.json
+        result = helpers.badge_image(data)
+        return jsonify(result)
 
 api.add_resource(GetBadgeImage, '/get_badge_image')
 
@@ -142,27 +136,9 @@ class ValidateBadge(Resource):
     @api.expect(validate_badge_model, validate=True)
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
-        req_body = request.get_json()
-        encrypted_data = req_body.get('data')
-        
-        if not encrypted_data:
-            return jsonify({"error": "Dados criptografados são obrigatórios"}), 400
-
-        decrypted_data = gpg.decrypt(encrypted_data)
-        if not decrypted_data.ok:
-            return jsonify({"error": "Falha na descriptografia"}), 400
-        
-        try:
-            badge_guid, owner_name, issuer_name = decrypted_data.data.split("|")
-        except ValueError:
-            return jsonify({"error": "Dados decodificados inválidos"}), 400
-        
-        db = Database()
-        badge = db.validate_badge(badge_guid, owner_name, issuer_name)
-        if badge:
-            return jsonify({"valid": True, "badge_info": badge})
-        else:
-            return jsonify({"valid": False, "error": "Badge não encontrado ou informações não correspondem"}), 404
+        data = request.json
+        result = helpers.badge_valid(data)
+        return jsonify(result)
     
 api.add_resource(ValidateBadge, '/validate_badge')
 
@@ -185,27 +161,9 @@ class GetUserBadges(Resource):
     @api.expect(user_badges_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de badges de um usuário específico."""
-        req_body = request.get_json()
-        
-        if not req_body or 'user_id' not in req_body:
-            return jsonify({"error": "ID do usuário é obrigatório"}), 400
-
-        user_id = req_body['user_id']
-
-        db = Database()
-        badges = db.get_user_badges(user_id)
-
-        if not badges:
-            return jsonify({"error": "Nenhum badge encontrado para o usuário"}), 404
-
-        badge_list = []
-        for badge in badges:
-            badge_guid = badge[0]
-            badge_name = badge[1]
-            validation_url = f"https://yourdomain.com/validate?badge_guid={badge_guid}"
-            badge_list.append({"name": badge_name, "validation_url": validation_url})
-
-        return jsonify(badge_list)
+        data = request.json
+        result = helpers.badge_list(data)
+        return jsonify(result)
 
 api.add_resource(GetUserBadges, '/get_user_badges')
 
@@ -228,21 +186,9 @@ class GetBadgeHolders(Resource):
     @api.expect(badge_holders_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de usuários que possuem um badge específico."""
-        req_body = request.get_json()
-        
-        if not req_body or 'badge_name' not in req_body:
-            return jsonify({"error": "Nome do badge é obrigatório"}), 400
-
-        badge_name = req_body['badge_name']
-
-        db = Database()
-        badge_holders = db.get_badge_holders(badge_name)
-
-        if not badge_holders:
-            return jsonify({"error": "Nenhum detentor de badge encontrado para este nome de badge"}), 404
-
-        users = [user[0] for user in badge_holders]
-        return jsonify(users)
+        data = request.json
+        result = helpers.badge_holder(data)
+        return jsonify(result)
 
 api.add_resource(GetBadgeHolders, '/get_badge_holders')
 
@@ -265,33 +211,9 @@ class GetLinkedInPost(Resource):
     @api.expect(linkedin_post_model, validate=True)
     def get(self):
         """Endpoint para gerar um texto sugerido para postagem no LinkedIn sobre um badge."""
-        req_body = request.get_json()
-        
-        if not req_body or 'badge_guid' not in req_body:
-            return jsonify({"error": "GUID do badge é obrigatório"}), 400
-
-        badge_guid = req_body['badge_guid']
-
-        db = Database()
-        badge_info = db.get_badge_info_for_post(badge_guid)
-
-        if not badge:
-            return jsonify({"error": "Badge não encontrado"}), 404
-
-        badge_name, additional_info = badge
-
-        # URL de validação do badge
-        validation_url = f"https://yourdomain.com/validate?badge_guid={badge_guid}"
-        
-        # Texto sugerido para postagem
-        post_text = (
-            f"Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}! "
-            f"Esta conquista representa {additional_info}. "
-            f"Você pode verificar a autenticidade do meu badge aqui: {validation_url} "
-            "#Conquista #Badge #DesenvolvimentoProfissional"
-        )
-        
-        return jsonify({"linkedin_post": post_text})
+        data = request.json
+        result = helpers.linkedin_post(data)
+        return jsonify(result)
 
 api.add_resource(GetLinkedInPost, '/get_linkedin_post')
 
