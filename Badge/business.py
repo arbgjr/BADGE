@@ -55,9 +55,9 @@ def generate_badge(data):
             return {"error": "Falha ao editar badge."}, 500 
 
         db = Database()
-        success = db.insert_badge(badge_guid, badge_hash, badge_data, owner_name, issuer_name, signed_hash, badge_base64)
+        success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
         if not success:
-            current_app.logger.error("Falha ao inserir o badge no banco de dados.")
+            logging.error("Falha ao inserir o badge no banco de dados.")
             return {"error": "Falha ao inserir o badge no banco de dados"}, 500
 
         return {"guid": badge_guid, "hash": badge_hash}
@@ -75,14 +75,14 @@ def badge_image(data):
 
         badge_guid = data['badge_guid']
         
-        logging.info(f"Recuoerando badge para {badge_guid} emitido por {issuer_name}")
+        logging.info(f"Recuperando badge para {badge_guid}.")
         
         db = Database()
         row = db.get_badge_image(badge_guid)
         if row:
             return {"badge_image": row[0]}
         else:
-            current_app.logger.error("Falha ao rechperar o badge no banco de dados.")
+            logging.error("Falha ao rechperar o badge no banco de dados.")
             return {"error": "Badge não encontrado"}, 404
     except Exception as e:
         logging.error(f"Erro ao recuoerar badge: {str(e)}")
@@ -200,10 +200,10 @@ def linkedin_post(data):
         db = Database()
         badge_info = db.get_badge_info_for_post(badge_guid)
 
-        if not badge:
+        if not badge_info:
             return {"error": "Badge não encontrado"}, 404
 
-        badge_name, additional_info = badge
+        badge_name, additional_info = badge_info
 
         base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
