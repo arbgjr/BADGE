@@ -50,8 +50,12 @@ def generate_badge(data):
 
         draw.text((10, 10), f"Owner: {owner_name}", font=font, fill=(0, 0, 0))
         draw.text((10, 30), f"Issuer: {issuer_name}", font=font, fill=(0, 0, 0))
+        
+        qr_code_img = helpers.create_qr_code(encrypted_data, base_url, box_size=10, border=4)
+        if qr_code_img is None:
+            logging.error("Falha ao gerar QR Code. ")
+            return {"error": "Falha ao gerar QR Code."}, 500 
 
-        qr_code_img = helpers.create_qr_code(base_url, encrypted_data, 10, 5)
         badge_template.paste(qr_code_img, (10, 50))
 
         exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
