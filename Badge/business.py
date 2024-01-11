@@ -47,17 +47,16 @@ def generate_badge(data):
         qr_code_img = helpers.create_qr_code(encrypted_data, base_url, box_size=10, border=4)
         if qr_code_img is None:
             logging.error("Falha ao gerar QR Code. ")
-            return {"error": "Falha ao gerar QR Code."}, 500 
+            return {"error": "Falha ao editar badge."}, 500 
 
         badge_template.paste(qr_code_img, (10, 50))
 
-        exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
-        badge_with_exif = helpers.insert_exif(badge_template, exif_data)
-        badge_bytes_io = io.BytesIO()
-        badge_with_exif.save(badge_bytes_io, format='JPEG')
-        badge_hash = helpers.generate_image_hash(badge_with_exif)
-        badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
-        signed_hash = gpg.sign(badge_hash)
+        result = process_badge_image(badge_template, issuer_name)
+        if result is not None:
+            badge_hash, badge_base64, signed_hash = result
+        else:
+            logging.error("Falha ao editar exif do badge. ")
+            return {"error": "Falha ao editar badge."}, 500 
 
         db = Database()
         success = db.insert_badge(badge_guid, badge_hash, badge_data, owner_name, issuer_name, signed_hash, badge_base64)
