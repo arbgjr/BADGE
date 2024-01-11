@@ -17,6 +17,8 @@ import requests
 import logging
 import tempfile
 
+from .database import Database
+
 # Configuração do cliente Azure App Configuration
 try:
     # Inicializar credenciais
