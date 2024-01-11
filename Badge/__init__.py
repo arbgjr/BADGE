@@ -16,3 +16,4 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     except Exception as e:
         logging.error(f'Erro ao processar a solicitação: {str(e)}')
         return func.HttpResponse("Erro interno do servidor", status_code=500)
+
