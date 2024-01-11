@@ -5,31 +5,9 @@ import uuid
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
-import gnupg
 
 from .database import Database
 from . import helpers
-
-# Configuração do cliente Azure App Configuration
-try:
-    # Inicialização do GnuPG para criptografia
-    # Certifique-se de que o caminho para o diretório GPG está correto e acessível
-    gpg_home = os.getenv('GPG_HOME', '/path/to/.gnupg')
-    gpg = gnupg.GPG(gnupghome=gpg_home)
-
-    # Verificar se o GnuPG está configurado corretamente
-    if not gpg.list_keys():
-        raise EnvironmentError("GPG não está configurado corretamente ou não tem chaves disponíveis.")
-
-except ValueError as ve:
-    logging.error(f"Erro de configuração: {str(ve)}")
-    # Tratamento adicional para o erro ou encerrar o programa
-    raise
-
-except Exception as e:
-    logging.error(f"Erro ao inicializar o cliente Azure App Configuration: {str(e)}")
-    # Tratamento adicional para o erro ou encerrar o programa
-    raise
 
 def generate_badge(data):
     try:
@@ -139,8 +117,8 @@ def badge_valid(data):
             
         logging.info(f"Descriptografando dados enviados: {encrypted_data}")
 
-        decrypted_data = gpg.decrypt(encrypted_data)
-        if not decrypted_data.ok:
+        decrypted_data = helpers.decrypt_data(encrypted_data)
+        if not decrypted_data:
             logging.error("Não foi possível descriptograr dados informados.")
             return {"error": "Falha na descriptografia"}, 400 
 
