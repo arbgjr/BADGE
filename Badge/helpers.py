@@ -74,6 +74,9 @@ def get_app_config_setting(key):
         logging.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
         return None
 
+def gera_guid_badge():
+    return str(uuid.uuid4())
+
 def encrypt_data(data):
     try:
         # Verificar se os dados de entrada são válidos
