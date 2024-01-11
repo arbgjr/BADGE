@@ -13,7 +13,8 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
 from azure.functions import HttpRequest, HttpResponse as azfunc
-from flask import Flask, jsonify, request, reqparse
+from flask import Flask, jsonify, request
+from flask_restx import Resource, Api, fields, reqparse 
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 import requests
