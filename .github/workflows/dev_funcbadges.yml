@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure Functions: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python project to Azure Function App - FuncBadges
+name: Lint, Build and deploy Python project to Azure Function App - FuncBadges
 
 on:
   push:
@@ -15,6 +15,25 @@ env:
   PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
+  lint_python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - run: pip install bandit black codespell flake8 isort mypy pytest pyupgrade safety
+      - run: bandit --recursive --skip B101 . || true  # B101 is assert statements
+      - run: black --check . || true
+      - run: codespell || true  # --ignore-words-list="" --skip=""
+      - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --show-source --statistics
+      - run: isort --check-only --profile black . || true
+      - run: pip install -r requirements.txt || true
+      - run: mypy --install-types --non-interactive . || true
+      - run: pytest . || true
+      - run: pytest --doctest-modules . || true
+      - run: shopt -s globstar && pyupgrade --py36-plus **/*.py || true
+      - run: safety check 
+      
   build:
     runs-on: ubuntu-latest
     steps:
