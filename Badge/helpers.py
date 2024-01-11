@@ -102,6 +102,28 @@ def encrypt_data(data):
         logging.error(f"Erro ao criptografar dados: {str(e)}")
         return None
 
+def decrypt_data(encrypted_data):
+    try:
+        # Verificar se os dados criptografados são válidos
+        if encrypted_data is None or encrypted_data == "":
+            logging.error("Dados fornecidos para descriptografia estão vazios ou nulos.")
+            return None
+
+        # Criar uma instância GPG
+        gpg = gnupg.GPG()
+
+        # Descriptografar os dados
+        decrypted_data = gpg.decrypt(encrypted_data)
+        if not decrypted_data.ok:
+            logging.error(f"Falha na descriptografia: {decrypted_data.status}")
+            return None
+
+        return str(decrypted_data)
+
+    except Exception as e:
+        logging.error(f"Erro ao descriptografar dados: {str(e)}")
+        return None
+        
 def load_image_from_base64(base64_img):
     try:
         # Verificar se a entrada é uma string
