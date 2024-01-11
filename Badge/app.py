@@ -23,15 +23,6 @@ application.config['PROPAGATE_EXCEPTIONS'] = True
 # doc='/doc/' habilita a documentação Swagger em /doc/
 api = Api(application, doc='/doc/')
 
-# Inicialização do GnuPG para criptografia
-# Certifique-se de que o caminho para o diretório GPG está correto e acessível
-gpg_home = os.getenv('GPG_HOME', '/path/to/.gnupg')
-gpg = gnupg.GPG(gnupghome=gpg_home)
-
-# Verificar se o GnuPG está configurado corretamente
-if not gpg.list_keys():
-    raise EnvironmentError("GPG não está configurado corretamente ou não tem chaves disponíveis.")
-
 @api.route("/hello")
 class Hello(Resource):
     @api.doc(
