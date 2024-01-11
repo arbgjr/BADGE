@@ -159,7 +159,7 @@ def badge_valid(data):
 
         except ValueError:
             logging.error("Não foi possível decodificar dados informados.")
-            return jsonify({"error": "Dados decodificados inválidos"}), 400
+            return {"error": "Dados decodificados inválidos"}, 400
         
         db = Database()
         badge = db.validate_badge(badge_guid, owner_name, issuer_name)
