@@ -149,6 +149,27 @@ def load_image_from_base64(base64_img):
         logging.error(f"Erro ao carregar imagem de base64: {str(e)}")
     return None
 
+def create_qr_code(data, base_url, box_size=10, border=5):
+    if not data or not base_url:
+        logging.error("Dados ou URL base não fornecidos para o QR Code.")
+        return None
+
+    try:
+        # Criar a instância QR Code
+        qr = qrcode.QRCode(version=1, box_size=box_size, border=border)
+
+        # Adicionar dados ao QR Code
+        qr.add_data(f"{base_url}?data={data}")
+        qr.make(fit=True)
+
+        # Gerar a imagem QR Code
+        qr_code_img = qr.make_image(fill='black', back_color='white')
+        return qr_code_img
+
+    except Exception as e:
+        logging.error(f"Erro ao criar QR Code: {str(e)}")
+        return None
+        
 def load_font_from_google_fonts(css_url, size):
     try:
         # Baixar o CSS da fonte
