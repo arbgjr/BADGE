@@ -11,10 +11,7 @@ import qrcode
 import gnupg
 from azure.functions import HttpRequest, HttpResponse as azfunc
 from flask import Flask, jsonify, request
-from azure.identity import DefaultAzureCredential
-from azure.appconfiguration import AzureAppConfigurationClient
 import requests
-import logging
 import tempfile
 
 from .database import Database
@@ -22,19 +19,6 @@ from . import helpers
 
 # Configuração do cliente Azure App Configuration
 try:
-    # Inicializar credenciais
-    credential = DefaultAzureCredential()
-
-    # Obter a string de conexão da variável de ambiente
-    connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
-
-    # Verificar se a string de conexão existe
-    if not connection_string:
-        raise ValueError("A variável de ambiente 'AppConfigConnectionString' não está definida.")
-
-    # Criar cliente de configuração do Azure
-    client = AzureAppConfigurationClient.from_connection_string(connection_string)
-
     # Inicialização do GnuPG para criptografia
     # Certifique-se de que o caminho para o diretório GPG está correto e acessível
     gpg_home = os.getenv('GPG_HOME', '/path/to/.gnupg')
