@@ -66,30 +66,30 @@ def generate_badge(data):
 
         logging.info(f"Gerando badge para {owner_name} emitido por {issuer_name}")
 
-        badge_template_base64 = get_app_config_setting('BadgeTemplateBase64')
+        badge_template_base64 = helpers.get_app_config_setting('BadgeTemplateBase64')
         if not badge_template_base64:
             logging.error("Template de badge não encontrado.")
             return {"error": "Template de badge não encontrado"}, 500
 
         # Carregar template de imagem
-        badge_template = load_image_from_base64(badge_template_base64)
+        badge_template = helpers.load_image_from_base64(badge_template_base64)
         if not badge_template:
             logging.error("Falha ao carregar template de badge.")
             return {"error": "Falha ao carregar template de badge"}, 500
 
-        base_url = get_app_config_setting('BadgeVerificationUrl')
+        base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
  
         badge_guid = str(uuid.uuid4())
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
-        encrypted_data = encrypt_data(concatenated_data)
+        encrypted_data = helpers.encrypt_data(concatenated_data)
         
         draw = ImageDraw.Draw(badge_template)
         css_url = 'https://fonts.googleapis.com/css2?family=Rubik&display=swap'
         font_size = 15
-        font = load_font_from_google_fonts(css_url, font_size)
+        font = helpers.load_font_from_google_fonts(css_url, font_size)
         if font is None:
             logging.error("Falha ao carregar a fonte Rubik.")
             return {"error": "Falha ao carregar a fonte Rubik."}, 500 
@@ -104,10 +104,10 @@ def generate_badge(data):
         badge_template.paste(qr_code_img, (10, 50))
 
         exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
-        badge_with_exif = insert_exif(badge_template, exif_data)
+        badge_with_exif = helpers.insert_exif(badge_template, exif_data)
         badge_bytes_io = io.BytesIO()
         badge_with_exif.save(badge_bytes_io, format='JPEG')
-        badge_hash = generate_image_hash(badge_with_exif)
+        badge_hash = helpers.generate_image_hash(badge_with_exif)
         badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
         signed_hash = gpg.sign(badge_hash)
 
@@ -203,7 +203,7 @@ def badge_list(data):
         if not badges:
             return {"error": "Nenhum badge encontrado para o usuário"}), 404
 
-        base_url = get_app_config_setting('BadgeVerificationUrl')
+        base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
@@ -262,7 +262,7 @@ def linkedin_post
 
         badge_name, additional_info = badge
 
-        base_url = get_app_config_setting('BadgeVerificationUrl')
+        base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
@@ -271,7 +271,7 @@ def linkedin_post
         validation_url = f"{base_url}/validate?badge_guid={badge_guid}"
         
         # Texto sugerido para postagem
-        post_text = get_app_config_setting('LinkedInPost')
+        post_text = helpers.get_app_config_setting('LinkedInPost')
         if not post_text:
           post_text = (
             f"Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}! "
