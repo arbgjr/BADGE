@@ -1,8 +1,4 @@
 import logging
-import os
-import io
-import uuid
-from datetime import datetime, timedelta
 
 from .database import Database
 from . import helpers
@@ -35,11 +31,11 @@ def generate_badge(data):
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
  
-        badge_guid = str(uuid.uuid4())
+        badge_guid = helpers.gera_guid_badge() 
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
         encrypted_data = helpers.encrypt_data(concatenated_data)
 
-        badge_template = add_text_to_badge(badge_template, owner_name, issuer_name)
+        badge_template = helpers.add_text_to_badge(badge_template, owner_name, issuer_name)
         if badge_template is None:
             logging.error("Falha ao editar badge. ")
             return {"error": "Falha ao editar badge."}, 500 
@@ -51,7 +47,7 @@ def generate_badge(data):
 
         badge_template.paste(qr_code_img, (10, 50))
 
-        result = process_badge_image(badge_template, issuer_name)
+        result = helpers.process_badge_image(badge_template, issuer_name)
         if result is not None:
             badge_hash, badge_base64, signed_hash = result
         else:
