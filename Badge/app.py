@@ -8,7 +8,7 @@ import gnupg
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.identity import DefaultAzureCredential
 
-from . import helpers
+from . import business
 
 # Criação da aplicação Flask
 application = Flask(__name__)
@@ -76,7 +76,7 @@ class EmitBadge(Resource):
     def post(self):
         """Endpoint para emitir um novo badge."""
         data = request.json
-        result = helpers.generate_badge(data)
+        result = business.generate_badge(data)
         return jsonify(result)
 
 api.add_resource(EmitBadge, '/emit_badge')
@@ -101,7 +101,7 @@ class GetBadgeImage(Resource):
     def get(self):
         """Endpoint para obter a imagem de um badge específico."""
         data = request.json
-        result = helpers.badge_image(data)
+        result = business.badge_image(data)
         return jsonify(result)
 
 api.add_resource(GetBadgeImage, '/get_badge_image')
@@ -126,7 +126,7 @@ class ValidateBadge(Resource):
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
         data = request.json
-        result = helpers.badge_valid(data)
+        result = business.badge_valid(data)
         return jsonify(result)
     
 api.add_resource(ValidateBadge, '/validate_badge')
@@ -151,7 +151,7 @@ class GetUserBadges(Resource):
     def get(self):
         """Endpoint para obter a lista de badges de um usuário específico."""
         data = request.json
-        result = helpers.badge_list(data)
+        result = business.badge_list(data)
         return jsonify(result)
 
 api.add_resource(GetUserBadges, '/get_user_badges')
@@ -176,7 +176,7 @@ class GetBadgeHolders(Resource):
     def get(self):
         """Endpoint para obter a lista de usuários que possuem um badge específico."""
         data = request.json
-        result = helpers.badge_holder(data)
+        result = business.badge_holder(data)
         return jsonify(result)
 
 api.add_resource(GetBadgeHolders, '/get_badge_holders')
@@ -201,7 +201,7 @@ class GetLinkedInPost(Resource):
     def get(self):
         """Endpoint para gerar um texto sugerido para postagem no LinkedIn sobre um badge."""
         data = request.json
-        result = helpers.linkedin_post(data)
+        result = business.linkedin_post(data)
         return jsonify(result)
 
 api.add_resource(GetLinkedInPost, '/get_linkedin_post')
