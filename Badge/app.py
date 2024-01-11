@@ -9,8 +9,6 @@ from azure.appconfiguration import AzureAppConfigurationClient
 from azure.identity import DefaultAzureCredential
 
 from . import helpers
-from .database import Database
-
 
 # Criação da aplicação Flask
 application = Flask(__name__)
