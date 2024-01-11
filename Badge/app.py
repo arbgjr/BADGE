@@ -1,12 +1,7 @@
 import os
 import logging
-import pyodbc
-from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_restx import Resource, Api, fields
-import gnupg
-from azure.appconfiguration import AzureAppConfigurationClient
-from azure.identity import DefaultAzureCredential
 
 from . import business
 
