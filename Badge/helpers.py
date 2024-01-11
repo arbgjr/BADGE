@@ -6,11 +6,14 @@ import uuid
 import hashlib
 import pyodbc
 from datetime import datetime, timedelta
+import piexif
+import re
+from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
 from azure.functions import HttpRequest, HttpResponse as azfunc
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, reqparse
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 import requests
