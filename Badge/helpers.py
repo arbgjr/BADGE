@@ -149,6 +149,27 @@ def load_image_from_base64(base64_img):
         logging.error(f"Erro ao carregar imagem de base64: {str(e)}")
     return None
 
+def add_text_to_badge(badge_template, owner_name, issuer_name):
+    try:
+        draw = ImageDraw.Draw(badge_template)
+        css_url = 'https://fonts.googleapis.com/css2?family=Rubik&display=swap'
+        font_size = 15
+        font = load_font_from_google_fonts(css_url, font_size)
+
+        if font is None:
+            logging.error("Falha ao carregar a fonte Rubik.")
+            return None
+
+        # Adicionar texto à imagem
+        draw.text((10, 10), f"Owner: {owner_name}", font=font, fill=(0, 0, 0))
+        draw.text((10, 30), f"Issuer: {issuer_name}", font=font, fill=(0, 0, 0))
+
+        return badge_template
+
+    except Exception as e:
+        logging.error(f"Erro ao adicionar texto ao badge: {str(e)}")
+        return None
+
 def create_qr_code(data, base_url, box_size=10, border=5):
     if not data or not base_url:
         logging.error("Dados ou URL base não fornecidos para o QR Code.")
