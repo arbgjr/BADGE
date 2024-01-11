@@ -15,16 +15,8 @@ env:
   PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
-  security_checks:
-    runs-on: ubuntu-latest
-    name: Execute the pycharm-security action
-    steps:
-      - uses: actions/checkout@v1
-      - name: Run PyCharm Security
-        uses: tonybaloney/pycharm-security@master
   lint_python:
     runs-on: ubuntu-latest
-    needs: security_checks
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python version
@@ -48,10 +40,17 @@ jobs:
       - run: pytest . || true
       - run: pytest --doctest-modules . || true
       - run: shopt -s globstar && pyupgrade --py36-plus **/*.py || true
-      
+  security_checks:
+    runs-on: ubuntu-latest
+    needs: lint_python
+    name: Execute the pycharm-security action
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run PyCharm Security
+        uses: tonybaloney/pycharm-security@master    
   build:
     runs-on: ubuntu-latest
-    needs: lint_python 
+    needs: security_checks 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
