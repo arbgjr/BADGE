@@ -210,7 +210,7 @@ def process_badge_image(badge_template, issuer_name):
         gpg = gnupg.GPG()
         signed_hash = gpg.sign(badge_hash)
 
-        return badge_base64, signed_hash
+        return badge_hash, badge_base64, signed_hash
 
     except Exception as e:
         logging.error(f"Erro ao processar a imagem do badge: {str(e)}")
