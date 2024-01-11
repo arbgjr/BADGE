@@ -144,7 +144,7 @@ def badge_list(data):
         badges = db.get_user_badges(user_id)
 
         if not badges:
-            return {"error": "Nenhum badge encontrado para o usuário"}), 404
+            return {"error": "Nenhum badge encontrado para o usuário"}, 404
 
         base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
