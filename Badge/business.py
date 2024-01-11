@@ -3,7 +3,6 @@ import os
 import io
 import uuid
 from datetime import datetime, timedelta
-from PIL import Image, ImageDraw, ImageFont
 
 from .database import Database
 from . import helpers
@@ -39,18 +38,12 @@ def generate_badge(data):
         badge_guid = str(uuid.uuid4())
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
         encrypted_data = helpers.encrypt_data(concatenated_data)
-        
-        draw = ImageDraw.Draw(badge_template)
-        css_url = 'https://fonts.googleapis.com/css2?family=Rubik&display=swap'
-        font_size = 15
-        font = helpers.load_font_from_google_fonts(css_url, font_size)
-        if font is None:
-            logging.error("Falha ao carregar a fonte Rubik.")
-            return {"error": "Falha ao carregar a fonte Rubik."}, 500 
 
-        draw.text((10, 10), f"Owner: {owner_name}", font=font, fill=(0, 0, 0))
-        draw.text((10, 30), f"Issuer: {issuer_name}", font=font, fill=(0, 0, 0))
-        
+        badge_template = add_text_to_badge(badge_template, owner_name, issuer_name)
+        if badge_template is None:
+            logging.error("Falha ao editar badge. ")
+            return {"error": "Falha ao editar badge."}, 500 
+
         qr_code_img = helpers.create_qr_code(encrypted_data, base_url, box_size=10, border=4)
         if qr_code_img is None:
             logging.error("Falha ao gerar QR Code. ")
