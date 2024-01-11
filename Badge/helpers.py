@@ -190,7 +190,32 @@ def create_qr_code(data, base_url, box_size=10, border=5):
     except Exception as e:
         logging.error(f"Erro ao criar QR Code: {str(e)}")
         return None
-        
+
+def process_badge_image(badge_template, issuer_name):
+    
+    try:
+        # Adicionar dados EXIF à imagem
+        exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
+        badge_with_exif = insert_exif(badge_template, exif_data)
+
+        # Salvar a imagem em um buffer de bytes
+        badge_bytes_io = io.BytesIO()
+        badge_with_exif.save(badge_bytes_io, format='JPEG')
+
+        # Gerar hash da imagem e converter para base64
+        badge_hash = generate_image_hash(badge_with_exif)
+        badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
+
+        # Assinar o hash
+        gpg = gnupg.GPG()
+        signed_hash = gpg.sign(badge_hash)
+
+        return badge_base64, signed_hash
+
+    except Exception as e:
+        logging.error(f"Erro ao processar a imagem do badge: {str(e)}")
+        return None
+
 def load_font_from_google_fonts(css_url, size):
     try:
         # Baixar o CSS da fonte
