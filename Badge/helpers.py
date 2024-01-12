@@ -38,15 +38,6 @@ try:
 
     key_vault_url = get_app_config_setting('KeyVaultURL') # "https://<your-key-vault-name>.vault.azure.net"
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
- 
-    # Inicialização do GnuPG para criptografia
-    # Certifique-se de que o caminho para o diretório GPG está correto e acessível
-    gpg_home = os.getenv('GPG_HOME', '/path/to/.gnupg')
-    gpg = gnupg.GPG(gnupghome=gpg_home)
-
-    # Verificar se o GnuPG está configurado corretamente
-    if not gpg.list_keys():
-        raise EnvironmentError("GPG não está configurado corretamente ou não tem chaves disponíveis.")
 
 except ValueError as ve:
     logging.error(f"Erro de configuração: {str(ve)}")
