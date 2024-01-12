@@ -93,7 +93,32 @@ def get_pgp_public_key():
     public_key = secret_client.get_secret(public_key_name).value
     return public_key
 
+def decrypt_data(encrypted_data):
+    gpg = gnupg.GPG()
+    private_key = get_pgp_private_key()
+    import_result = gpg.import_keys(private_key)
+    
+    if not import_result.count:
+        raise ValueError("Falha ao importar a chave privada PGP")
+
+    decrypted_data = gpg.decrypt(encrypted_data)
+    return str(decrypted_data)
+
 def encrypt_data(data):
+    gpg = gnupg.GPG()
+    public_key = get_pgp_public_key()
+    import_result = gpg.import_keys(public_key)
+    
+    if not import_result.count:
+        raise ValueError("Falha ao importar a chave pública PGP")
+
+    encrypted_data = gpg.encrypt(data, import_result.fingerprints[0])
+    if not encrypted_data.ok:
+        raise ValueError(f"Falha na criptografia: {encrypted_data.status}")
+    
+    return str(encrypted_data)
+
+def deprecated_encrypt_data(data):
     try:
         # Verificar se os dados de entrada são válidos
         if data is None:
@@ -121,7 +146,7 @@ def encrypt_data(data):
         logging.error(f"Erro ao criptografar dados: {str(e)}")
         return None
 
-def decrypt_data(encrypted_data):
+def deprecated_decrypt_data(encrypted_data):
     try:
         # Verificar se os dados criptografados são válidos
         if encrypted_data is None or encrypted_data == "":
