@@ -84,12 +84,12 @@ def gera_guid_badge():
     return str(uuid.uuid4())
 
 def get_pgp_private_key():
-    private_key_name = "your-private-key-name"
+    private_key_name = get_app_config_setting('PGPPrivateKeyName')
     private_key = secret_client.get_secret(private_key_name).value
     return private_key
 
 def get_pgp_public_key():
-    public_key_name = "your-public-key-name"
+    public_key_name = get_app_config_setting('PGPPublicKeyName') 
     public_key = secret_client.get_secret(public_key_name).value
     return public_key
 
