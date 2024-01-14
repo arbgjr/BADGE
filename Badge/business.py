@@ -6,6 +6,7 @@ from . import helpers
 def generate_badge(data):
     try:
         # Validação e análise dos dados recebidos
+        logging.info(f"[business] Endpoint para emitir um novo badge.")
         if 'owner_name' not in data or 'issuer_name' not in data:
             logging.error("Dados de entrada faltando: 'owner_name' ou 'issuer_name'")
             return {"error": "Dados de entrada inválidos"}, 400
@@ -15,38 +16,47 @@ def generate_badge(data):
 
         logging.info(f"Gerando badge para {owner_name} emitido por {issuer_name}")
 
+        logging.info(f"[business] Recuperando template do Badge em base64.")
         badge_template_base64 = helpers.get_app_config_setting('BadgeTemplateBase64')
         if not badge_template_base64:
             logging.error("Template de badge não encontrado.")
             return {"error": "Template de badge não encontrado"}, 500
 
         # Carregar template de imagem
+        logging.info(f"[business] Carregar template de imagem.")
         badge_template = helpers.load_image_from_base64(badge_template_base64)
         if not badge_template:
             logging.error("Falha ao carregar template de badge.")
             return {"error": "Falha ao carregar template de badge"}, 500
 
+        logging.info(f"[business] Carregar URL de verificação do Badge.")
         base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
  
+        logging.info(f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
+        logging.info(f"[business] Gerando dados de verificação do Badge do Badge.")
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
         encrypted_data = helpers.encrypt_data(concatenated_data)
 
+        logging.info(f"[business] Adicionando texto ao Badge.")
         badge_template = helpers.add_text_to_badge(badge_template, owner_name, issuer_name)
         if badge_template is None:
             logging.error("Falha ao editar badge. ")
             return {"error": "Falha ao editar badge."}, 500 
 
+        logging.info(f"[business] Gerando QRCode do Badge.")
         qr_code_img = helpers.create_qr_code(encrypted_data, base_url, box_size=10, border=4)
         if qr_code_img is None:
             logging.error("Falha ao gerar QR Code. ")
             return {"error": "Falha ao editar badge."}, 500 
 
+        logging.info(f"[business] Inerindo Qrcode no Badge.")
         badge_template.paste(qr_code_img, (10, 50))
 
+        logging.info(f"[business] Inserindo dados EXIF do Badge.")
         result = helpers.process_badge_image(badge_template, issuer_name)
         if result is not None:
             badge_hash, badge_base64, signed_hash = result
@@ -54,6 +64,7 @@ def generate_badge(data):
             logging.error("Falha ao editar exif do badge. ")
             return {"error": "Falha ao editar badge."}, 500 
 
+        logging.info(f"[business] Gerando Badge no banco.")
         db = Database()
         success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
         if not success:
