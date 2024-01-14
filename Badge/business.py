@@ -3,6 +3,9 @@ import logging
 from .database import Database
 from . import helpers
 
+# Configurar o nível de log para INFO
+logging.basicConfig(level=logging.INFO)
+
 def generate_badge(data):
     try:
         # Validação e análise dos dados recebidos
