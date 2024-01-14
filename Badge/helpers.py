@@ -22,9 +22,6 @@ import requests
 import logging
 import tempfile
 from azure.keyvault.secrets import SecretClient
-from azure.loganalytics import LogAnalyticsDataClient
-from azure.loganalytics.models import QueryBody
-from azure.common.credentials import ServicePrincipalCredentials
 
 # Configurar o nível de log para INFO
 config_integration.trace_integrations(['logging'])
