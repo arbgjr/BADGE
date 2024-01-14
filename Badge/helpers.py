@@ -24,16 +24,20 @@ from azure.keyvault.secrets import SecretClient
 # Configuração do cliente Azure App Configuration
 try:
     # Inicializar credenciais
+    logging.info(f"[helpers] Inicializar credenciais.")
     credential = DefaultAzureCredential() 
 
     # Obter a string de conexão da variável de ambiente
+    logging.info(f"[helpers] Obter a string de conexão da variável de ambiente.")
     connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
 
     # Verificar se a string de conexão existe
+    logging.info(f"[helpers] Obter a string de conexão da variável de ambiente") 
     if not connection_string:
         raise ValueError("A variável de ambiente 'AppConfigConnectionString' não está definida.")
 
     # Criar cliente de configuração do Azure
+    logging.info(f"[helpers] Criar cliente de configuração do Azure") 
     client = AzureAppConfigurationClient.from_connection_string(connection_string)
     
 except Exception as e:
@@ -72,9 +76,11 @@ def get_app_config_setting(key):
         return None 
         
 try:
+    logging.info(f"Obter a configuração 'AzKVURI'.")
     key_vault_url = get_app_config_setting("AzKVURI")
     logging.info(f"key_vault_url: '{key_vault_url}'")
-    
+
+    logging.info(f"[helpers] Criar cliente do Azure KeyVaut") 
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
 except ValueError as ve:
