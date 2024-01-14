@@ -1,16 +1,23 @@
 import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+from opencensus.trace import config_integration
+import os
 import pyodbc
 from datetime import datetime, timedelta
 from . import helpers
 from flask import current_app
 
-# Configurar o nível de log para INFO
-logging.basicConfig(level=logging.INFO)
+# Configurar o log
+config_integration.trace_integrations(['logging'])
+logger = logging.getLogger(__name__)
+APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
+handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
+logger.addHandler(handler)
 
 class Database:
     def __init__(self):
         logging.info(f"[database] Obter dados de conexão com o banco.")
-        self.conn_str = helpers.get_app_config_setting('SqlConnectionString')
+        self.conn_str = helpers.get_key_vault_secret('SqlConnectionString')
 
     def connect(self):
         try:
