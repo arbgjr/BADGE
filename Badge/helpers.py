@@ -20,6 +20,9 @@ import requests
 import logging
 import tempfile
 from azure.keyvault.secrets import SecretClient
+from azure.loganalytics import LogAnalyticsDataClient
+from azure.loganalytics.models import QueryBody
+from azure.common.credentials import ServicePrincipalCredentials
 
 # Configurar o nível de log para INFO
 logging.basicConfig(level=logging.INFO)
@@ -93,17 +96,41 @@ except ValueError as ve:
 
 # Funções auxiliares
 
+def get_key_vault_secret(secret_name):
+    try:
+        # Verificar se o nome do segredo fornecido é válido
+        logging.info(f"Verificar se o '{secret_name}' fornecido é válido.")
+        if not secret_name or not isinstance(secret_name, str):
+            logging.error("Nome do segredo inválido ou nulo fornecido.")
+            return None
+
+        # Obter o segredo do Azure Key Vault
+        logging.info(f"Obter o segredo '{secret_name}' do Azure Key Vault.")
+        secret = secret_client.get_secret(secret_name)
+
+        # Verificar se o segredo foi encontrado
+        if not secret:
+            logging.warning(f"Segredo '{secret_name}' não encontrado no Azure Key Vault.")
+            return None
+
+        logging.info(f"Valor obtido para o segredo '{secret_name}' é '{secret.value}'.")
+        return secret.value
+
+    except Exception as e:
+        logging.error(f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}")
+        return None
+        
 def gera_guid_badge():
     return str(uuid.uuid4())
 
 def get_pgp_private_key():
     private_key_name = get_app_config_setting('PGPPrivateKeyName')
-    private_key = secret_client.get_secret(private_key_name).value
+    private_key = get_key_vault_secret(private_key_name)
     return private_key
 
 def get_pgp_public_key():
     public_key_name = get_app_config_setting('PGPPublicKeyName') 
-    public_key = secret_client.get_secret(public_key_name).value
+    public_key = get_key_vault_secret(public_key_name)
     return public_key
 
 def decrypt_data(encrypted_data):
@@ -139,7 +166,7 @@ def deprecated_encrypt_data(data):
             return None
 
         # Obter a ID da chave GPG da configuração
-        gpg_key_id = get_app_config_setting('GpgKeyId')
+        gpg_key_id = get_key_vault_secret('GpgKeyId')
         if not gpg_key_id:
             logging.error("ID da chave GPG não está configurada.")
             return None
