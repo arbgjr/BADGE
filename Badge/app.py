@@ -4,6 +4,9 @@ from flask_restx import Resource, Api, fields, reqparse
 
 from . import business
 
+# Configurar o nível de log para INFO
+logging.basicConfig(level=logging.INFO)
+
 # Criação da aplicação Flask
 logging.info(f"[app] Criação da aplicação Flask")
 application = Flask(__name__)
