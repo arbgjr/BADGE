@@ -22,4 +22,5 @@ bcrypt
 azf-wsgi
 flask-restx
 azure-keyvault-secrets
+azure-log-analytics
 
