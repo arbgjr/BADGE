@@ -21,6 +21,9 @@ import logging
 import tempfile
 from azure.keyvault.secrets import SecretClient
 
+# Configurar o nível de log para INFO
+logging.basicConfig(level=logging.INFO)
+
 # Configuração do cliente Azure App Configuration
 try:
     # Inicializar credenciais
