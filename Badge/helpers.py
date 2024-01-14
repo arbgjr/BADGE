@@ -36,7 +36,7 @@ try:
     # Criar cliente de configuração do Azure
     client = AzureAppConfigurationClient.from_connection_string(connection_string)
 
-    key_vault_url = client.get_configuration_setting("AzKVURI") # "https://<your-key-vault-name>.vault.azure.net"
+    key_vault_url = client.get_configuration_setting("AzKVURI")
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
 except ValueError as ve:
