@@ -71,7 +71,7 @@ def get_app_config_setting(key):
         logging.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
         return None 
         
-try
+try:
     key_vault_url = get_app_config_setting("AzKVURI")
     
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
