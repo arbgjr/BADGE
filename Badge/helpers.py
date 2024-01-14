@@ -37,6 +37,9 @@ try:
     client = AzureAppConfigurationClient.from_connection_string(connection_string)
 
     key_vault_url = client.get_configuration_setting("AzKVURI")
+    if not key_vault_url:
+        raise ValueError(f"Configuração para a chave '{key}' não encontrada.")
+     
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
 except ValueError as ve:
