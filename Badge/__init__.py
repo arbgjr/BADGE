@@ -2,6 +2,9 @@ import logging
 import azure.functions as func
 from .app import application
 
+# Configurar o nível de log para INFO
+logging.basicConfig(level=logging.INFO)
+
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Log da solicitação recebida
     logging.info('Python HTTP trigger function processed a request.')
