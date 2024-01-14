@@ -1,3 +1,4 @@
+import logging
 import pyodbc
 from datetime import datetime, timedelta
 from . import helpers
