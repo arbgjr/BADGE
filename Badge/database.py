@@ -5,10 +5,12 @@ from flask import current_app
 
 class Database:
     def __init__(self):
+        logging.info(f"[database] Obter dados de conexão com o banco.")
         self.conn_str = helpers.get_app_config_setting('SqlConnectionString')
 
     def connect(self):
         try:
+            logging.info(f"[database] Conectando com o banco.")
             return pyodbc.connect(self.conn_str)
         except pyodbc.Error as e:
             current_app.logger.error(f"Erro de conexão com o banco de dados: {e}")
@@ -68,10 +70,12 @@ class Database:
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
+                logging.info(f"[database] Inserindo dados no banco.")
                 cursor.execute(
                     "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
                 )
+                logging.info(f"[database] Comitando dados .")
                 conn.commit()
             return True
         except Exception as e:
