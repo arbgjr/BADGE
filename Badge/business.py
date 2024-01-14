@@ -1,10 +1,17 @@
 import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+from opencensus.trace import config_integration
+import os
 
 from .database import Database
 from . import helpers
 
-# Configurar o nível de log para INFO
-logging.basicConfig(level=logging.INFO)
+# Configurar o log
+config_integration.trace_integrations(['logging'])
+logger = logging.getLogger(__name__)
+APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
+handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
+logger.addHandler(handler)
 
 def generate_badge(data):
     try:
