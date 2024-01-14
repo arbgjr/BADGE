@@ -35,32 +35,27 @@ try:
 
     # Criar cliente de configuração do Azure
     client = AzureAppConfigurationClient.from_connection_string(connection_string)
-
-    key_vault_url = client.get_configuration_setting("AzKVURI")
-    if not key_vault_url:
-        raise ValueError("Configuração para a chave 'AzKVURI' não encontrada.")
-     
-    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+    
+except Exception as e:
+    logging.error(f"Erro ao inicializar o cliente Azure App Configuration: {str(e)}")
+    # Tratamento adicional para o erro ou encerrar o programa
+    raise 
 
 except ValueError as ve:
     logging.error(f"Erro de configuração: {str(ve)}")
     # Tratamento adicional para o erro ou encerrar o programa
     raise
 
-except Exception as e:
-    logging.error(f"Erro ao inicializar o cliente Azure App Configuration: {str(e)}")
-    # Tratamento adicional para o erro ou encerrar o programa
-    raise
-
-# Funções auxiliares
 def get_app_config_setting(key):
     try:
         # Verificar se a chave fornecida é válida
+        logging.info(f"Verificar se a '{key}' fornecida é válida.")
         if not key or not isinstance(key, str):
             logging.error("Chave de configuração inválida ou nula fornecida.")
             return None
 
         # Obter a configuração
+        logging.info(f"Obter a configuração '{key}'.")
         config_setting = client.get_configuration_setting(key)
 
         # Verificar se a configuração foi encontrada
@@ -68,11 +63,25 @@ def get_app_config_setting(key):
             logging.warning(f"Configuração para a chave '{key}' não encontrada.")
             return None
 
+        logging.info(f"Valor obtido da configuração '{key}' é '{config_setting.value}'.")
+        
         return config_setting.value
 
     except Exception as e:
         logging.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
-        return None
+        return None 
+        
+try
+    key_vault_url = get_app_config_setting("AzKVURI")
+    
+    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+
+except ValueError as ve:
+    logging.error(f"Erro de configuração: {str(ve)}")
+    # Tratamento adicional para o erro ou encerrar o programa
+    raise
+
+# Funções auxiliares
 
 def gera_guid_badge():
     return str(uuid.uuid4())
