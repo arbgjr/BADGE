@@ -50,7 +50,7 @@ jobs:
         uses: tonybaloney/pycharm-security@master    
   build:
     runs-on: ubuntu-latest
-    needs: security_checks 
+    needs: lint_python 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
