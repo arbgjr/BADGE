@@ -73,6 +73,7 @@ def get_app_config_setting(key):
         
 try:
     key_vault_url = get_app_config_setting("AzKVURI")
+    logging.info(f"key_vault_url: '{key_vault_url}'")
     
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
