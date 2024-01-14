@@ -19,11 +19,10 @@ from flask import Flask, jsonify, request
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 import requests
-import logging
 import tempfile
 from azure.keyvault.secrets import SecretClient
 
-# Configurar o nível de log para INFO
+# Configurar o log
 config_integration.trace_integrations(['logging'])
 logger = logging.getLogger(__name__)
 APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
