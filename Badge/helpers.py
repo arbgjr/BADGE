@@ -1,4 +1,6 @@
 import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+from opencensus.trace import config_integration
 import os
 import io
 import base64
@@ -25,72 +27,76 @@ from azure.loganalytics.models import QueryBody
 from azure.common.credentials import ServicePrincipalCredentials
 
 # Configurar o nível de log para INFO
-logging.basicConfig(level=logging.INFO)
+config_integration.trace_integrations(['logging'])
+logger = logging.getLogger(__name__)
+APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
+handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
+logger.addHandler(handler)
 
 # Configuração do cliente Azure App Configuration
 try:
     # Inicializar credenciais
-    logging.info(f"[helpers] Inicializar credenciais.")
+    logger.info(f"[helpers] Inicializar credenciais.")
     credential = DefaultAzureCredential() 
 
     # Obter a string de conexão da variável de ambiente
-    logging.info(f"[helpers] Obter a string de conexão da variável de ambiente.")
+    logger.info(f"[helpers] Obter a string de conexão da variável de ambiente.")
     connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
 
     # Verificar se a string de conexão existe
-    logging.info(f"[helpers] Obter a string de conexão da variável de ambiente") 
+    logger.info(f"[helpers] Obter a string de conexão da variável de ambiente") 
     if not connection_string:
         raise ValueError("A variável de ambiente 'AppConfigConnectionString' não está definida.")
 
     # Criar cliente de configuração do Azure
-    logging.info(f"[helpers] Criar cliente de configuração do Azure") 
+    logger.info(f"[helpers] Criar cliente de configuração do Azure") 
     client = AzureAppConfigurationClient.from_connection_string(connection_string)
     
 except Exception as e:
-    logging.error(f"Erro ao inicializar o cliente Azure App Configuration: {str(e)}")
+    logger.error(f"Erro ao inicializar o cliente Azure App Configuration: {str(e)}")
     # Tratamento adicional para o erro ou encerrar o programa
     raise 
 
 except ValueError as ve:
-    logging.error(f"Erro de configuração: {str(ve)}")
+    logger.error(f"Erro de configuração: {str(ve)}")
     # Tratamento adicional para o erro ou encerrar o programa
     raise
 
 def get_app_config_setting(key):
     try:
         # Verificar se a chave fornecida é válida
-        logging.info(f"Verificar se a '{key}' fornecida é válida.")
+        logger.info(f"Verificar se a '{key}' fornecida é válida.")
         if not key or not isinstance(key, str):
-            logging.error("Chave de configuração inválida ou nula fornecida.")
+            logger.error("Chave de configuração inválida ou nula fornecida.")
             return None
 
         # Obter a configuração
-        logging.info(f"Obter a configuração '{key}'.")
+        logger.info(f"Obter a configuração '{key}'.")
         config_setting = client.get_configuration_setting(key)
 
         # Verificar se a configuração foi encontrada
         if not config_setting:
-            logging.warning(f"Configuração para a chave '{key}' não encontrada.")
+            logger.warning(f"Configuração para a chave '{key}' não encontrada.")
             return None
 
-        logging.info(f"Valor obtido da configuração '{key}' é '{config_setting.value}'.")
+        logger.info(f"Valor obtido da configuração '{key}' é '{config_setting.value}'.")
         
         return config_setting.value
 
     except Exception as e:
-        logging.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
+        logger.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
         return None 
         
 try:
-    logging.info(f"Obter a configuração 'AzKVURI'.")
+    logger.info(f"Obter a configuração 'AzKVURI'.")
     key_vault_url = get_app_config_setting("AzKVURI")
-    logging.info(f"key_vault_url: '{key_vault_url}'")
+    logger.info(f"key_vault_url: '{key_vault_url}'")
 
-    logging.info(f"[helpers] Criar cliente do Azure KeyVaut") 
+    logger.info(f"[helpers] Criar cliente do Azure KeyVaut") 
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
 except ValueError as ve:
-    logging.error(f"Erro de configuração: {str(ve)}")
+    logger.error(f"Erro de configuração: {str(ve)}")
     # Tratamento adicional para o erro ou encerrar o programa
     raise
 
@@ -99,25 +105,25 @@ except ValueError as ve:
 def get_key_vault_secret(secret_name):
     try:
         # Verificar se o nome do segredo fornecido é válido
-        logging.info(f"Verificar se o '{secret_name}' fornecido é válido.")
+        logger.info(f"Verificar se o '{secret_name}' fornecido é válido.")
         if not secret_name or not isinstance(secret_name, str):
-            logging.error("Nome do segredo inválido ou nulo fornecido.")
+            logger.error("Nome do segredo inválido ou nulo fornecido.")
             return None
 
         # Obter o segredo do Azure Key Vault
-        logging.info(f"Obter o segredo '{secret_name}' do Azure Key Vault.")
+        logger.info(f"Obter o segredo '{secret_name}' do Azure Key Vault.")
         secret = secret_client.get_secret(secret_name)
 
         # Verificar se o segredo foi encontrado
         if not secret:
-            logging.warning(f"Segredo '{secret_name}' não encontrado no Azure Key Vault.")
+            logger.warning(f"Segredo '{secret_name}' não encontrado no Azure Key Vault.")
             return None
 
-        logging.info(f"Valor obtido para o segredo '{secret_name}' é '{secret.value}'.")
+        logger.info(f"Valor obtido para o segredo '{secret_name}' é '{secret.value}'.")
         return secret.value
 
     except Exception as e:
-        logging.error(f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}")
+        logger.error(f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}")
         return None
         
 def gera_guid_badge():
@@ -162,13 +168,13 @@ def deprecated_encrypt_data(data):
     try:
         # Verificar se os dados de entrada são válidos
         if data is None:
-            logging.error("Dados fornecidos para criptografia estão vazios ou nulos.")
+            logger.error("Dados fornecidos para criptografia estão vazios ou nulos.")
             return None
 
         # Obter a ID da chave GPG da configuração
         gpg_key_id = get_key_vault_secret('GpgKeyId')
         if not gpg_key_id:
-            logging.error("ID da chave GPG não está configurada.")
+            logger.error("ID da chave GPG não está configurada.")
             return None
 
         # Criar uma instância GPG
@@ -177,20 +183,20 @@ def deprecated_encrypt_data(data):
         # Criptografar os dados
         encrypted_data = gpg.encrypt(data, recipients=[gpg_key_id])
         if not encrypted_data.ok:
-            logging.error(f"Falha na criptografia: {encrypted_data.status}")
+            logger.error(f"Falha na criptografia: {encrypted_data.status}")
             return None
 
         return str(encrypted_data)
 
     except Exception as e:
-        logging.error(f"Erro ao criptografar dados: {str(e)}")
+        logger.error(f"Erro ao criptografar dados: {str(e)}")
         return None
 
 def deprecated_decrypt_data(encrypted_data):
     try:
         # Verificar se os dados criptografados são válidos
         if encrypted_data is None or encrypted_data == "":
-            logging.error("Dados fornecidos para descriptografia estão vazios ou nulos.")
+            logger.error("Dados fornecidos para descriptografia estão vazios ou nulos.")
             return None
 
         # Criar uma instância GPG
@@ -199,20 +205,20 @@ def deprecated_decrypt_data(encrypted_data):
         # Descriptografar os dados
         decrypted_data = gpg.decrypt(encrypted_data)
         if not decrypted_data.ok:
-            logging.error(f"Falha na descriptografia: {decrypted_data.status}")
+            logger.error(f"Falha na descriptografia: {decrypted_data.status}")
             return None
 
         return str(decrypted_data)
 
     except Exception as e:
-        logging.error(f"Erro ao descriptografar dados: {str(e)}")
+        logger.error(f"Erro ao descriptografar dados: {str(e)}")
         return None
         
 def load_image_from_base64(base64_img):
     try:
         # Verificar se a entrada é uma string
         if not isinstance(base64_img, str):
-            logging.error("Dados de entrada não são uma string base64 válida.")
+            logger.error("Dados de entrada não são uma string base64 válida.")
             return None
 
         # Decodificar dados base64
@@ -224,13 +230,13 @@ def load_image_from_base64(base64_img):
 
     except base64.binascii.Error:
         # Erro específico para problemas relacionados à decodificação base64
-        logging.error("Erro na decodificação dos dados base64.")
+        logger.error("Erro na decodificação dos dados base64.")
     except IOError:
         # Erro específico para problemas relacionados à I/O ao abrir a imagem
-        logging.error("Não foi possível abrir a imagem a partir dos dados base64.")
+        logger.error("Não foi possível abrir a imagem a partir dos dados base64.")
     except Exception as e:
         # Captura outros tipos de exceções
-        logging.error(f"Erro ao carregar imagem de base64: {str(e)}")
+        logger.error(f"Erro ao carregar imagem de base64: {str(e)}")
     return None
 
 def add_text_to_badge(badge_template, owner_name, issuer_name):
@@ -241,7 +247,7 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         font = load_font_from_google_fonts(css_url, font_size)
 
         if font is None:
-            logging.error("Falha ao carregar a fonte Rubik.")
+            logger.error("Falha ao carregar a fonte Rubik.")
             return None
 
         # Adicionar texto à imagem
@@ -251,12 +257,12 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         return badge_template
 
     except Exception as e:
-        logging.error(f"Erro ao adicionar texto ao badge: {str(e)}")
+        logger.error(f"Erro ao adicionar texto ao badge: {str(e)}")
         return None
 
 def create_qr_code(data, base_url, box_size=10, border=5):
     if not data or not base_url:
-        logging.error("Dados ou URL base não fornecidos para o QR Code.")
+        logger.error("Dados ou URL base não fornecidos para o QR Code.")
         return None
 
     try:
@@ -272,7 +278,7 @@ def create_qr_code(data, base_url, box_size=10, border=5):
         return qr_code_img
 
     except Exception as e:
-        logging.error(f"Erro ao criar QR Code: {str(e)}")
+        logger.error(f"Erro ao criar QR Code: {str(e)}")
         return None
 
 def process_badge_image(badge_template, issuer_name):
@@ -297,7 +303,7 @@ def process_badge_image(badge_template, issuer_name):
         return badge_hash, badge_base64, signed_hash
 
     except Exception as e:
-        logging.error(f"Erro ao processar a imagem do badge: {str(e)}")
+        logger.error(f"Erro ao processar a imagem do badge: {str(e)}")
         return None
 
 def load_font_from_google_fonts(css_url, size):
@@ -333,17 +339,17 @@ def load_font(font_path, size):
         return font
     except IOError:
         # Erro específico para problemas relacionados à I/O, como arquivo de fonte não encontrado
-        logging.error(f"Não foi possível carregar a fonte: {font_path}")
+        logger.error(f"Não foi possível carregar a fonte: {font_path}")
     except Exception as e:
         # Captura outros tipos de exceções
-        logging.error(f"Erro ao carregar a fonte ({font_path}): {str(e)}")
+        logger.error(f"Erro ao carregar a fonte ({font_path}): {str(e)}")
     return None
 
 def generate_image_hash(image):
     try:
         # Validar os dados de entrada
         if not isinstance(image, Image.Image):
-            logging.error("O objeto fornecido não é uma imagem válida.")
+            logger.error("O objeto fornecido não é uma imagem válida.")
             return None
 
         # Geração do hash da imagem
@@ -352,18 +358,18 @@ def generate_image_hash(image):
         return img_hash.hexdigest()
 
     except Exception as e:
-        logging.error(f"Erro ao gerar o hash da imagem: {str(e)}")
+        logger.error(f"Erro ao gerar o hash da imagem: {str(e)}")
         return None
 
 def insert_exif(image, exif_data):
     try:
         # Validar os dados de entrada
         if not isinstance(image, Image.Image):
-            logging.error("O objeto fornecido não é uma imagem válida.")
+            logger.error("O objeto fornecido não é uma imagem válida.")
             return None
 
         if not isinstance(exif_data, dict):
-            logging.error("Os dados EXIF fornecidos não estão no formato de dicionário.")
+            logger.error("Os dados EXIF fornecidos não estão no formato de dicionário.")
             return None
 
         exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": None}
@@ -380,14 +386,11 @@ def insert_exif(image, exif_data):
         return Image.open(temp_img_path)
 
     except Exception as e:
-        logging.error(f"Erro ao inserir dados EXIF na imagem: {str(e)}")
+        logger.error(f"Erro ao inserir dados EXIF na imagem: {str(e)}")
         return None
 
     finally:
         # Limpar a imagem temporária, se existir
         if os.path.exists(temp_img_path):
             os.remove(temp_img_path)
-
-
-
 
