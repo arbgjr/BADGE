@@ -10,6 +10,7 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
 
     try:
         # Executar aplicação Flask através do WsgiMiddleware
+        logging.info(f"[_init_.py] Executar aplicação Flask através do WsgiMiddleware") 
         response = func.WsgiMiddleware(application.wsgi_app).handle(req, context)
         logging.info('Flask app processed the request successfully.')
         return response
