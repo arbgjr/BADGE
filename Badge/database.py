@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from . import helpers
 from flask import current_app
 
+# Configurar o nível de log para INFO
+logging.basicConfig(level=logging.INFO)
+
 class Database:
     def __init__(self):
         logging.info(f"[database] Obter dados de conexão com o banco.")
