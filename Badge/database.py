@@ -2,6 +2,7 @@ import logging
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 import os
+import re
 import pyodbc
 from datetime import datetime, timedelta
 from . import helpers
@@ -11,12 +12,12 @@ from . import azure
 class Database:
     def __init__(self):
         self._configure_logging()
-        
+
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 
         logging.info(f"[database] Obter dados de conexão com o banco.")
-        self.conn_str = azure_client.get_key_vault_secret('SqlConnectionString')
+        self.conn_str = self._transform_connection_string(azure_client.get_key_vault_secret('SqlConnectionString'))
 
     def _configure_logging(self):
         config_integration.trace_integrations(['logging'])
@@ -26,6 +27,35 @@ class Database:
             handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
             self.logger.addHandler(handler)
 
+    def _transform_connection_string(original_conn_str):
+        # Extrair os componentes da string de conexão original
+        server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", original_conn_str)
+        database_match = re.search(r"Initial Catalog=([a-zA-Z0-9]+);", original_conn_str)
+        user_id_match = re.search(r"User ID=([^;]+);", original_conn_str)
+        password_match = re.search(r"Password=([^;]+);", original_conn_str)
+        if not all([server_match, database_match, user_id_match, password_match]):
+            raise ValueError("Formato de string de conexão inválido ou incompleto")
+
+        server = server_match.group(1)
+        port = server_match.group(2)
+        database = database_match.group(1)
+        user_id = user_id_match.group(1)
+        password = password_match.group(1)
+
+        # Montar a string de conexão para o pyodbc
+        pyodbc_conn_str = (
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER=tcp:{server},{port};"
+            f"DATABASE={database};"
+            f"UID={user_id};"
+            f"PWD={password};"
+            "Encrypt=yes;"
+            "TrustServerCertificate=no;"
+            "Connection Timeout=30;"
+        )
+
+        return pyodbc_conn_str
+                              
     def connect(self):
         try:
             logging.info(f"[database] Conectando com o banco.")
