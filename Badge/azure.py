@@ -6,6 +6,11 @@ from azure.appconfiguration import AzureAppConfigurationClient
 from azure.keyvault.secrets import SecretClient
 import os
 
+class FlushAzureLogHandler(AzureLogHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
+
 class Azure:
     def __init__(self):
         self._configure_logging()
@@ -18,7 +23,7 @@ class Azure:
         self.logger = logging.getLogger(__name__)
         appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
         if appinsights_key:
-            handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
+            handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
             self.logger.addHandler(handler)
 
     def _initialize_app_config_client(self):

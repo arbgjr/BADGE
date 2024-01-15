@@ -10,12 +10,20 @@ from . import helpers
 from . import azure
 
 
+class FlushAzureLogHandler(AzureLogHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
+
 # Configurar o log
 config_integration.trace_integrations(['logging'])
 logger = logging.getLogger(__name__)
 APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
-handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
+
+# Usar o FlushAzureLogHandler
+handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
 logger.addHandler(handler)
+
 
 # Configuração do cliente Azure
 azure_client = azure.Azure()

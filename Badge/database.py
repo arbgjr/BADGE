@@ -9,6 +9,11 @@ from . import helpers
 from flask import current_app
 from . import azure
 
+class FlushAzureLogHandler(AzureLogHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
+
 class Database:
     def __init__(self):
         self._configure_logging()
@@ -26,7 +31,7 @@ class Database:
         self.logger = logging.getLogger(__name__)
         appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
         if appinsights_key:
-            handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
+            handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
             self.logger.addHandler(handler)
 
     def _transform_connection_string(original_conn_str):
