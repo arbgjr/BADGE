@@ -63,7 +63,7 @@ def generate_badge(data):
         logging.info(f"Gerando badge para {owner_name} emitido por {issuer_name}")
 
         logging.info(f"[business] Recuperando template do Badge em base64.")
-        badge_template_base64 = helpers.get_app_config_setting('BadgeTemplateBase64')
+        badge_template_base64 = azure_client.get_app_config_setting('BadgeTemplateBase64')
         if not badge_template_base64:
             logging.error("Template de badge não encontrado.")
             return {"error": "Template de badge não encontrado"}, 500
@@ -76,7 +76,7 @@ def generate_badge(data):
             return {"error": "Falha ao carregar template de badge"}, 500
 
         logging.info(f"[business] Carregar URL de verificação do Badge.")
-        base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
+        base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
@@ -203,7 +203,7 @@ def badge_list(data):
         if not badges:
             return {"error": "Nenhum badge encontrado para o usuário"}, 404
 
-        base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
+        base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
@@ -262,7 +262,7 @@ def linkedin_post(data):
 
         badge_name, additional_info = badge_info
 
-        base_url = helpers.get_app_config_setting('BadgeVerificationUrl')
+        base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
@@ -271,7 +271,7 @@ def linkedin_post(data):
         validation_url = f"{base_url}/validate?badge_guid={badge_guid}"
         
         # Texto sugerido para postagem
-        post_text = helpers.get_app_config_setting('LinkedInPost')
+        post_text = azure_client.get_app_config_setting('LinkedInPost')
         if not post_text:
           post_text = (
             f"Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}! "
