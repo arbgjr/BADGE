@@ -209,8 +209,8 @@ def generate_image_hash(image):
             logger.error("O objeto fornecido não é uma imagem válida.")
             return None
 
-        # Geração do hash da imagem
-        img_hash = hashlib.sha256()
+        # Geração do hash da imagem usando SHA-3
+        img_hash = hashlib.sha3_256()
         img_hash.update(image.tobytes())
         return img_hash.hexdigest()
 

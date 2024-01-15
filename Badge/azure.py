@@ -30,11 +30,16 @@ class Azure:
 
     def _initialize_key_vault_client(self):
         key_vault_url = self.get_app_config_setting("AzKVURI")
+        if key_vault_url is None:
+            self.logger.error("A URL do Azure Key Vault não foi encontrada na configuração.")
+            raise ValueError("A URL do Azure Key Vault não foi encontrada.")
+
         if not key_vault_url.startswith("https://") or ".vault.azure.net" not in key_vault_url:
             self.logger.error("URL do Azure Key Vault fornecida está incorreta")
             raise ValueError("URL do Azure Key Vault fornecida está incorreta")
-        return SecretClient(vault_url=key_vault_url, credential=self.credential)
 
+        return SecretClient(vault_url=key_vault_url, credential=self.credential)
+    
     def get_app_config_setting(self, key):
         try:
             config_setting = self.app_config_client.get_configuration_setting(key)

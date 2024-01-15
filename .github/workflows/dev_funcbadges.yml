@@ -40,6 +40,7 @@ jobs:
       - run: pytest . || true
       - run: pytest --doctest-modules . || true
       - run: shopt -s globstar && pyupgrade --py36-plus **/*.py || true
+
   security_checks:
     runs-on: ubuntu-latest
     needs: lint_python
@@ -47,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run PyCharm Security
-        uses: tonybaloney/pycharm-security@master    
+        uses: tonybaloney/pycharm-security@master
+        
   build:
     runs-on: ubuntu-latest
     needs: lint_python 
