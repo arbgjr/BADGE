@@ -17,7 +17,9 @@ class Database:
         azure_client = azure.Azure()
 
         logging.info(f"[database] Obter dados de conexão com o banco.")
-        self.conn_str = self._transform_connection_string(azure_client.get_key_vault_secret('SqlConnectionString'))
+        conn_str_orig = azure_client.get_key_vault_secret('SqlConnectionString')['value']
+        logging.info(f"[database] String de conexão original: {conn_str_orig}")
+        self.conn_str = self._transform_connection_string(conn_str_orig)
 
     def _configure_logging(self):
         config_integration.trace_integrations(['logging'])
