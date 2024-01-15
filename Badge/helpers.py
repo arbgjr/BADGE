@@ -159,56 +159,6 @@ def encrypt_data(data):
         raise ValueError(f"Falha na criptografia: {encrypted_data.status}")
     
     return str(encrypted_data)
-
-def deprecated_encrypt_data(data):
-    try:
-        # Verificar se os dados de entrada são válidos
-        if data is None:
-            logger.error("Dados fornecidos para criptografia estão vazios ou nulos.")
-            return None
-
-        # Obter a ID da chave GPG da configuração
-        gpg_key_id = get_key_vault_secret('GpgKeyId')
-        if not gpg_key_id:
-            logger.error("ID da chave GPG não está configurada.")
-            return None
-
-        # Criar uma instância GPG
-        gpg = gnupg.GPG()
-
-        # Criptografar os dados
-        encrypted_data = gpg.encrypt(data, recipients=[gpg_key_id])
-        if not encrypted_data.ok:
-            logger.error(f"Falha na criptografia: {encrypted_data.status}")
-            return None
-
-        return str(encrypted_data)
-
-    except Exception as e:
-        logger.error(f"Erro ao criptografar dados: {str(e)}")
-        return None
-
-def deprecated_decrypt_data(encrypted_data):
-    try:
-        # Verificar se os dados criptografados são válidos
-        if encrypted_data is None or encrypted_data == "":
-            logger.error("Dados fornecidos para descriptografia estão vazios ou nulos.")
-            return None
-
-        # Criar uma instância GPG
-        gpg = gnupg.GPG()
-
-        # Descriptografar os dados
-        decrypted_data = gpg.decrypt(encrypted_data)
-        if not decrypted_data.ok:
-            logger.error(f"Falha na descriptografia: {decrypted_data.status}")
-            return None
-
-        return str(decrypted_data)
-
-    except Exception as e:
-        logger.error(f"Erro ao descriptografar dados: {str(e)}")
-        return None
         
 def load_image_from_base64(base64_img):
     try:

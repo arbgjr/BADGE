@@ -61,6 +61,21 @@ class Ping(Resource):
 
 api.add_resource(Ping, "/ping")
 
+class Configs(Resource):
+    @api.doc(
+        description="Recupera configurações para verificação se estão ok.",
+        responses={
+            200: "Retorno ok",
+            500: "Erro interno do servidor"
+        }
+    )
+    def get(self):
+        """Endpoint para recuperar configurações da API."""
+        result = business.get_configs()
+        return jsonify(result)
+
+api.add_resource(Configs, "/configs")
+
 
 # Modelo de dados para a documentação Swagger
 badge_model = api.model('BadgeData', {

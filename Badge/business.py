@@ -2,6 +2,8 @@ import logging
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 import os
+import re
+
 
 from .database import Database
 from . import helpers
@@ -13,6 +15,32 @@ APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
 handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
 logger.addHandler(handler)
 
+def get_configs():
+    try:
+        logging.info(f"[business] Endpoint para recuperar configurações.")
+        data = {}
+        data['APPINSIGHTS_INSTRUMENTATIONKEY'] = APPINSIGHTS_INSTRUMENTATIONKEY
+        data['AzKVURI'] = helpers.get_app_config_setting("AzKVURI")
+        data['BadgeTemplateBase64'] = helpers.get_app_config_setting('BadgeTemplateBase64')
+        data['BadgeVerificationUrl'] = helpers.get_app_config_setting('BadgeVerificationUrl')
+        data['PGPPrivateKeyName'] = helpers.get_app_config_setting('PGPPrivateKeyName')
+        public_key_name = helpers.get_app_config_setting('PGPPublicKeyName') 
+        data['PGPPublicKeyName'] = public_key_name
+        data['LinkedInPost'] = helpers.get_app_config_setting('LinkedInPost')
+        conexao = helpers.get_key_vault_secret('SqlConnectionString')
+        conexao = re.sub(r"User ID=[^;]+", "User ID=***", conexao)
+        conexao = re.sub(r"Password=[^;]+", "Password=***", conexao)
+        data['SqlConnectionString'] = conexao
+        data['AppConfigConnectionString'] = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
+        data['PGPPublicKey'] = helpers.get_key_vault_secret(public_key_name)
+
+        return data
+
+    except Exception as e:
+        logging.error(f"Erro ao recuperar informações: {str(e)}")
+        return {"error": "Erro interno no servidor"}, 500
+    
+        
 def generate_badge(data):
     try:
         # Validação e análise dos dados recebidos
