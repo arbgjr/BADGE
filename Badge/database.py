@@ -6,18 +6,25 @@ import pyodbc
 from datetime import datetime, timedelta
 from . import helpers
 from flask import current_app
-
-# Configurar o log
-config_integration.trace_integrations(['logging'])
-logger = logging.getLogger(__name__)
-APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
-handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
-logger.addHandler(handler)
+from . import azure
 
 class Database:
     def __init__(self):
+        self._configure_logging()
+        
+        # Configuração do cliente Azure
+        azure_client = azure.Azure()
+
         logging.info(f"[database] Obter dados de conexão com o banco.")
-        self.conn_str = helpers.get_key_vault_secret('SqlConnectionString')
+        self.conn_str = azure_client.get_key_vault_secret('SqlConnectionString')
+
+    def _configure_logging(self):
+        config_integration.trace_integrations(['logging'])
+        self.logger = logging.getLogger(__name__)
+        appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
+        if appinsights_key:
+            handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
+            self.logger.addHandler(handler)
 
     def connect(self):
         try:
