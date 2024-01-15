@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request 
 from flask_restx import Resource, Api, fields, reqparse
-from . import logger
+from . import logger, LogLevel
 
 from . import business
 
