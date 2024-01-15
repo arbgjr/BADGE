@@ -5,7 +5,7 @@ from . import logger, LogLevel
 from . import business
 
 # Criação da aplicação Flask
-logger.log(logger.LogLevel.DEBUG, f"[app] Criação da aplicação Flask")
+logger.log(LogLevel.DEBUG, f"[app] Criação da aplicação Flask")
 application = Flask(__name__)
 
 # Configurações da aplicação

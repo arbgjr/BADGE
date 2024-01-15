@@ -15,7 +15,7 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
 
     try:
         # Executar aplicação Flask através do WsgiMiddleware
-        logger.log(LogLevel.DEBUG, f"[_init_.py] Executar aplicação Flask através do WsgiMiddleware") 
+        logger.log(LogLevel.DEBUG, f"[__init__.py] Executar aplicação Flask através do WsgiMiddleware") 
         response = func.WsgiMiddleware(application.wsgi_app).handle(req, context)
         logger.log(LogLevel.DEBUG, 'Flask app processed the request successfully.')
         return response

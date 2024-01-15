@@ -2,6 +2,7 @@ import logging
 import os
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from enum import Enum
+import inspect
 
 class LogLevel(Enum):
     INFO = logging.INFO
@@ -33,9 +34,18 @@ class Logger:
 
     def log(self, level, message):
         if not isinstance(level, LogLevel):
-            self.logger.log(LogLevel.INFO.value, f"Nível de log inválido: {level}, configurado para INFO. {message}")
+            self.logger.log(LogLevel.INFO, f"Nível de log inválido: {level}, configurado para INFO. {message}")
         else:
-            self.logger.log(level.value, message)
+            caller_info = self._get_caller_info()
+            formatted_message = f"{caller_info} - {message}"
+            self.logger.log(level, formatted_message)
+
+    def _get_caller_info(self):
+        frame = inspect.currentframe().f_back
+        module_name = inspect.getmodule(frame).__name__
+        class_name = frame.f_globals.get('__qualname__')
+        function_name = frame.f_code.co_name
+        return f"{module_name}.{class_name}.{function_name}"
 
 class CustomLogFilter(logging.Filter):
     def filter_conditions(self):
