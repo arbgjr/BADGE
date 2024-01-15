@@ -1,12 +1,30 @@
 from flask import Flask, jsonify, request 
+import traceback
 from flask_restx import Resource, Api, fields, reqparse
-from . import logger, LogLevel
-
-from . import business
 
 # Criação da aplicação Flask
-logger.log(LogLevel.DEBUG, f"[app] Criação da aplicação Flask")
 application = Flask(__name__)
+
+def format_exception(e):
+    trace = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+
+    formatted_trace = []
+    for line in trace:
+        if " File" in line or " ^" in line:
+            formatted_trace.append("\n" + line.strip())
+        else:
+            formatted_trace.append(line.strip())
+
+    pretty_exception = "".join(formatted_trace)
+
+    return pretty_exception
+
+@application.errorhandler(Exception)
+def handle_exception(e):
+    formatted_error = format_exception(e)
+    response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
+    response.status_code = 500
+    return response
 
 # Configurações da aplicação
 # Ativar a propagação de exceções para garantir que os erros sejam tratados de maneira adequada
@@ -15,6 +33,9 @@ application.config['PROPAGATE_EXCEPTIONS'] = True
 # Inicializar a API REST com Flask-RESTx
 # doc='/doc/' habilita a documentação Swagger em /doc/
 api = Api(application, doc='/doc/')
+
+from . import logger, LogLevel
+from . import business
 
 @api.route("/hello")
 class Hello(Resource):
