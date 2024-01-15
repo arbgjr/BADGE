@@ -26,3 +26,4 @@ azure-keyvault-secrets
 opencensus
 opencensus-ext-azure
 opencensus-ext-logging
+azure-mgmt-sql

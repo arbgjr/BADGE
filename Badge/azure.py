@@ -5,6 +5,7 @@ import traceback
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.sql import SqlManagementClient
 from azure.keyvault.secrets import SecretClient
 import json
 import re
@@ -87,23 +88,22 @@ class Azure:
             server = server_match.group(1)
             self.logger.log(LogLevel.DEBUG, f"Az SQL Server: {server}")
             
-            # Comando e argumentos como lista de strings
-            cmd = [
-                "az", "sql", "server", "firewall-rule", "create",
-                "--resource-group", resource_group,
-                "--server", server,
-                "--name", "PermitirAcessoFunction",
-                "--start-ip-address", function_ip,
-                "--end-ip-address", function_ip
-            ]
+            # Crie uma instância do SqlManagementClient
+            credential = DefaultAzureCredential()
+            sql_client = SqlManagementClient(credential, self.subscription_id)
 
-            self.logger.log(LogLevel.DEBUG, f"Executando comando: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as e:
-            self.logger.log(LogLevel.ERROR, f"Erro ao atualizar a regra de firewall: {e.stderr}")
-            raise
+            # Crie ou atualize a regra de firewall
+            firewall_rule = sql_client.firewall_rules.create_or_update(
+                resource_group_name=resource_group,
+                server_name=server,
+                firewall_rule_name="PermitirAcessoFunction",
+                start_ip_address=function_ip,
+                end_ip_address=function_ip
+            )
+            
+            self.logger.log(LogLevel.DEBUG, f"Regra de firewall atualizada: {firewall_rule.name}")
         except Exception as e:
-            self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
+            self.logger.log(LogLevel.ERROR, f"Erro ao atualizar a regra de firewall: {e}")
             raise
 
     def get_resource_group(self):
