@@ -1,8 +1,12 @@
+import os
+import requests
+import subprocess
 import traceback
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.keyvault.secrets import SecretClient
-import os
+import json
+import re
 from . import logger, LogLevel
 
 # Classe principal
@@ -13,6 +17,9 @@ class Azure:
         self.credential = DefaultAzureCredential()
         self.app_config_client = self._initialize_app_config_client()
         self.secret_client = self._initialize_key_vault_client()
+
+        # Atualizar a regra de firewall para Azure SQL
+        self.update_firewall_rule()
 
     def _initialize_app_config_client(self):
         connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
@@ -54,3 +61,37 @@ class Azure:
             self.logger.log(LogLevel.ERROR, f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}\nStack Trace:\n{stack_trace}")
             return None
 
+    def get_function_ip(self):
+        try:
+            response = requests.get("https://ifconfig.me/ip")
+            response.raise_for_status()  # Isso garantirá que erros HTTP sejam capturados como exceções
+            return response.text.strip()
+        except requests.RequestException as e:
+            self.logger.log(LogLevel.ERROR, f"Erro ao obter o IP da função: {e}")
+            raise
+
+    def update_firewall_rule(self):
+        try:
+            function_ip = self.get_function_ip()
+            resource_group = self.get_resource_group()
+            server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", self.get_key_vault_secret('SqlConnectionString'))
+            command = f"az sql server firewall-rule create --resource-group {resource_group} --server {server_match} --name PermitirAcessoFunction --start-ip-address {function_ip} --end-ip-address {function_ip}"
+            self.logger.log(LogLevel.DEBUG, f"Executando comando: {command}")
+            subprocess.run(command, shell=True, check=True)  # 'check=True' para capturar erros
+        except subprocess.CalledProcessError as e:
+            self.logger.log(LogLevel.ERROR, f"Erro ao atualizar a regra de firewall: {e}")
+            raise
+
+    def get_resource_group(self):
+        try:
+            # O comando Azure CLI para obter as informações da função
+            cmd = "az functionapp show --name NOME_DA_SUA_FUNCAO --query resourceGroup -o json"
+            self.logger.log(LogLevel.DEBUG, f"Executando comando: {cmd}")
+            # Executa o comando e captura a saída
+            output = subprocess.check_output(cmd, shell=True)
+            rg_name = json.loads(output)
+            
+            return rg_name
+        except subprocess.CalledProcessError as e:
+            self.logger.log(LogLevel.ERROR, f"Erro ao recuperar o Resource Group: {e.output}")
+            raise

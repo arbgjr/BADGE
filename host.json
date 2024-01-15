@@ -8,7 +8,7 @@
   }, 
   "logging": {
     "logLevel": {
-            "default": "Information"
+            "default": "Debug"
     }, 
     "applicationInsights": {
       "samplingSettings": {
