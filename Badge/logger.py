@@ -34,11 +34,11 @@ class Logger:
 
     def log(self, level, message):
         if not isinstance(level, LogLevel):
-            self.logger.log(LogLevel.INFO, f"Nível de log inválido: {level}, configurado para INFO. {message}")
+            self.logger.log(LogLevel.INFO.value, f"Nível de log inválido: {level}, configurado para INFO. {message}")
         else:
             caller_info = self._get_caller_info()
             formatted_message = f"{caller_info} - {message}"
-            self.logger.log(level, formatted_message)
+            self.logger.log(level.value, formatted_message)
 
     def _get_caller_info(self):
         frame = inspect.currentframe().f_back
