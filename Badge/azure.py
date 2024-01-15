@@ -84,8 +84,9 @@ class Azure:
 
     def get_resource_group(self):
         try:
+            function_name = self.get_azure_function_name()
             # O comando Azure CLI para obter as informações da função
-            cmd = "az functionapp show --name NOME_DA_SUA_FUNCAO --query resourceGroup -o json"
+            cmd = f"az functionapp show --name {function_name} --query resourceGroup -o json"
             self.logger.log(LogLevel.DEBUG, f"Executando comando: {cmd}")
             # Executa o comando e captura a saída
             output = subprocess.check_output(cmd, shell=True)
@@ -95,3 +96,11 @@ class Azure:
         except subprocess.CalledProcessError as e:
             self.logger.log(LogLevel.ERROR, f"Erro ao recuperar o Resource Group: {e.output}")
             raise
+
+    def get_azure_function_name(self):
+        function_name = os.getenv('WEBSITE_SITE_NAME')
+        
+        if function_name:
+            return function_name
+        else:
+            raise EnvironmentError("Nome da Azure Function não encontrado em variáveis de ambiente.")

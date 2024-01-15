@@ -34,7 +34,9 @@ def get_configs():
         data['AppConfigConnectionString'] = conexao
         data['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
         data['pyodbcDrivers'] = pyodbc.drivers()
-
+        data['IPAzFunction'] = azure_client.get_function_ip()
+        data['RGAzFunction'] = azure_client.get_resource_group()
+        data['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
         return data
 
     except Exception as e:
