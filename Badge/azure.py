@@ -73,35 +73,61 @@ class Azure:
     def update_firewall_rule(self):
         try:
             function_ip = self.get_function_ip()
+            self.logger.log(LogLevel.DEBUG, f"Function IP: {function_ip}")
             resource_group = self.get_resource_group()
-            server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", self.get_key_vault_secret('SqlConnectionString'))
-            command = f"az sql server firewall-rule create --resource-group {resource_group} --server {server_match} --name PermitirAcessoFunction --start-ip-address {function_ip} --end-ip-address {function_ip}"
-            self.logger.log(LogLevel.DEBUG, f"Executando comando: {command}")
-            subprocess.run(command, shell=True, check=True)  # 'check=True' para capturar erros
+            self.logger.log(LogLevel.DEBUG, f"Resource Group: {resource_group}")
+
+            # Extrair informações do servidor da string de conexão
+            conn_str = self.get_key_vault_secret('SqlConnectionString')
+            server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", conn_str)
+            if not server_match:
+                raise ValueError("Não foi possível extrair informações do servidor da string de conexão.")
+
+            server = server_match.group(1)
+            self.logger.log(LogLevel.DEBUG, f"Az SQL Server: {server}")
+            
+            # Comando e argumentos como lista de strings
+            cmd = [
+                "az", "sql", "server", "firewall-rule", "create",
+                "--resource-group", resource_group,
+                "--server", server,
+                "--name", "PermitirAcessoFunction",
+                "--start-ip-address", function_ip,
+                "--end-ip-address", function_ip
+            ]
+
+            self.logger.log(LogLevel.DEBUG, f"Executando comando: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
-            self.logger.log(LogLevel.ERROR, f"Erro ao atualizar a regra de firewall: {e}")
+            self.logger.log(LogLevel.ERROR, f"Erro ao atualizar a regra de firewall: {e.stderr}")
+            raise
+        except Exception as e:
+            self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
             raise
 
     def get_resource_group(self):
         try:
             function_name = self.get_azure_function_name()
-            # Comando Azure CLI para obter o Resource Group da função especificada
-            cmd = f"az functionapp list --query \"[?name=='{function_name}'].{{ResourceGroup:resourceGroup}}\" --output json"
-            
-            # Executa o comando e captura a saída
-            result = subprocess.check_output(cmd, shell=True)
-            rg_info = json.loads(result)
+            self.logger.log(LogLevel.DEBUG, f"Function Name: {function_name}")
 
-            # Verifica se alguma informação foi retornada e obtém o Resource Group
+            # Comando e argumentos como lista de strings
+            cmd = ["az", "functionapp", "list", "--query", f"[?name=='{function_name}'].{{ResourceGroup:resourceGroup}}", "--output", "json"]
+
+            self.logger.log(LogLevel.DEBUG, f"Executando comando: {' '.join(cmd)}")
+
+            # Executa o comando sem shell=True
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            rg_info = json.loads(result.stdout)
+
             if rg_info:
                 return rg_info[0]['ResourceGroup']
             else:
                 raise ValueError(f"Não foi possível encontrar o Resource Group para a função '{function_name}'.")
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Erro ao executar o comando Azure CLI: {e.output}")
+            raise Exception(f"Erro ao executar o comando Azure CLI: {e.stderr}")
         except json.JSONDecodeError as e:
             raise Exception(f"Erro ao decodificar a resposta JSON: {e}")
-
+        
     def get_azure_function_name(self):
         function_name = os.getenv('WEBSITE_SITE_NAME')
         
