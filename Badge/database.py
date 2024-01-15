@@ -6,7 +6,7 @@ from . import azure
 from . import logger, LogLevel
 
 class Database:
-    def __init__(self, logger_name):
+    def __init__(self):
         self.logger = logger
 
         # Configuração do cliente Azure
