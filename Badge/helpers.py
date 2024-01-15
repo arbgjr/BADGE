@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import gnupg
 import requests
-from .azure import azure
+from . import azure
 from . import logger
 
 # Configuração do cliente Azure

@@ -2,7 +2,7 @@ import traceback
 import re
 import pyodbc
 from datetime import datetime, timedelta
-from .azure import azure
+from . import azure
 from . import logger
 
 class Database:
