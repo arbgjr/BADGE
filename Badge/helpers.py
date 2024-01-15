@@ -21,6 +21,7 @@ from azure.appconfiguration import AzureAppConfigurationClient
 import requests
 import tempfile
 from azure.keyvault.secrets import SecretClient
+from . import azure
 
 # Configurar o log
 config_integration.trace_integrations(['logging'])
@@ -29,112 +30,20 @@ APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
 handler = AzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
 logger.addHandler(handler)
 
-# Configuração do cliente Azure App Configuration
-try:
-    # Inicializar credenciais
-    logger.info(f"[helpers] Inicializar credenciais.")
-    credential = DefaultAzureCredential() 
-
-    # Obter a string de conexão da variável de ambiente
-    logger.info(f"[helpers] Obter a string de conexão da variável de ambiente.")
-    connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
-
-    # Verificar se a string de conexão existe
-    logger.info(f"[helpers] Obter a string de conexão da variável de ambiente") 
-    if not connection_string:
-        raise ValueError("A variável de ambiente 'AppConfigConnectionString' não está definida.")
-
-    # Criar cliente de configuração do Azure
-    logger.info(f"[helpers] Criar cliente de configuração do Azure") 
-    client = AzureAppConfigurationClient.from_connection_string(connection_string)
-    
-except Exception as e:
-    logger.error(f"Erro ao inicializar o cliente Azure App Configuration: {str(e)}")
-    # Tratamento adicional para o erro ou encerrar o programa
-    raise 
-
-except ValueError as ve:
-    logger.error(f"Erro de configuração: {str(ve)}")
-    # Tratamento adicional para o erro ou encerrar o programa
-    raise
-
-def get_app_config_setting(key):
-    try:
-        # Verificar se a chave fornecida é válida
-        logger.info(f"Verificar se a '{key}' fornecida é válida.")
-        if not key or not isinstance(key, str):
-            logger.error("Chave de configuração inválida ou nula fornecida.")
-            return None
-
-        # Obter a configuração
-        logger.info(f"Obter a configuração '{key}'.")
-        config_setting = client.get_configuration_setting(key)
-
-        # Verificar se a configuração foi encontrada
-        if not config_setting:
-            logger.warning(f"Configuração para a chave '{key}' não encontrada.")
-            return None
-
-        logger.info(f"Valor obtido da configuração '{key}' é '{config_setting.value}'.")
-        
-        return config_setting.value
-
-    except Exception as e:
-        logger.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
-        return None 
-        
-try:
-    logger.info(f"Obter a configuração 'AzKVURI'.")
-    key_vault_url = get_app_config_setting("AzKVURI")
-    logger.info(f"key_vault_url: '{key_vault_url}'")
-    if not key_vault_url.startswith("https://") or ".vault.azure.net" not in key_vault_url:
-        raise ValueError("URL do Azure Key Vault fornecida está incorreta")
-
-    logger.info(f"[helpers] Criar cliente do Azure KeyVaut") 
-    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
-
-except ValueError as ve:
-    logger.error(f"Erro de configuração: {str(ve)}")
-    # Tratamento adicional para o erro ou encerrar o programa
-    raise
-
-# Funções auxiliares
-
-def get_key_vault_secret(secret_name):
-    try:
-        # Verificar se o nome do segredo fornecido é válido
-        logger.info(f"Verificar se o '{secret_name}' fornecido é válido.")
-        if not secret_name or not isinstance(secret_name, str):
-            logger.error("Nome do segredo inválido ou nulo fornecido.")
-            return None
-
-        # Obter o segredo do Azure Key Vault
-        logger.info(f"Obter o segredo '{secret_name}' do Azure Key Vault.")
-        secret = secret_client.get_secret(secret_name)
-
-        # Verificar se o segredo foi encontrado
-        if not secret:
-            logger.warning(f"Segredo '{secret_name}' não encontrado no Azure Key Vault.")
-            return None
-
-        logger.info(f"Valor obtido para o segredo '{secret_name}' é '{secret.value}'.")
-        return secret.value
-
-    except Exception as e:
-        logger.error(f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}")
-        return None
+# Configuração do cliente Azure
+azure_client = azure.Azure()
         
 def gera_guid_badge():
     return str(uuid.uuid4())
 
 def get_pgp_private_key():
-    private_key_name = get_app_config_setting('PGPPrivateKeyName')
-    private_key = get_key_vault_secret(private_key_name)
+    private_key_name = azure_client.get_app_config_setting('PGPPrivateKeyName')
+    private_key = azure_client.get_key_vault_secret(private_key_name)
     return private_key
 
 def get_pgp_public_key():
-    public_key_name = get_app_config_setting('PGPPublicKeyName') 
-    public_key = get_key_vault_secret(public_key_name)
+    public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
+    public_key = azure_client.get_key_vault_secret(public_key_name)
     return public_key
 
 def decrypt_data(encrypted_data):
