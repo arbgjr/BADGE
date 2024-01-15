@@ -32,12 +32,15 @@ def get_configs():
         public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
         data['PGPPublicKeyName'] = public_key_name
         data['LinkedInPost'] = azure_client.get_app_config_setting('LinkedInPost')
-#        conexao = azure_client.get_key_vault_secret('SqlConnectionString')
-#        conexao = re.sub(r"User ID=[^;]+", "User ID=***", conexao)
-#        conexao = re.sub(r"Password=[^;]+", "Password=***", conexao)
-#        data['SqlConnectionString'] = conexao
-        data['AppConfigConnectionString'] = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
-#        data['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
+        conexao = azure_client.get_key_vault_secret('SqlConnectionString')
+        conexao = re.sub(r"User ID=[^;]+", "User ID=***", conexao)
+        conexao = re.sub(r"Password=[^;]+", "Password=***", conexao)
+        data['SqlConnectionString'] = conexao
+        conexao = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
+        conexao = re.sub(r"Id=[^;]+", "Id=***", conexao)
+        conexao = re.sub(r"Secret=[^;]+", "Secret=***", conexao)
+        data['AppConfigConnectionString'] = conexao
+        data['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
 
         return data
 
