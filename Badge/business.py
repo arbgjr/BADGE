@@ -1,4 +1,5 @@
 import logging
+import traceback
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 import os
@@ -53,7 +54,8 @@ def get_configs():
         return data
 
     except Exception as e:
-        logger.error(f"Erro ao recuperar informações: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao recuperar informações: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
     
         
@@ -138,7 +140,8 @@ def generate_badge(data):
         return {"guid": badge_guid, "hash": badge_hash}
 
     except Exception as e:
-        logger.error(f"Erro ao gerar badge: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao gerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_image(data):
@@ -160,7 +163,8 @@ def badge_image(data):
             logger.error("Falha ao rechperar o badge no banco de dados.")
             return {"error": "Badge não encontrado"}, 404
     except Exception as e:
-        logger.error(f"Erro ao recuoerar badge: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao recuoerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_valid(data):
@@ -192,6 +196,7 @@ def badge_valid(data):
             logger.info(f"Validando badge {badge_guid} emitido por {issuer_name}")
 
         except ValueError:
+            stack_trace = traceback.format_exc()
             logger.error("Não foi possível decodificar dados informados.")
             return {"error": "Dados decodificados inválidos"}, 400
         
@@ -202,7 +207,8 @@ def badge_valid(data):
         else:
             return {"valid": False, "error": "Badge não encontrado ou informações não correspondem"}, 404
     except Exception as e:
-        logger.error(f"Erro ao validar badge: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao validar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
      
 def badge_list(data):
@@ -236,7 +242,8 @@ def badge_list(data):
         return badge_list
 
     except Exception as e:
-        logger.error(f"Erro ao listar badges: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao listar badges: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_holder(data):
@@ -259,7 +266,8 @@ def badge_holder(data):
         return users
 
     except Exception as e:
-        logger.error(f"Erro ao recuperar detentores do badge: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao recuperar detentores do badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def linkedin_post(data):
@@ -301,7 +309,8 @@ def linkedin_post(data):
         return {"linkedin_post": post_text}
         
     except Exception as e:
-        logger.error(f"Erro ao recuperar a mensagem do post do LinkedIn: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao recuperar a mensagem do post do LinkedIn: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
         
         

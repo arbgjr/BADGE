@@ -1,4 +1,5 @@
 import logging
+import traceback
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 import os
@@ -32,6 +33,7 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
         logger.info('Flask app processed the request successfully.')
         return response
     except Exception as e:
+        stack_trace = traceback.format_exc()
         logger.error(f'Erro ao processar a solicitação: {str(e)}')
         return func.HttpResponse("Erro interno do servidor", status_code=500)
 

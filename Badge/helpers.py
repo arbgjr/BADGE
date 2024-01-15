@@ -1,4 +1,5 @@
 import logging
+import traceback
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 import os
@@ -99,8 +100,9 @@ def load_image_from_base64(base64_img):
         # Erro específico para problemas relacionados à I/O ao abrir a imagem
         logger.error("Não foi possível abrir a imagem a partir dos dados base64.")
     except Exception as e:
+        stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.error(f"Erro ao carregar imagem de base64: {str(e)}")
+        logger.error(f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def add_text_to_badge(badge_template, owner_name, issuer_name):
@@ -121,7 +123,8 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         return badge_template
 
     except Exception as e:
-        logger.error(f"Erro ao adicionar texto ao badge: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def create_qr_code(data, base_url, box_size=10, border=5):
@@ -142,7 +145,8 @@ def create_qr_code(data, base_url, box_size=10, border=5):
         return qr_code_img
 
     except Exception as e:
-        logger.error(f"Erro ao criar QR Code: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def process_badge_image(badge_template, issuer_name):
@@ -167,7 +171,8 @@ def process_badge_image(badge_template, issuer_name):
         return badge_hash, badge_base64, signed_hash
 
     except Exception as e:
-        logger.error(f"Erro ao processar a imagem do badge: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao processar a imagem do badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def load_font_from_google_fonts(css_url, size):
@@ -191,9 +196,11 @@ def load_font_from_google_fonts(css_url, size):
         font = ImageFont.truetype(BytesIO(font_response.content), size)
         return font
     except requests.RequestException as e:
-        print(f"Erro ao baixar a fonte: {e}")
+        stack_trace = traceback.format_exc()
+        print(f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
     except Exception as e:
-        print(f"Erro ao carregar a fonte: {e}")
+        stack_trace = traceback.format_exc()
+        print(f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
     return None
 
 def load_font(font_path, size):
@@ -202,11 +209,13 @@ def load_font(font_path, size):
         font = ImageFont.truetype(font_path, size)
         return font
     except IOError:
+        stack_trace = traceback.format_exc()
         # Erro específico para problemas relacionados à I/O, como arquivo de fonte não encontrado
-        logger.error(f"Não foi possível carregar a fonte: {font_path}")
+        logger.error(f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
     except Exception as e:
+        stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.error(f"Erro ao carregar a fonte ({font_path}): {str(e)}")
+        logger.error(f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def generate_image_hash(image):
@@ -222,7 +231,8 @@ def generate_image_hash(image):
         return img_hash.hexdigest()
 
     except Exception as e:
-        logger.error(f"Erro ao gerar o hash da imagem: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def insert_exif(image, exif_data):
@@ -250,7 +260,8 @@ def insert_exif(image, exif_data):
         return Image.open(temp_img_path)
 
     except Exception as e:
-        logger.error(f"Erro ao inserir dados EXIF na imagem: {str(e)}")
+        stack_trace = traceback.format_exc()
+        logger.error(f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
     finally:

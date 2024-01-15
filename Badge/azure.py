@@ -1,4 +1,5 @@
 import logging
+import traceback
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 from azure.identity import DefaultAzureCredential
@@ -53,7 +54,8 @@ class Azure:
                 config_setting = self.app_config_client.get_configuration_setting(key)
             return config_setting.value
         except Exception as e:
-            self.logger.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
+            stack_trace = traceback.format_exc()
+            self.logger.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_key_vault_secret(self, secret_name):
@@ -61,6 +63,7 @@ class Azure:
             secret = self.secret_client.get_secret(secret_name)
             return secret.value
         except Exception as e:
-            self.logger.error(f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}")
+            stack_trace = traceback.format_exc()
+            self.logger.error(f"Erro ao obter o segredo '{secret_name}' do Azure Key Vault: {str(e)}\nStack Trace:\n{stack_trace}")
             return None
 
