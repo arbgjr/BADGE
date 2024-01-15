@@ -1,10 +1,11 @@
 import traceback
 import azure.functions as func
-from .app import application
 from .logger import LogLevel, Logger
 
 # Crie uma instância do Logger com um nome específico
 logger = Logger("AzFuncBadges", default_level=LogLevel.DEBUG)
+
+from .app import application
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Log da solicitação recebida
