@@ -12,7 +12,7 @@ class Database:
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 
-        self.logger.log('debug', f"[database] Obter dados de conexão com o banco.")
+        self.logger.log(logger.LogLevel.DEBUG, f"[database] Obter dados de conexão com o banco.")
         conn_str_orig = azure_client.get_key_vault_secret('SqlConnectionString')
         self.conn_str = self._transform_connection_string(conn_str_orig)
 
@@ -47,11 +47,11 @@ class Database:
                               
     def connect(self):
         try:
-            self.logger.log('debug', f"[database] Conectando com o banco.")
+            self.logger.log(logger.LogLevel.DEBUG, f"[database] Conectando com o banco.")
             return pyodbc.connect(self.conn_str)
         except pyodbc.Error as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
             raise
 
     def get_badge_template(self, badge_id):
@@ -62,7 +62,7 @@ class Database:
                 return cursor.fetchone()[0]
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_image(self, badge_guid):
@@ -73,7 +73,7 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def validate_badge(self, badge_guid, owner_name, issuer_name):
@@ -84,7 +84,7 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_user_badges(self, user_id):
@@ -95,7 +95,7 @@ class Database:
                 return cursor.fetchall()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_holders(self, badge_name):
@@ -106,7 +106,7 @@ class Database:
                 return cursor.fetchall()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao obter detentores do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao obter detentores do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_info_for_post(self, badge_guid):
@@ -117,22 +117,22 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def insert_badge(self, badge_guid, badge_hash, badge_data, owner_name, issuer_name, signed_hash, badge_base64):
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
-                self.logger.log('debug', f"[database] Inserindo dados no banco.")
+                self.logger.log(logger.LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
                 cursor.execute(
                     "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
                 )
-                self.logger.log('debug', f"[database] Comitando dados .")
+                self.logger.log(logger.LogLevel.DEBUG, f"[database] Comitando dados .")
                 conn.commit()
             return True
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log('error', f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(logger.LogLevel.ERROR, f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
             return False

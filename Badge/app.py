@@ -5,7 +5,7 @@ from . import logger
 from . import business
 
 # Criação da aplicação Flask
-logger.log('debug', f"[app] Criação da aplicação Flask")
+logger.log(logger.LogLevel.DEBUG, f"[app] Criação da aplicação Flask")
 application = Flask(__name__)
 
 # Configurações da aplicação
@@ -85,7 +85,7 @@ class EmitBadge(Resource):
     @api.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
-        logger.log('debug', f"[app] Endpoint para emitir um novo badge.")
+        logger.log(LogLevel.DEBUG, f"[app] Endpoint para emitir um novo badge.")
         data = request.json
         result = business.generate_badge(data)
         return jsonify(result)

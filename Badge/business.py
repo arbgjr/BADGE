@@ -13,7 +13,7 @@ azure_client = azure.Azure()
         
 def get_configs():
     try:
-        logger.log('debug', f"[business] Endpoint para recuperar configurações.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Endpoint para recuperar configurações.")
         data = {}
         data['APPINSIGHTS_INSTRUMENTATIONKEY'] = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
         data['AzKVURI'] = azure_client.get_app_config_setting("AzKVURI")
@@ -38,153 +38,153 @@ def get_configs():
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao recuperar informações: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao recuperar informações: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
     
         
 def generate_badge(data):
     try:
         # Validação e análise dos dados recebidos
-        logger.log('debug', f"[business] Endpoint para emitir um novo badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Endpoint para emitir um novo badge.")
         if 'owner_name' not in data or 'issuer_name' not in data:
-            logger.log('error', "Dados de entrada faltando: 'owner_name' ou 'issuer_name'")
+            logger.log(logger.LogLevel.ERROR, "Dados de entrada faltando: 'owner_name' ou 'issuer_name'")
             return {"error": "Dados de entrada inválidos"}, 400
 
         owner_name = data['owner_name']
         issuer_name = data['issuer_name']
 
-        logger.log('debug', f"Gerando badge para {owner_name} emitido por {issuer_name}")
+        logger.log(logger.LogLevel.DEBUG, f"Gerando badge para {owner_name} emitido por {issuer_name}")
 
         db = Database()
 
         # Carregar template de imagem
-        logger.log('debug', f"[business] Recuperando template do Badge em base64.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Recuperando template do Badge em base64.")
         template_id = int(azure_client.get_app_config_setting('BadgeTemplateBase64'))
-        logger.log('debug', f"[business] Template do Badge em base64: {template_id}.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Template do Badge em base64: {template_id}.")
         if not template_id:
-            logger.log('error', "Falha ao carregar id do template do badge.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao carregar id do template do badge.")
             return {"error": "Falha ao carregar id do template do badge"}, 500
         
         badge_template_base64  = db.get_badge_template(template_id)
-        logger.log('debug', f"[business] Template do Badge em base64: {badge_template_base64}.")  
+        logger.log(logger.LogLevel.DEBUG, f"[business] Template do Badge em base64: {badge_template_base64}.")  
         if not badge_template_base64:
-            logger.log('error', "Template de badge não encontrado.")
+            logger.log(logger.LogLevel.ERROR, "Template de badge não encontrado.")
             return {"error": "Template de badge não encontrado"}, 500
 
-        logger.log('debug', f"[business] Carregar template de imagem.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Carregar template de imagem.")
         badge_template = helpers.load_image_from_base64(badge_template_base64)
-        logger.log('debug', f"[business] Template do Badge: {badge_template}.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Template do Badge: {badge_template}.")
         if not badge_template:
-            logger.log('error', "Falha ao carregar template de badge.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao carregar template de badge.")
             return {"error": "Falha ao carregar template de badge"}, 500
 
-        logger.log('debug', f"[business] Carregar URL de verificação do Badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Carregar URL de verificação do Badge.")
         base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
-        logger.log('debug', f"[business] URL de verificação do Badge: {base_url}.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] URL de verificação do Badge: {base_url}.")
         if not base_url:
-            logger.log('error', "Falha ao carregar a URL de verificação do badge.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
         
         if not helpers.validar_url_https(base_url):
-            logger.log('error', "URL de verificação do badge inválida.")
+            logger.log(logger.LogLevel.ERROR, "URL de verificação do badge inválida.")
             return {"error": "URL de verificação do badge inválida."}, 500
  
-        logger.log('debug', f"[business] Gerando GUID do Badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
-        logger.log('debug', f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
         encrypted_data = helpers.encrypt_data(concatenated_data)
 
-        logger.log('debug', f"[business] Adicionando texto ao Badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Adicionando texto ao Badge.")
         badge_template = helpers.add_text_to_badge(badge_template, owner_name, issuer_name)
         if badge_template is None:
-            logger.log('error', "Falha ao editar badge. ")
+            logger.log(logger.LogLevel.ERROR, "Falha ao editar badge. ")
             return {"error": "Falha ao editar badge."}, 500 
 
-        logger.log('debug', f"[business] Gerando QRCode do Badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Gerando QRCode do Badge.")
         qr_code_img = helpers.create_qr_code(encrypted_data, base_url, box_size=10, border=4)
         if qr_code_img is None:
-            logger.log('error', "Falha ao gerar QR Code. ")
+            logger.log(logger.LogLevel.ERROR, "Falha ao gerar QR Code. ")
             return {"error": "Falha ao editar badge."}, 500 
 
-        logger.log('debug', f"[business] Inerindo Qrcode no Badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Inerindo Qrcode no Badge.")
         badge_template.paste(qr_code_img, (10, 50))
 
-        logger.log('debug', f"[business] Inserindo dados EXIF do Badge.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Inserindo dados EXIF do Badge.")
         result = helpers.process_badge_image(badge_template, issuer_name)
         if result is not None:
             badge_hash, badge_base64, signed_hash = result
         else:
-            logger.log('error', "Falha ao editar exif do badge. ")
+            logger.log(logger.LogLevel.ERROR, "Falha ao editar exif do badge. ")
             return {"error": "Falha ao editar badge."}, 500 
 
-        logger.log('debug', f"[business] Gerando Badge no banco.")
+        logger.log(logger.LogLevel.DEBUG, f"[business] Gerando Badge no banco.")
         success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
         if not success:
-            logger.log('error', "Falha ao inserir o badge no banco de dados.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao inserir o badge no banco de dados.")
             return {"error": "Falha ao inserir o badge no banco de dados"}, 500
 
         return {"guid": badge_guid, "hash": badge_hash}
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao gerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao gerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_image(data):
     try:
         # Validação e análise dos dados recebidos
         if 'badge_guid' not in data:
-            logger.log('error', "Dados de entrada faltando: 'badge_guid'")
+            logger.log(logger.LogLevel.ERROR, "Dados de entrada faltando: 'badge_guid'")
             return {"error": "Dados de entrada inválidos"}, 400
 
         badge_guid = data['badge_guid']
         
-        logger.log('debug', f"Recuperando badge para {badge_guid}.")
+        logger.log(logger.LogLevel.DEBUG, f"Recuperando badge para {badge_guid}.")
         
         db = Database()
         row = db.get_badge_image(badge_guid)
         if row:
             return {"badge_image": row[0]}
         else:
-            logger.log('error', "Falha ao rechperar o badge no banco de dados.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao rechperar o badge no banco de dados.")
             return {"error": "Badge não encontrado"}, 404
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao recuoerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao recuoerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_valid(data):
     try:
         # Validação e análise dos dados recebidos
         if 'data' not in data:
-            logger.log('error', "Dados de entrada faltando: 'data'")
+            logger.log(logger.LogLevel.ERROR, "Dados de entrada faltando: 'data'")
             return {"error": "Dados de entrada inválidos"}, 400
 
         encrypted_data = data['data']
                 
-        logger.log('debug', "Analisando dados enviados.")
+        logger.log(logger.LogLevel.DEBUG, "Analisando dados enviados.")
 
         if not encrypted_data:
-            logger.log('error', "Dados criptogtafados não informados.")
+            logger.log(logger.LogLevel.ERROR, "Dados criptogtafados não informados.")
             return {"error": "Dados criptografados são obrigatórios"}, 400
             
-        logger.log('debug', f"Descriptografando dados enviados: {encrypted_data}")
+        logger.log(logger.LogLevel.DEBUG, f"Descriptografando dados enviados: {encrypted_data}")
 
         decrypted_data = helpers.decrypt_data(encrypted_data)
         if not decrypted_data:
-            logger.log('error', "Não foi possível descriptograr dados informados.")
+            logger.log(logger.LogLevel.ERROR, "Não foi possível descriptograr dados informados.")
             return {"error": "Falha na descriptografia"}, 400 
 
-        logger.log('debug', f"Decodificando dados enviados: {encrypted_data}")
+        logger.log(logger.LogLevel.DEBUG, f"Decodificando dados enviados: {encrypted_data}")
 
         try:
             badge_guid, owner_name, issuer_name = decrypted_data.data.split("|")
-            logger.log('debug', f"Validando badge {badge_guid} emitido por {issuer_name}")
+            logger.log(logger.LogLevel.DEBUG, f"Validando badge {badge_guid} emitido por {issuer_name}")
 
         except ValueError:
             stack_trace = traceback.format_exc()
-            logger.log('error', "Não foi possível decodificar dados informados.")
+            logger.log(logger.LogLevel.ERROR, "Não foi possível decodificar dados informados.")
             return {"error": "Dados decodificados inválidos"}, 400
         
         db = Database()
@@ -195,7 +195,7 @@ def badge_valid(data):
             return {"valid": False, "error": "Badge não encontrado ou informações não correspondem"}, 404
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao validar badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao validar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
      
 def badge_list(data):
@@ -203,7 +203,7 @@ def badge_list(data):
         
         # Validação e análise dos dados recebidos
         if 'user_id' not in data:
-            logger.log('error', "Dados de entrada faltando: 'user_id'")
+            logger.log(logger.LogLevel.ERROR, "Dados de entrada faltando: 'user_id'")
             return {"error": "Dados de entrada inválidos"}, 400
 
         user_id = data['user_id']
@@ -216,7 +216,7 @@ def badge_list(data):
 
         base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
-            logger.log('error', "Falha ao carregar a URL de verificação do badge.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
 
         badge_list = []
@@ -230,7 +230,7 @@ def badge_list(data):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao listar badges: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao listar badges: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_holder(data):
@@ -238,7 +238,7 @@ def badge_holder(data):
       
         # Validação e análise dos dados recebidos
         if 'badge_name' not in data:
-            logger.log('error', "Dados de entrada faltando: 'badge_name'")
+            logger.log(logger.LogLevel.ERROR, "Dados de entrada faltando: 'badge_name'")
             return {"error": "Dados de entrada inválidos"}, 400
 
         badge_name = data['badge_name']
@@ -254,7 +254,7 @@ def badge_holder(data):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao recuperar detentores do badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao recuperar detentores do badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def linkedin_post(data):
@@ -262,7 +262,7 @@ def linkedin_post(data):
       
         # Validação e análise dos dados recebidos
         if 'badge_guid' not in data:
-            logger.log('error', "Dados de entrada faltando: 'badge_guid'")
+            logger.log(logger.LogLevel.ERROR, "Dados de entrada faltando: 'badge_guid'")
             return {"error": "Dados de entrada inválidos"}, 400
 
         badge_guid = data['badge_guid']
@@ -277,7 +277,7 @@ def linkedin_post(data):
 
         base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
-            logger.log('error', "Falha ao carregar a URL de verificação do badge.")
+            logger.log(logger.LogLevel.ERROR, "Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
 
         # URL de validação do badge
@@ -297,7 +297,7 @@ def linkedin_post(data):
         
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log('error', f"Erro ao recuperar a mensagem do post do LinkedIn: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(logger.LogLevel.ERROR, f"Erro ao recuperar a mensagem do post do LinkedIn: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
         
         

@@ -1,10 +1,22 @@
 import logging
 import os
 from opencensus.ext.azure.log_exporter import AzureLogHandler
+from enum import Enum
+
+class LogLevel(Enum):
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    DEBUG = logging.DEBUG
+    CRITICAL = logging.CRITICAL
+    EXCEPTION = logging.ERROR
+    FATAL = logging.FATAL
+    TRACE = logging.DEBUG
+    ERROR = logging.ERROR
 
 class Logger:
-    def __init__(self, logger_name):
+    def __init__(self, logger_name, default_level=LogLevel.INFO):
         self.logger = logging.getLogger(logger_name)
+        self.default_level = default_level
 
         # Configure o logger apenas se houver uma chave de instrumentação do Application Insights
         appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
@@ -15,34 +27,15 @@ class Logger:
         handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
         self.logger.addHandler(handler)
 
-        # Configurar o nível de log padrão (você pode ajustar conforme necessário)
-        self.logger.setLevel(logging.INFO)
-
         # Adicionar um filtro personalizado
         custom_filter = CustomLogFilter()
         self.logger.addFilter(custom_filter)
 
     def log(self, level, message):
-        # Método genérico para registrar logs com o nível especificado
-        if level == 'info':
-            self.logger.info(message)
-        elif level == 'warning':
-            self.logger.warning(message)
-        elif level == 'debug':
-            self.logger.debug(message)
-        elif level == 'critical':
-            self.logger.critical(message)
-        elif level == 'exception':
-            self.logger.exception(message)
-        elif level == 'fatal':
-            self.logger.fatal(message)
-        elif level == 'trace':
-            self.logger.trace(message)
-        elif level == 'error':
-            self.logger.error(message)
+        if not isinstance(level, LogLevel):
+            self.logger.log(LogLevel.INFO.value, f"Nível de log inválido: {level}, configurado para INFO. {message}")
         else:
-            # Nível de log inválido, você pode lidar com isso de acordo com suas necessidades
-            raise ValueError(f"Nível de log inválido: {level}")
+            self.logger.log(level.value, message)
 
 class CustomLogFilter(logging.Filter):
     def filter_conditions(self):
