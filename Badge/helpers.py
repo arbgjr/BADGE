@@ -87,6 +87,8 @@ try:
     logger.info(f"Obter a configuração 'AzKVURI'.")
     key_vault_url = get_app_config_setting("AzKVURI")
     logger.info(f"key_vault_url: '{key_vault_url}'")
+    if not key_vault_url.startswith("https://") or ".vault.azure.net" not in key_vault_url:
+        raise ValueError("URL do Azure Key Vault fornecida está incorreta")
 
     logger.info(f"[helpers] Criar cliente do Azure KeyVaut") 
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
