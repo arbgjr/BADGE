@@ -1,28 +1,11 @@
-import logging
-from opencensus.ext.azure.log_exporter import AzureLogHandler
-from opencensus.trace import config_integration
-import os
 from flask import Flask, jsonify, request 
 from flask_restx import Resource, Api, fields, reqparse
+from . import logger
 
 from . import business
 
-class FlushAzureLogHandler(AzureLogHandler):
-    def emit(self, record):
-        super().emit(record)
-        self.flush()
-
-# Configurar o log
-config_integration.trace_integrations(['logging'])
-logger = logging.getLogger(__name__)
-APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
-
-# Usar o FlushAzureLogHandler
-handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
-logger.addHandler(handler)
-
 # Criação da aplicação Flask
-logger.info(f"[app] Criação da aplicação Flask")
+logger.log_debug(f"[app] Criação da aplicação Flask")
 application = Flask(__name__)
 
 # Configurações da aplicação
@@ -102,7 +85,7 @@ class EmitBadge(Resource):
     @api.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
-        logger.info(f"[app] Endpoint para emitir um novo badge.")
+        logger.log_debug(f"[app] Endpoint para emitir um novo badge.")
         data = request.json
         result = business.generate_badge(data)
         return jsonify(result)

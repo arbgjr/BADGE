@@ -1,39 +1,25 @@
-import logging
 import traceback
-from opencensus.ext.azure.log_exporter import AzureLogHandler
-from opencensus.trace import config_integration
-import os
 import azure.functions as func
 from .app import application
+from .logger import Logger
 
-class FlushAzureLogHandler(AzureLogHandler):
-    def emit(self, record):
-        super().emit(record)
-        self.flush()
-
-# Configurar o log
-config_integration.trace_integrations(['logging'])
-logger = logging.getLogger(__name__)
-APPINSIGHTS_INSTRUMENTATIONKEY = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
-
-# Usar o FlushAzureLogHandler
-handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}')
-logger.addHandler(handler)
+# Crie uma instância do Logger com um nome específico
+logger = Logger("AzFuncBadges")
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Log da solicitação recebida
-    logger.info('Python HTTP trigger function processed a request.')
-    logger.info(f'Request method: {req.method}')
-    logger.info(f'Request URL: {req.url}')
+    logger.log_debug('Python HTTP trigger function processed a request.')
+    logger.log_debug(f'Request method: {req.method}')
+    logger.log_debug(f'Request URL: {req.url}')
 
     try:
         # Executar aplicação Flask através do WsgiMiddleware
-        logger.info(f"[_init_.py] Executar aplicação Flask através do WsgiMiddleware") 
+        logger.log_debug(f"[_init_.py] Executar aplicação Flask através do WsgiMiddleware") 
         response = func.WsgiMiddleware(application.wsgi_app).handle(req, context)
-        logger.info('Flask app processed the request successfully.')
+        logger.log_debug('Flask app processed the request successfully.')
         return response
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.error(f'Erro ao processar a solicitação: {str(e)}')
+        logger.log_error(f'Erro ao processar a solicitação: {str(e)}')
         return func.HttpResponse("Erro interno do servidor", status_code=500)
 

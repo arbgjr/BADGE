@@ -1,39 +1,20 @@
-import logging
 import traceback
-from opencensus.ext.azure.log_exporter import AzureLogHandler
-from opencensus.trace import config_integration
-import os
 import re
 import pyodbc
 from datetime import datetime, timedelta
-from . import helpers
-from flask import current_app
-from . import azure
-
-class FlushAzureLogHandler(AzureLogHandler):
-    def emit(self, record):
-        super().emit(record)
-        self.flush()
+from .azure import azure
+from . import logger
 
 class Database:
-    def __init__(self):
-        self._configure_logging()
+    def __init__(self, logger_name):
+        self.logger = logger
 
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 
-        self.logger.info(f"[database] Obter dados de conexão com o banco.")
+        self.logger.log_debug(f"[database] Obter dados de conexão com o banco.")
         conn_str_orig = azure_client.get_key_vault_secret('SqlConnectionString')
-        #self.logger.info(f"[database] String de conexão original: {conn_str_orig}")
         self.conn_str = self._transform_connection_string(conn_str_orig)
-
-    def _configure_logging(self):
-        config_integration.trace_integrations(['logging'])
-        self.logger = logging.getLogger(__name__)
-        appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
-        if appinsights_key:
-            handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
-            self.logger.addHandler(handler)
 
     def _transform_connection_string(self, original_conn_str):
         # Extrair os componentes da string de conexão original
@@ -66,11 +47,11 @@ class Database:
                               
     def connect(self):
         try:
-            self.logger.info(f"[database] Conectando com o banco.")
+            self.logger.log_debug(f"[database] Conectando com o banco.")
             return pyodbc.connect(self.conn_str)
         except pyodbc.Error as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
             raise
 
     def get_badge_template(self, badge_id):
@@ -81,7 +62,7 @@ class Database:
                 return cursor.fetchone()[0]
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_image(self, badge_guid):
@@ -92,7 +73,7 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def validate_badge(self, badge_guid, owner_name, issuer_name):
@@ -103,7 +84,7 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_user_badges(self, user_id):
@@ -114,7 +95,7 @@ class Database:
                 return cursor.fetchall()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_holders(self, badge_name):
@@ -125,7 +106,7 @@ class Database:
                 return cursor.fetchall()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao obter detentores do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao obter detentores do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_info_for_post(self, badge_guid):
@@ -136,22 +117,22 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def insert_badge(self, badge_guid, badge_hash, badge_data, owner_name, issuer_name, signed_hash, badge_base64):
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
-                self.logger.info(f"[database] Inserindo dados no banco.")
+                self.logger.log_debug(f"[database] Inserindo dados no banco.")
                 cursor.execute(
                     "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
                 )
-                self.logger.info(f"[database] Comitando dados .")
+                self.logger.log_debug(f"[database] Comitando dados .")
                 conn.commit()
             return True
         except Exception as e:
             stack_trace = traceback.format_exc()
-            current_app.logger.error(f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log_error(f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
             return False
