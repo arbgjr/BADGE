@@ -16,9 +16,9 @@ class Database:
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 
-        logging.info(f"[database] Obter dados de conexão com o banco.")
+        self.logger.info(f"[database] Obter dados de conexão com o banco.")
         conn_str_orig = azure_client.get_key_vault_secret('SqlConnectionString')['value']
-        logging.info(f"[database] String de conexão original: {conn_str_orig}")
+        self.logger.info(f"[database] String de conexão original: {conn_str_orig}")
         self.conn_str = self._transform_connection_string(conn_str_orig)
 
     def _configure_logging(self):
@@ -60,7 +60,7 @@ class Database:
                               
     def connect(self):
         try:
-            logging.info(f"[database] Conectando com o banco.")
+            self.logger.info(f"[database] Conectando com o banco.")
             return pyodbc.connect(self.conn_str)
         except pyodbc.Error as e:
             current_app.logger.error(f"Erro de conexão com o banco de dados: {e}")
@@ -130,12 +130,12 @@ class Database:
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
-                logging.info(f"[database] Inserindo dados no banco.")
+                self.logger.info(f"[database] Inserindo dados no banco.")
                 cursor.execute(
                     "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
                 )
-                logging.info(f"[database] Comitando dados .")
+                self.logger.info(f"[database] Comitando dados .")
                 conn.commit()
             return True
         except Exception as e:
