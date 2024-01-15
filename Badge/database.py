@@ -27,6 +27,16 @@ class Database:
             current_app.logger.error(f"Erro de conexão com o banco de dados: {e}")
             raise
 
+    def get_badge_template(self, badge_id):
+        try:
+            with self.connect() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT ImagemBase64 FROM Imagens WHERE Id = ?", badge_id)
+                return cursor.fetchone()[0]
+        except Exception as e:
+            current_app.logger.error(f"Erro ao obter template do badge: {e}")
+            return None
+
     def get_badge_image(self, badge_guid):
         try:
             with self.connect() as conn:

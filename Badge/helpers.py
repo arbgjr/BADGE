@@ -251,3 +251,7 @@ def insert_exif(image, exif_data):
         if os.path.exists(temp_img_path):
             os.remove(temp_img_path)
 
+def validar_url_https(url):
+    pattern = r'^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$'
+    return re.match(pattern, url) is not None
+

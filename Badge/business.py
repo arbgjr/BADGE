@@ -60,15 +60,22 @@ def generate_badge(data):
         owner_name = data['owner_name']
         issuer_name = data['issuer_name']
 
+        db = Database()
+
         logging.info(f"Gerando badge para {owner_name} emitido por {issuer_name}")
 
+        # Carregar template de imagem
         logging.info(f"[business] Recuperando template do Badge em base64.")
-        badge_template_base64 = azure_client.get_app_config_setting('BadgeTemplateBase64')
+        template_id = azure_client.get_app_config_setting('BadgeTemplateBase64')
+        if not template_id:
+            logging.error("Falha ao carregar id do template do badge.")
+            return {"error": "Falha ao carregar id do template do badge"}, 500
+        
+        badge_template_base64  = db.get_badge_template(template_id)
         if not badge_template_base64:
             logging.error("Template de badge não encontrado.")
             return {"error": "Template de badge não encontrado"}, 500
 
-        # Carregar template de imagem
         logging.info(f"[business] Carregar template de imagem.")
         badge_template = helpers.load_image_from_base64(badge_template_base64)
         if not badge_template:
@@ -80,6 +87,10 @@ def generate_badge(data):
         if not base_url:
             logging.error("Falha ao carregar a URL de verificação do badge.")
             return {"error": "Falha ao carregar url de verificação do badge"}, 500
+        
+        if not helpers.validar_url_https(base_url):
+            logging.error("URL de verificação do badge inválida.")
+            return {"error": "URL de verificação do badge inválida."}, 500
  
         logging.info(f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
@@ -111,7 +122,6 @@ def generate_badge(data):
             return {"error": "Falha ao editar badge."}, 500 
 
         logging.info(f"[business] Gerando Badge no banco.")
-        db = Database()
         success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
         if not success:
             logging.error("Falha ao inserir o badge no banco de dados.")
