@@ -52,7 +52,7 @@ class Database:
 
         # Montar a string de conexão para o pyodbc
         pyodbc_conn_str = (
-            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"DRIVER={{ODBC Driver 18 for SQL Server}};"
             f"SERVER=tcp:{server},{port};"
             f"DATABASE={database};"
             f"UID={user_id};"
