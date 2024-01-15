@@ -1,5 +1,6 @@
 import logging
 import traceback
+import pyodbc
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from opencensus.trace import config_integration
 import os
@@ -50,6 +51,7 @@ def get_configs():
         conexao = re.sub(r"Secret=[^;]+", "Secret=***", conexao)
         data['AppConfigConnectionString'] = conexao
         data['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
+        data['pyodbcDrivers'] = pyodbc.drivers()
 
         return data
 

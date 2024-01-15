@@ -24,7 +24,7 @@ class Database:
 
         self.logger.info(f"[database] Obter dados de conexão com o banco.")
         conn_str_orig = azure_client.get_key_vault_secret('SqlConnectionString')
-        self.logger.info(f"[database] String de conexão original: {conn_str_orig}")
+        #self.logger.info(f"[database] String de conexão original: {conn_str_orig}")
         self.conn_str = self._transform_connection_string(conn_str_orig)
 
     def _configure_logging(self):
