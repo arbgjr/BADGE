@@ -35,7 +35,7 @@ class Database:
             handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
             self.logger.addHandler(handler)
 
-    def _transform_connection_string(original_conn_str):
+    def _transform_connection_string(self, original_conn_str):
         # Extrair os componentes da string de conexão original
         server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", original_conn_str)
         database_match = re.search(r"Initial Catalog=([a-zA-Z0-9]+);", original_conn_str)

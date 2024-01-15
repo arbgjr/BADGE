@@ -70,9 +70,9 @@ def generate_badge(data):
         owner_name = data['owner_name']
         issuer_name = data['issuer_name']
 
-        db = Database()
-
         logger.info(f"Gerando badge para {owner_name} emitido por {issuer_name}")
+
+        db = Database()
 
         # Carregar template de imagem
         logger.info(f"[business] Recuperando template do Badge em base64.")
