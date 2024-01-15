@@ -29,7 +29,7 @@ class Azure:
         return AzureAppConfigurationClient.from_connection_string(connection_string)
 
     def _initialize_key_vault_client(self):
-        key_vault_url = self.get_app_config_setting("AzKVURI")
+        key_vault_url = self.get_app_config_setting("AzKVURI", )
         if key_vault_url is None:
             self.logger.error("A URL do Azure Key Vault não foi encontrada na configuração.")
             raise ValueError("A URL do Azure Key Vault não foi encontrada.")
@@ -40,9 +40,12 @@ class Azure:
 
         return SecretClient(vault_url=key_vault_url, credential=self.credential)
     
-    def get_app_config_setting(self, key):
+    def get_app_config_setting(self, key, label="Badge"):
         try:
-            config_setting = self.app_config_client.get_configuration_setting(key)
+            if label:
+                config_setting = self.app_config_client.get_configuration_setting(key, label=label)
+            else:
+                config_setting = self.app_config_client.get_configuration_setting(key)
             return config_setting.value
         except Exception as e:
             self.logger.error(f"Erro ao obter a configuração para a chave '{key}': {str(e)}")
