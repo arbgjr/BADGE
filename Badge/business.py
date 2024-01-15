@@ -66,7 +66,7 @@ def generate_badge(data):
 
         # Carregar template de imagem
         logging.info(f"[business] Recuperando template do Badge em base64.")
-        template_id = azure_client.get_app_config_setting('BadgeTemplateBase64')
+        template_id = int(azure_client.get_app_config_setting('BadgeTemplateBase64'))
         if not template_id:
             logging.error("Falha ao carregar id do template do badge.")
             return {"error": "Falha ao carregar id do template do badge"}, 500
