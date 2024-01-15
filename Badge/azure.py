@@ -4,6 +4,7 @@ import subprocess
 import traceback
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
+from azure.mgmt.resource import ResourceManagementClient
 from azure.keyvault.secrets import SecretClient
 import json
 import re
@@ -107,26 +108,27 @@ class Azure:
 
     def get_resource_group(self):
         try:
-            function_name = self.get_azure_function_name()
-            self.logger.log(LogLevel.DEBUG, f"Function Name: {function_name}")
+            function_app_name = self.get_azure_function_name()
+            credential = DefaultAzureCredential()
+            subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")  # Defina sua ID de subscrição do Azure
 
-            # Comando e argumentos como lista de strings
-            cmd = ["az", "functionapp", "list", "--query", f"[?name=='{function_name}'].{{ResourceGroup:resourceGroup}}", "--output", "json"]
+            if not subscription_id:
+                raise EnvironmentError("AZURE_SUBSCRIPTION_ID não está definida em variáveis de ambiente.")
 
-            self.logger.log(LogLevel.DEBUG, f"Executando comando: {' '.join(cmd)}")
+            client = ResourceManagementClient(credential, subscription_id)
 
-            # Executa o comando sem shell=True
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-            rg_info = json.loads(result.stdout)
+            for function_app in client.resources.list():
+                if function_app.name == function_app_name and function_app.type == 'Microsoft.Web/sites':
+                    # O ID do recurso é no formato /subscriptions/{sub}/resourceGroups/{rg}/providers/...
+                    return function_app.id.split('/')[4]
 
-            if rg_info:
-                return rg_info[0]['ResourceGroup']
-            else:
-                raise ValueError(f"Não foi possível encontrar o Resource Group para a função '{function_name}'.")
-        except subprocess.CalledProcessError as e:
-            raise Exception(f"Erro ao executar o comando Azure CLI: {e.stderr}")
-        except json.JSONDecodeError as e:
-            raise Exception(f"Erro ao decodificar a resposta JSON: {e}")
+            raise ValueError(f"Azure Function '{function_app_name}' não encontrada.")
+        
+        except Exception as e:
+            self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
+            raise
+
+
         
     def get_azure_function_name(self):
         function_name = os.getenv('WEBSITE_SITE_NAME')

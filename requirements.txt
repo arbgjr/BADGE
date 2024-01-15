@@ -9,6 +9,7 @@ pyodbc
 flask
 azure-identity
 azure-appconfiguration
+azure-mgmt-resource
 gnupg
 Flask-SQLAlchemy
 gunicorn
