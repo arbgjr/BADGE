@@ -59,7 +59,7 @@ def load_image_from_base64(base64_img):
     try:
         # Verificar se a entrada é uma string
         if not isinstance(base64_img, str):
-            logger.log_error("Dados de entrada não são uma string base64 válida.")
+            logger.log('error', "Dados de entrada não são uma string base64 válida.")
             return None
 
         # Decodificar dados base64
@@ -71,14 +71,14 @@ def load_image_from_base64(base64_img):
 
     except base64.binascii.Error:
         # Erro específico para problemas relacionados à decodificação base64
-        logger.log_error("Erro na decodificação dos dados base64.")
+        logger.log('error', "Erro na decodificação dos dados base64.")
     except IOError:
         # Erro específico para problemas relacionados à I/O ao abrir a imagem
-        logger.log_error("Não foi possível abrir a imagem a partir dos dados base64.")
+        logger.log('error', "Não foi possível abrir a imagem a partir dos dados base64.")
     except Exception as e:
         stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.log_error(f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def add_text_to_badge(badge_template, owner_name, issuer_name):
@@ -89,7 +89,7 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         font = load_font_from_google_fonts(css_url, font_size)
 
         if font is None:
-            logger.log_error("Falha ao carregar a fonte Rubik.")
+            logger.log('error', "Falha ao carregar a fonte Rubik.")
             return None
 
         # Adicionar texto à imagem
@@ -100,12 +100,12 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log_error(f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def create_qr_code(data, base_url, box_size=10, border=5):
     if not data or not base_url:
-        logger.log_error("Dados ou URL base não fornecidos para o QR Code.")
+        logger.log('error', "Dados ou URL base não fornecidos para o QR Code.")
         return None
 
     try:
@@ -122,7 +122,7 @@ def create_qr_code(data, base_url, box_size=10, border=5):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log_error(f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def process_badge_image(badge_template, issuer_name):
@@ -148,7 +148,7 @@ def process_badge_image(badge_template, issuer_name):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log_error(f"Erro ao processar a imagem do badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao processar a imagem do badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def load_font_from_google_fonts(css_url, size):
@@ -187,18 +187,18 @@ def load_font(font_path, size):
     except IOError:
         stack_trace = traceback.format_exc()
         # Erro específico para problemas relacionados à I/O, como arquivo de fonte não encontrado
-        logger.log_error(f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
     except Exception as e:
         stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.log_error(f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def generate_image_hash(image):
     try:
         # Validar os dados de entrada
         if not isinstance(image, Image.Image):
-            logger.log_error("O objeto fornecido não é uma imagem válida.")
+            logger.log('error', "O objeto fornecido não é uma imagem válida.")
             return None
 
         # Geração do hash da imagem usando SHA-3
@@ -208,18 +208,18 @@ def generate_image_hash(image):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log_error(f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def insert_exif(image, exif_data):
     try:
         # Validar os dados de entrada
         if not isinstance(image, Image.Image):
-            logger.log_error("O objeto fornecido não é uma imagem válida.")
+            logger.log('error', "O objeto fornecido não é uma imagem válida.")
             return None
 
         if not isinstance(exif_data, dict):
-            logger.log_error("Os dados EXIF fornecidos não estão no formato de dicionário.")
+            logger.log('error', "Os dados EXIF fornecidos não estão no formato de dicionário.")
             return None
 
         exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": None}
@@ -237,7 +237,7 @@ def insert_exif(image, exif_data):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log_error(f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log('error', f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
     finally:
