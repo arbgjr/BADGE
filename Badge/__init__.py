@@ -22,13 +22,12 @@ def format_exception(e):
 
     return pretty_exception
 
-@app.errorhandler(Exception)
+@application.errorhandler(Exception)
 def handle_exception(e):
     formatted_error = format_exception(e)
     response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
     response.status_code = 500
     return response
-
 
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
     # Log da solicitação recebida
