@@ -38,6 +38,13 @@ def get_configs():
         data['RGAzFunction'] = azure_client.get_resource_group()
         data['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
         data['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
+        data['Palavra'] = 'Palavra'
+        data['PalavraCriptada'] = helpers.encrypt_data(data['Palavra'])
+        data['PalavraDescriptada'] = helpers.decrypt_data(data['PalavraCriptada'])
+        return data
+
+
+        data['Palavra'] = 'Palavra'
         return data
 
     except Exception as e:

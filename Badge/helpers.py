@@ -35,19 +35,36 @@ def decrypt_data(encrypted_data):
     private_key = get_pgp_private_key()
     import_result = gpg.import_keys(private_key)
     
-    if not import_result.count:
+    if not import_result.counts['imported'] and not import_result.fingerprints:
         raise ValueError("Falha ao importar a chave privada PGP")
 
     decrypted_data = gpg.decrypt(encrypted_data)
+    if not decrypted_data.ok:
+        raise ValueError(f"Falha na descriptografia: {decrypted_data.status}")
+
     return str(decrypted_data)
 
 def encrypt_data(data):
     gpg = gnupg.GPG()
     public_key = get_pgp_public_key()
     import_result = gpg.import_keys(public_key)
+
+    # Verifique se pelo menos uma chave foi importada usando 'counts' ou 'fingerprints'
+    logger.log(LogLevel.DEBUG, f"Verifique se pelo menos uma chave foi importada usando 'counts' ou 'fingerprints'")
+    if not import_result.counts['imported'] and not import_result.fingerprints:
+        raise ValueError("Falha ao importar a chave pública PGP")
+
+    # Usa a primeira fingerprint importada para a criptografia
+    logger.log(LogLevel.DEBUG, f"Usa a primeira fingerprint importada para a criptografia")
+    fingerprint = import_result.fingerprints[0] if import_result.fingerprints else None
+    if not fingerprint:
+        raise ValueError("Nenhuma fingerprint válida encontrada após a importação da chave")
+
+    encrypted_data = gpg.encrypt(data, fingerprint)
+    if not encrypted_data.ok:
+        raise ValueError(f"Falha na criptografia: {encrypted_data.status}")
     
-    logger.log(LogLevel.INFO, f"Atributos do ImportResult:{dir(import_result)}" )
-    raise ValueError("Forçando saída d AzFunc")
+    return str(encrypted_data)
         
 def load_image_from_base64(base64_img):
     try:
