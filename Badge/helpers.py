@@ -46,14 +46,8 @@ def encrypt_data(data):
     public_key = get_pgp_public_key()
     import_result = gpg.import_keys(public_key)
     
-    if not import_result.count:
-        raise ValueError("Falha ao importar a chave pública PGP")
-
-    encrypted_data = gpg.encrypt(data, import_result.fingerprints[0])
-    if not encrypted_data.ok:
-        raise ValueError(f"Falha na criptografia: {encrypted_data.status}")
-    
-    return str(encrypted_data)
+    logger.log(LogLevel.INFO, f"Atributos do ImportResult:{dir(import_result)}" )
+    raise ValueError("Forçando saída d AzFunc")
         
 def load_image_from_base64(base64_img):
     try:

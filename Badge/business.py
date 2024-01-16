@@ -70,7 +70,7 @@ def generate_badge(data):
             return {"error": "Falha ao carregar id do template do badge"}, 500
         
         badge_template_base64  = db.get_badge_template(template_id)
-        logger.log(LogLevel.DEBUG, f"[business] Template do Badge em base64: {badge_template_base64}.")  
+        #logger.log(LogLevel.DEBUG, f"[business] Template do Badge em base64: {badge_template_base64}.")  
         if not badge_template_base64:
             logger.log(LogLevel.ERROR, "Template de badge não encontrado.")
             return {"error": "Template de badge não encontrado"}, 500
