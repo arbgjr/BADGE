@@ -1,13 +1,12 @@
 import os
 import requests
-import subprocess
 import traceback
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.sql import SqlManagementClient
+from azure.mgmt.subscription import SubscriptionClient
 from azure.keyvault.secrets import SecretClient
-import json
 import re
 from . import logger, LogLevel
 
@@ -110,7 +109,7 @@ class Azure:
         try:
             function_app_name = self.get_azure_function_name()
             credential = DefaultAzureCredential()
-            subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"] 
+            subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
 
             if not subscription_id:
                 raise EnvironmentError("AZURE_SUBSCRIPTION_ID não está definida em variáveis de ambiente.")
