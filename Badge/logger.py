@@ -7,7 +7,7 @@ import inspect
 class LogLevel(Enum):
     INFO = logging.INFO
     WARNING = logging.WARNING
-    DEBUG = logging.DEBUG
+    DEBUG = logging.INFO
     CRITICAL = logging.CRITICAL
     EXCEPTION = logging.ERROR
     FATAL = logging.FATAL
