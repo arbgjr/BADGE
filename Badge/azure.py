@@ -19,7 +19,7 @@ class Azure:
         self.secret_client = self._initialize_key_vault_client()
 
         # Atualizar a regra de firewall para Azure SQL
-        self.update_firewall_rule()
+        #self.update_firewall_rule()
 
     def _initialize_app_config_client(self):
         connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")

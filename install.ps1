@@ -1048,7 +1048,6 @@ try {
 		}
 		Save-ScriptProgress -step ([int][ScriptSteps]::AzFuncEnvCreated)
 	}
-<<<<<<< HEAD
 
 	if ($lastStep -le [ScriptSteps]::AzFuncEnvCreated) {
 
@@ -1184,8 +1183,6 @@ try {
 		Write-Host "Caso deseje instalar Azure Storage Explorer baixe e instale-o de https://azure.microsoft.com/en-us/products/storage/storage-explorer/"
 	}
 
-=======
->>>>>>> parent of f956466 ( On branch dev)
 } catch {
 	Show-ErrorMessage -ErrorMessage $_.Exception.Message -ErrorLine $_.InvocationInfo.ScriptLineNumber
 	exit
