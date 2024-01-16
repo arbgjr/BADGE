@@ -3,7 +3,7 @@ import requests
 import traceback
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
-from azure.mgmt.resource import ResourceManagementClient
+#from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.sql import SqlManagementClient
 from azure.keyvault.secrets import SecretClient
 import re
@@ -88,6 +88,13 @@ class Azure:
             server = server_match.group(1)
             self.logger.log(LogLevel.DEBUG, f"Az SQL Server: {server}")
 
+            database_match = re.search(r"Initial Catalog=([a-zA-Z0-9]+);", conn_str)
+            if not database_match:
+                raise ValueError("Não foi possível extrair informações do banco da string de conexão.")
+
+            database = database_match.group(1)
+            self.logger.log(LogLevel.DEBUG, f"Database: {database}")
+            
             # Crie uma instância do SqlManagementClient
             credential = DefaultAzureCredential()
             sql_client = SqlManagementClient(credential, subscription_id)
@@ -97,8 +104,12 @@ class Azure:
                 resource_group_name=resource_group,
                 server_name=server,
                 firewall_rule_name="PermitirAcessoFunction",
-                start_ip_address=function_ip,
-                end_ip_address=function_ip
+                parameters={
+                    "properties": {
+                        "startIpAddress": function_ip,
+                        "endIpAddress": function_ip
+                    }
+                }
             )
             
             self.logger.log(LogLevel.DEBUG, f"Regra de firewall atualizada: {firewall_rule.name}")
