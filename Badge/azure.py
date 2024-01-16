@@ -114,6 +114,7 @@ class Azure:
                 raise EnvironmentError("AZURE_SUBSCRIPTION_ID não está definida em variáveis de ambiente.")
 
             client = ResourceManagementClient(credential, subscription_id)
+            self.logger.log(LogLevel.DEBUG, f"Cliente ResourceManagementClient criado:{client}")
 
             for function_app in client.resources.list():
                 if function_app.name == function_app_name and function_app.type == 'Microsoft.Web/sites':
@@ -126,8 +127,6 @@ class Azure:
             self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
             raise
 
-
-        
     def get_azure_function_name(self):
         function_name = os.getenv('WEBSITE_SITE_NAME')
         
