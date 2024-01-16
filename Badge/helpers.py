@@ -30,6 +30,18 @@ def get_pgp_public_key():
     public_key = azure_client.get_key_vault_secret(public_key_name)
     return public_key
 
+def format_pgp_key(raw_key):
+    header = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n"
+    footer = "\n-----END PGP PUBLIC KEY BLOCK-----"
+    key_body = raw_key.replace(header, "").replace(footer, "").replace("\n", "")
+    
+    formatted_key = header
+    for i in range(0, len(key_body), 64):
+        formatted_key += key_body[i:i+64] + "\n"
+    formatted_key += footer
+
+    return formatted_key
+
 def decrypt_data(encrypted_data):
     gpg = gnupg.GPG()
     private_key = get_pgp_private_key()
@@ -46,7 +58,7 @@ def decrypt_data(encrypted_data):
 
 def encrypt_data(data):
     gpg = gnupg.GPG()
-    public_key = get_pgp_public_key()
+    public_key = format_pgp_key(get_pgp_public_key())
     logger.log(LogLevel.DEBUG, f"Public Key: {public_key}")
 
     # Importar a chave pública PGP
