@@ -5,7 +5,6 @@ from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.sql import SqlManagementClient
-from azure.mgmt.subscription import SubscriptionClient
 from azure.keyvault.secrets import SecretClient
 import re
 from . import logger, LogLevel
