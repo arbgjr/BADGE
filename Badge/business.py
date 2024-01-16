@@ -38,7 +38,7 @@ def get_configs():
         data['RGAzFunction'] = azure_client.get_resource_group()
         data['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
         data['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
-        data['Palavra'] = 'Palavra'
+        data['Palavra'] = '5e8124de-c23f-4ed4-a191-a89a2045a21a|Armando Guimarães|Sinqia'
         data['PalavraCriptada'] = helpers.encrypt_data(data['Palavra'])
         data['PalavraDescriptada'] = helpers.decrypt_data(data['PalavraCriptada'])
         return data

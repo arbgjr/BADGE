@@ -72,6 +72,8 @@ def encrypt_data(data):
         logger.log(LogLevel.DEBUG, f"Contagem de importados: {import_result.counts['imported']}")
         logger.log(LogLevel.DEBUG, f"Contagem de não alterados: {import_result.counts['unchanged']}")
         logger.log(LogLevel.DEBUG, f"Resultados da importação: {import_result.results}")
+        logger.log(LogLevel.DEBUG, f"Summary: {import_result.summary}")
+        logger.log(LogLevel.DEBUG, f"Fingerprints: {import_result.fingerprints}")
         logger.log(LogLevel.DEBUG, f"Stderr: {import_result.stderr}")
         raise ValueError("Falha ao importar a chave pública PGP")
 
