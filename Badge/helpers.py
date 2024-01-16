@@ -31,14 +31,14 @@ def get_pgp_public_key():
     return public_key
 
 def format_pgp_key(raw_key):
-    header = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n"
-    footer = "\n-----END PGP PUBLIC KEY BLOCK-----"
-    key_body = raw_key.replace(header, "").replace(footer, "").replace("\n", "")
+    header = "-----BEGIN PGP PUBLIC KEY BLOCK----- "
+    footer = "-----END PGP PUBLIC KEY BLOCK-----"
+    key_body = raw_key.replace(header, "").replace(footer, "").replace(" ", "")
     
-    formatted_key = header
+    formatted_key = header + "\n\n"
     for i in range(0, len(key_body), 64):
         formatted_key += key_body[i:i+64] + "\n"
-    formatted_key += footer
+    formatted_key += "\n" + footer
 
     return formatted_key
 
