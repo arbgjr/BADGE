@@ -121,7 +121,7 @@ class Azure:
                     # O ID do recurso é no formato /subscriptions/{sub}/resourceGroups/{rg}/providers/...
                     return function_app.id.split('/')[4]
 
-            raise ValueError(f"Azure Function '{function_app_name}' não encontrada.")
+            raise ValueError(f"[{subscription_id}] Azure Function '{function_app_name}' não encontrada dentro de {client}.")
         
         except Exception as e:
             self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
