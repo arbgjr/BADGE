@@ -18,6 +18,7 @@ class Logger:
     def __init__(self, logger_name, default_level=LogLevel.INFO):
         self.logger = logging.getLogger(logger_name)
         self.default_level = default_level
+        self.handler = None
 
         # Configure o logger apenas se houver uma chave de instrumentação do Application Insights
         appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
