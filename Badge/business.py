@@ -37,6 +37,7 @@ def get_configs():
         data['IPAzFunction'] = azure_client.get_function_ip()
         data['RGAzFunction'] = azure_client.get_resource_group()
         data['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
+        data['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
         return data
 
     except Exception as e:

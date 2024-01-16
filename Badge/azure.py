@@ -110,7 +110,7 @@ class Azure:
         try:
             function_app_name = self.get_azure_function_name()
             credential = DefaultAzureCredential()
-            subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")  # Defina sua ID de subscrição do Azure
+            subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"] 
 
             if not subscription_id:
                 raise EnvironmentError("AZURE_SUBSCRIPTION_ID não está definida em variáveis de ambiente.")
