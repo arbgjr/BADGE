@@ -76,7 +76,9 @@ class Azure:
             self.logger.log(LogLevel.DEBUG, f"Function IP: {function_ip}")
             resource_group = self.get_resource_group()
             self.logger.log(LogLevel.DEBUG, f"Resource Group: {resource_group}")
-
+            subscription_id = self.get_subscription_id()
+            self.logger.log(LogLevel.DEBUG, f"Subscription ID: {subscription_id}")
+            
             # Extrair informações do servidor da string de conexão
             conn_str = self.get_key_vault_secret('SqlConnectionString')
             server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", conn_str)
@@ -85,10 +87,10 @@ class Azure:
 
             server = server_match.group(1)
             self.logger.log(LogLevel.DEBUG, f"Az SQL Server: {server}")
-            
+
             # Crie uma instância do SqlManagementClient
             credential = DefaultAzureCredential()
-            sql_client = SqlManagementClient(credential, self.subscription_id)
+            sql_client = SqlManagementClient(credential, subscription_id)
 
             # Crie ou atualize a regra de firewall
             firewall_rule = sql_client.firewall_rules.create_or_update(
@@ -106,23 +108,41 @@ class Azure:
 
     def get_resource_group(self):
         try:
-            function_app_name = self.get_azure_function_name()
-            credential = DefaultAzureCredential()
+            resource_group = os.environ["RESOURCE_GROUP_NAME"]
+
+            if not resource_group:
+                raise EnvironmentError("RESOURCE_GROUP_NAME não está definida em variáveis de ambiente.")
+
+            return resource_group
+#            function_app_name = self.get_azure_function_name()
+#            credential = DefaultAzureCredential()
+#            subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
+#
+#            if not subscription_id:
+#                raise EnvironmentError("AZURE_SUBSCRIPTION_ID não está definida em variáveis de ambiente.")
+#
+#            client = ResourceManagementClient(credential, subscription_id)
+#            self.logger.log(LogLevel.DEBUG, f"Cliente ResourceManagementClient criado:{client}")
+#
+#            for function_app in client.resources.list():
+#                if function_app.name == function_app_name and function_app.type == 'Microsoft.Web/sites':
+#                    # O ID do recurso é no formato /subscriptions/{sub}/resourceGroups/{rg}/providers/...
+#                    return function_app.id.split('/')[4]
+#
+#            raise ValueError(f"[{subscription_id}] Azure Function '{function_app_name}' não encontrada dentro de {client}.")
+#        
+        except Exception as e:
+            self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
+            raise
+
+    def get_subscription_id(self):
+        try:
             subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
 
             if not subscription_id:
                 raise EnvironmentError("AZURE_SUBSCRIPTION_ID não está definida em variáveis de ambiente.")
 
-            client = ResourceManagementClient(credential, subscription_id)
-            self.logger.log(LogLevel.DEBUG, f"Cliente ResourceManagementClient criado:{client}")
-
-            for function_app in client.resources.list():
-                if function_app.name == function_app_name and function_app.type == 'Microsoft.Web/sites':
-                    # O ID do recurso é no formato /subscriptions/{sub}/resourceGroups/{rg}/providers/...
-                    return function_app.id.split('/')[4]
-
-            raise ValueError(f"[{subscription_id}] Azure Function '{function_app_name}' não encontrada dentro de {client}.")
-        
+            return subscription_id
         except Exception as e:
             self.logger.log(LogLevel.ERROR, f"Erro geral: {e}")
             raise

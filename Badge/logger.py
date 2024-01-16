@@ -39,6 +39,11 @@ class Logger:
             caller_info = self._get_caller_info()
             formatted_message = f"{caller_info} - {message}"
             self.logger.log(level.value, formatted_message)
+        self.flush_logs()
+
+    def flush_logs(self):
+        if self.handler:
+            self.handler.flush()
 
     def _get_caller_info(self):
         frame = inspect.currentframe().f_back
@@ -64,3 +69,8 @@ class CustomLogFilter(logging.Filter):
     def filter(self, record):
         filters = [CustomLogFilter.filter_azappconfig, CustomLogFilter.filter_azkv, CustomLogFilter.filter_response]
         return all(f(record) for f in filters)
+
+class FlushAzureLogHandler(AzureLogHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
