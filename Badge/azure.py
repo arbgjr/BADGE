@@ -15,21 +15,21 @@ class Azure:
     def __init__(self):
         self.logger = logger
 
+        self.currframe = inspect.currentframe().f_back
+        self.module_name = inspect.getmodule(self.currframe).__name__
+        self.class_name = self.currframe.f_globals.get('__qualname__')
+        function_name = self.currframe.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+        
         self.credential = DefaultAzureCredential()
         self.app_config_client = self._initialize_app_config_client()
         self.secret_client = self._initialize_key_vault_client()
-        
-        self.frame = inspect.currentframe().f_back
-        self.module_name = inspect.getmodule(self.frame).__name__
-        self.class_name = self.frame.f_globals.get('__qualname__')
-        function_name = self.frame.f_code.co_name
-        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
-        
+
         # Atualizar a regra de firewall para Azure SQL
         #self.update_firewall_rule()
 
     def _initialize_app_config_client(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         connection_string = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
         if not connection_string:
@@ -38,7 +38,7 @@ class Azure:
         return AzureAppConfigurationClient.from_connection_string(connection_string)
 
     def _initialize_key_vault_client(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         key_vault_url = self.get_app_config_setting("AzKVURI", )
         if key_vault_url is None:
@@ -52,7 +52,7 @@ class Azure:
         return SecretClient(vault_url=key_vault_url, credential=self.credential)
     
     def get_app_config_setting(self, key, label="Badge"):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         try:
             if label:
@@ -66,7 +66,7 @@ class Azure:
             return None
 
     def get_key_vault_secret(self, secret_name):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         try:
             secret = self.secret_client.get_secret(secret_name)
@@ -77,7 +77,7 @@ class Azure:
             return None
 
     def get_function_ip(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         try:
             response = requests.get("https://ifconfig.me/ip")
@@ -88,7 +88,7 @@ class Azure:
             raise
 
     def update_firewall_rule(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         try:
             function_ip = self.get_function_ip()
@@ -137,7 +137,7 @@ class Azure:
             raise
 
     def get_resource_group(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         try:
             resource_group = os.environ["RESOURCE_GROUP_NAME"]
@@ -168,7 +168,7 @@ class Azure:
             raise
 
     def get_subscription_id(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         try:
             subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
@@ -182,7 +182,7 @@ class Azure:
             raise
 
     def get_azure_function_name(self):
-        function_name = self.frame.f_code.co_name
+        function_name = self.currframe.f_code.co_name
         self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
         azfunction_name = os.getenv('WEBSITE_SITE_NAME')
         
