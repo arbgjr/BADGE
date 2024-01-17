@@ -156,11 +156,11 @@ def badge_image(data):
         if row:
             return {"badge_image": row[0]}
         else:
-            logger.log(LogLevel.ERROR, "Falha ao rechperar o badge no banco de dados.")
+            logger.log(LogLevel.ERROR, "Falha ao recuperar o badge no banco de dados.")
             return {"error": "Badge não encontrado"}, 404
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(LogLevel.ERROR, f"Erro ao recuoerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao recuperar badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_valid(data):

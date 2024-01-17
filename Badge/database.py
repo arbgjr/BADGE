@@ -69,7 +69,7 @@ class Database:
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT BadgeBase64 FROM Badges WHERE GUID = ?", badge_guid)
+                cursor.execute("SELECT BadgeData FROM Badges WHERE GUID = ?", badge_guid)
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
