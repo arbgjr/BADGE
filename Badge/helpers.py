@@ -169,7 +169,7 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         logger.log(LogLevel.ERROR, f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
-def create_qr_code(data, base_url, box_size=10, border=5):
+def create_qr_code(data, base_url, box_size=3, border=1):
     if not data or not base_url:
         logger.log(LogLevel.ERROR, "Dados ou URL base não fornecidos para o QR Code.")
         return None
