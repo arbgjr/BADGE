@@ -157,7 +157,7 @@ class Database:
                     "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     badge_guid, badge_hash, badge_base64, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash)
                 )
-                self.logger.log(Lself.caller_info, ogLevel.DEBUG, f"[database] Comitando dados .")
+                self.logger.log(self.caller_info, LogLevel.DEBUG, f"[database] Comitando dados .")
                 conn.commit()
             return True
         except Exception as e:
