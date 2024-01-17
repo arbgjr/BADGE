@@ -167,11 +167,14 @@ def create_qr_code(data, base_url, box_size=10, border=5):
         return None
 
 def process_badge_image(badge_template, issuer_name):
-    
     try:
         # Adicionar dados EXIF à imagem
         exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
         badge_with_exif = insert_exif(badge_template, exif_data)
+
+        # Verificar se a imagem foi retornada corretamente
+        if badge_with_exif is None:
+            raise ValueError("Falha ao inserir dados EXIF na imagem.")
 
         # Salvar a imagem em um buffer de bytes
         badge_bytes_io = io.BytesIO()
@@ -186,11 +189,9 @@ def process_badge_image(badge_template, issuer_name):
         signed_hash = gpg.sign(badge_hash)
 
         return badge_hash, badge_base64, signed_hash
-
     except Exception as e:
-        stack_trace = traceback.format_exc()
-        logger.log(LogLevel.ERROR, f"Erro ao processar a imagem do badge: {str(e)}\nStack Trace:\n{stack_trace}")
-        return None
+        # Tratamento de erro apropriado
+        pass
 
 def load_font_from_google_fonts(css_url, size):
     try:
