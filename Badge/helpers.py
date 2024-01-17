@@ -6,6 +6,7 @@ import uuid
 import hashlib
 import piexif
 import re
+import gnupg
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
