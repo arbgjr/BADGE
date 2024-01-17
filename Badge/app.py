@@ -6,7 +6,7 @@ from flask_restx import Resource, Api, fields, reqparse
 application = Flask(__name__)
 
 def format_exception(e):
-    trace = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+    trace = traceback.format_exception(type(e), e, e.__traceback__)
 
     formatted_trace = []
     for line in trace:
