@@ -102,6 +102,7 @@ def generate_badge(data):
  
         logger.log(LogLevel.DEBUG, f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
+        
         logger.log(LogLevel.DEBUG, f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
         encrypted_data = helpers.encrypt_data(concatenated_data)

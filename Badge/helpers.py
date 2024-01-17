@@ -13,6 +13,10 @@ import gnupg
 import requests
 from . import azure
 from . import logger, LogLevel
+from pgpy import PGPKey, PGPMessage
+import warnings
+from cryptography.utils import CryptographyDeprecationWarning
+
 
 # Configuração do cliente Azure
 azure_client = azure.Azure()
@@ -20,69 +24,81 @@ azure_client = azure.Azure()
 def gera_guid_badge():
     return str(uuid.uuid4())
 
+def format_pgp_key(raw_key, type):
+    if type == "pub":
+      header = "-----BEGIN PGP PUBLIC KEY BLOCK-----"
+      footer = "-----END PGP PUBLIC KEY BLOCK-----"
+    else:
+       if type == "pvt":
+          header = "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+          footer = "-----END PGP PRIVATE KEY BLOCK-----"
+
+    key_body = raw_key.replace(header, "").replace(footer, "")
+
+    # Divide a chave em linhas
+    lines = key_body.strip().split(" ")
+
+    # Reconstrói a chave, mantendo o cabeçalho, o rodapé e as quebras de linha do corpo
+    formatted_key = header + "\r\n\r\n"
+    for line in lines:  # Ignora o cabeçalho e o rodapé
+        formatted_key += line.strip() + "\r\n"
+    formatted_key += footer
+
+    return formatted_key
+
 def get_pgp_private_key():
     private_key_name = azure_client.get_app_config_setting('PGPPrivateKeyName')
     private_key = azure_client.get_key_vault_secret(private_key_name)
-    return private_key
+    return format_pgp_key(private_key, "pvt")
 
 def get_pgp_public_key():
     public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
     public_key = azure_client.get_key_vault_secret(public_key_name)
-    return public_key
-
-def format_pgp_key(raw_key):
-    header = "-----BEGIN PGP PUBLIC KEY BLOCK----- "
-    footer = "-----END PGP PUBLIC KEY BLOCK-----"
-    key_body = raw_key.replace(header, "").replace(footer, "").replace(" ", "")
-    
-    formatted_key = header + "\n\n"
-    for i in range(0, len(key_body), 64):
-        formatted_key += key_body[i:i+64] + "\n"
-    formatted_key += "\n" + footer
-
-    return formatted_key
+    return format_pgp_key(public_key, "pub")
 
 def decrypt_data(encrypted_data):
-    gpg = gnupg.GPG()
-    private_key = get_pgp_private_key()
-    import_result = gpg.import_keys(private_key)
-    
-    if not import_result.counts['imported'] and not import_result.fingerprints:
-        raise ValueError("Falha ao importar a chave privada PGP")
+    private_key_str = get_pgp_private_key()
+    passphrase = azure_client.get_key_vault_secret("PGPPassphrase")
 
-    decrypted_data = gpg.decrypt(encrypted_data)
-    if not decrypted_data.ok:
-        raise ValueError(f"Falha na descriptografia: {decrypted_data.status}")
+    # Carregar a chave privada
+    privkey = PGPKey()
+    privkey.parse(private_key_str)
 
-    return str(decrypted_data)
+    # Se a chave estiver protegida e a passphrase fornecida, tentar desbloquear
+    if privkey.is_protected and passphrase:
+        with privkey.unlock(passphrase):
+            if privkey.is_unlocked:
+                decrypted_message = privkey.decrypt(encrypted_data)
+            else:
+                raise ValueError("Falha ao desbloquear a chave privada. Verifique a passphrase.")
+
+    # Verificar se a descriptografia foi bem-sucedida
+    if not decrypted_message:
+        raise ValueError("Falha na descriptografia da mensagem.")
+
+    return str(decrypted_message.message)
 
 def encrypt_data(data):
-    gpg = gnupg.GPG()
-    public_key = format_pgp_key(get_pgp_public_key())
-    logger.log(LogLevel.DEBUG, f"Public Key: {public_key}")
+    logger.log(LogLevel.DEBUG, f"Mensagem: {data}")
+    public_key_str = get_pgp_public_key()
+    logger.log(LogLevel.DEBUG, f"PGP Public Key: {public_key_str}")
 
-    # Importar a chave pública PGP
-    logger.log(LogLevel.DEBUG, f"Importando a chave pública PGP:")
-    import_result = gpg.import_keys(public_key)
+    # Carregar a chave pública
+    pubkey, _ = PGPKey.from_blob(public_key_str)
 
-    # Verifique se a importação foi bem-sucedida
-    if not import_result.counts['imported'] and not import_result.fingerprints:
-        # Imprimir informações detalhadas do resultado da importação
-        logger.log(LogLevel.DEBUG, f"Detalhes da Importação:")
-        logger.log(LogLevel.DEBUG, f"Contagem de importados: {import_result.counts['imported']}")
-        logger.log(LogLevel.DEBUG, f"Contagem de não alterados: {import_result.counts['unchanged']}")
-        logger.log(LogLevel.DEBUG, f"Resultados da importação: {import_result.results}")
-        logger.log(LogLevel.DEBUG, f"Summary: {import_result.summary}")
-        logger.log(LogLevel.DEBUG, f"Fingerprints: {import_result.fingerprints}")
-        logger.log(LogLevel.DEBUG, f"Stderr: {import_result.stderr}")
-        raise ValueError("Falha ao importar a chave pública PGP")
+    # Verificar se a chave carregada é uma chave pública
+    if not pubkey.is_public:
+        raise ValueError("A chave fornecida não é uma chave pública válida.")
 
-    encrypted_data = gpg.encrypt(data, import_result.fingerprints[0])
-    if not encrypted_data.ok:
-        raise ValueError(f"Falha na criptografia: {encrypted_data.status}")
-    
-    return str(encrypted_data)
-        
+    # Criar uma nova mensagem PGP a partir dos dados
+    message = PGPMessage.new(data)
+
+    # Criptografar a mensagem com a chave pública
+    encrypted_phrase = pubkey.encrypt(message)
+    logger.log(LogLevel.DEBUG, f"Mensagem criptografada: {encrypted_phrase}")
+
+    return encrypted_phrase
+       
 def load_image_from_base64(base64_img):
     try:
         # Verificar se a entrada é uma string

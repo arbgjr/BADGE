@@ -4,13 +4,11 @@ azure-functions
 Pillow
 qrcode
 piexif
-python-gnupg
 pyodbc
 flask
 azure-identity
 azure-appconfiguration
 azure-mgmt-resource
-gnupg
 Flask-SQLAlchemy
 gunicorn
 Jinja2
@@ -27,3 +25,4 @@ opencensus
 opencensus-ext-azure
 opencensus-ext-logging
 azure-mgmt-sql
+PGPy
