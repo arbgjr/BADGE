@@ -22,6 +22,6 @@ def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
         return response
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(logger.LogLevel.ERROR, f'Erro ao processar a solicitação: {str(e)}\nStack Trace:\n{stack_trace}"')
+        logger.log(LogLevel.ERROR, f'Erro ao processar a solicitação: {str(e)}\nStack Trace:\n{stack_trace}"')
         return func.HttpResponse("Erro interno do servidor", status_code=500)
 
