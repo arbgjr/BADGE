@@ -55,21 +55,37 @@ class Logger:
 
 class CustomLogFilter(logging.Filter):
     @staticmethod
-    def filter_azappconfig(record):
-        return 'azappconfigengagement.azconfig.io' not in record.getMessage()
+    def filter_conditions(self):
+        return [
+            self.filter_keyvault_response,
+            self.filter_keyvault_request,
+            self.filter_appconfig_request,
+            self.filter_appconfig_response
+        ]
 
     @staticmethod
-    def filter_azkv(record):
-        return 'azkv-engagement.vault.azure.net' not in record.getMessage()
+    def filter_keyvault_request(self, message):
+        # Filtrar requisições para o Azure Key Vault
+        return 'vault.azure.net' not in message
 
     @staticmethod
-    def filter_response(record):
-        message = record.getMessage()
-        return not ('Response status:' in message and 'x-ms-request-id' in message)
+    def filter_keyvault_response(self, message):
+        # Filtrar respostas do Azure Key Vault
+        return 'x-ms-keyvault-region' not in message
+
+    @staticmethod
+    def filter_appconfig_request(self, message):
+        # Filtrar requisições para o Azure App Configuration
+        return 'azappconfigengagement.azconfig.io' not in message
+
+    @staticmethod
+    def filter_appconfig_response(self, message):
+        # Filtrar respostas do Azure App Configuration
+        return 'Content-Type': 'application/vnd.microsoft.appconfig.kv+json' not in message
 
     def filter(self, record):
-        filters = [CustomLogFilter.filter_azappconfig, CustomLogFilter.filter_azkv, CustomLogFilter.filter_response]
-        return all(f(record) for f in filters)
+        message = record.getMessage()
+        return all(condition(message) for condition in self.filter_conditions())
 
 class FlushAzureLogHandler(AzureLogHandler):
     def emit(self, record):
