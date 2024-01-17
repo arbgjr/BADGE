@@ -254,7 +254,7 @@ def generate_image_hash(image):
 
 def insert_exif(image, exif_data):
     try:
-        # Validar os dados de entrada
+        # Validação dos dados de entrada
         if not isinstance(image, Image.Image):
             logger.log(LogLevel.ERROR, "O objeto fornecido não é uma imagem válida.")
             return None
@@ -269,12 +269,18 @@ def insert_exif(image, exif_data):
 
         exif_bytes = piexif.dump(exif_dict)
 
-        # Salvar a imagem temporariamente com os dados EXIF
-        temp_img_path = "temp_img.jpg"
-        image.save(temp_img_path, "jpeg", exif=exif_bytes)
+        # Salvar a imagem em um buffer de memória com os dados EXIF
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='JPEG', exif=exif_bytes)
+        img_byte_arr.seek(0)
 
-        # Reabrir e retornar a imagem
-        return Image.open(temp_img_path)
+        # Reabrir a imagem do buffer de memória
+        return Image.open(img_byte_arr)
+
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        logger.log(LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
+        return None
 
     except Exception as e:
         stack_trace = traceback.format_exc()

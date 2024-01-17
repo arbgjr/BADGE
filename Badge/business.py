@@ -39,8 +39,9 @@ def get_configs():
         data['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
         data['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
         data['Palavra'] = '5e8124de-c23f-4ed4-a191-a89a2045a21a|Armando Guimarães|Sinqia'
-        data['PalavraCriptada'] = str(helpers.encrypt_data(data['Palavra']))
-        data['PalavraDescriptada'] = helpers.decrypt_data(data['PalavraCriptada'])
+        PalavraCriptada = helpers.encrypt_data(data['Palavra'])
+        data['PalavraCriptada'] = str(PalavraCriptada)
+        data['PalavraDescriptada'] = helpers.decrypt_data(PalavraCriptada)
         return data
 
     except Exception as e:
@@ -126,7 +127,7 @@ def generate_badge(data):
             logger.log(LogLevel.ERROR, "Falha ao editar exif do badge. ")
             return {"error": "Falha ao editar badge."}, 500 
 
-        logger.log(LogLevel.DEBUG, f"[business] Gerando Badge no banco.")
+        logger.log(LogLevel.DEBUG, f"[business] Gravando Badge no banco.")
         success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
         if not success:
             logger.log(LogLevel.ERROR, "Falha ao inserir o badge no banco de dados.")
