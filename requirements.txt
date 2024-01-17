@@ -25,5 +25,6 @@ opencensus
 opencensus-ext-azure
 opencensus-ext-logging
 azure-mgmt-sql
+cryptography
 PGPy
 gnupg
