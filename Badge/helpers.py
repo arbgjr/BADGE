@@ -53,6 +53,29 @@ def get_pgp_public_key():
     public_key = azure_client.get_key_vault_secret(public_key_name)
     return format_pgp_key(public_key, "pub")
 
+def sign_data(data):
+    private_key_str = get_pgp_private_key()
+    passphrase = azure_client.get_key_vault_secret("PGPPassphrase")
+
+    # Carregar a chave privada
+    privkey = PGPKey()
+    privkey.parse(private_key_str)
+
+    #privkey, _ = PGPKey.from_blob(private_key_str)
+
+    # Se a chave estiver protegida e a passphrase fornecida, tentar desbloquear
+    if privkey.is_protected and passphrase:
+        with privkey.unlock(passphrase):
+            if privkey.is_unlocked:
+                signature = privkey.sign(data)
+            else:
+                raise ValueError("Falha ao desbloquear a chave privada. Verifique a passphrase.")
+    else:
+        # Assinar o hash
+        signature = privkey.sign(data)
+
+    return str(signature)
+
 def decrypt_data(encrypted_data):
     private_key_str = get_pgp_private_key()
     passphrase = azure_client.get_key_vault_secret("PGPPassphrase")
@@ -68,6 +91,8 @@ def decrypt_data(encrypted_data):
                 decrypted_message = privkey.decrypt(encrypted_data)
             else:
                 raise ValueError("Falha ao desbloquear a chave privada. Verifique a passphrase.")
+    else:
+        decrypted_message = privkey.decrypt(encrypted_data)
 
     # Verificar se a descriptografia foi bem-sucedida
     if not decrypted_message:
@@ -95,7 +120,7 @@ def encrypt_data(data):
     logger.log(LogLevel.DEBUG, f"Mensagem criptografada: {encrypted_phrase}")
 
     return encrypted_phrase
-       
+
 def load_image_from_base64(base64_img):
     try:
         # Verificar se a entrada é uma string
@@ -185,10 +210,7 @@ def process_badge_image(badge_template, issuer_name):
         badge_hash = generate_image_hash(badge_with_exif)
         badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
 
-        # TODO: Mudar para PGPy
-        # Assinar o hash
-        gpg = gnupg.GPG()
-        signed_hash = gpg.sign(badge_hash)
+        signed_hash = sign_data(badge_hash)
 
         return badge_hash, badge_base64, signed_hash
 

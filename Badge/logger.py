@@ -26,12 +26,12 @@ class Logger:
             self._configure_logger(appinsights_key)
 
     def _configure_logger(self, appinsights_key):
-        handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
-        self.logger.addHandler(handler)
+        self.handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
+        self.logger.addHandler(self.handler)
 
-        # Adicionar um filtro personalizado
+        # Adicionar um filtro personalizado ao handler
         custom_filter = CustomLogFilter()
-        self.logger.addFilter(custom_filter)
+        self.handler.addFilter(custom_filter)
 
     def log(self, level, message):
         if not isinstance(level, LogLevel):
