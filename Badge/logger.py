@@ -64,24 +64,24 @@ class CustomLogFilter(logging.Filter):
         ]
 
     @staticmethod
-    def filter_keyvault_request(self, message):
+    def filter_keyvault_request(message):
         # Filtrar requisições para o Azure Key Vault
         return 'vault.azure.net' not in message
 
     @staticmethod
-    def filter_keyvault_response(self, message):
+    def filter_keyvault_response(message):
         # Filtrar mensagens de resposta do Key Vault
         if 'Response status: 200' in message and 'x-ms-keyvault-region' in message:
             return False
         return True
 
     @staticmethod
-    def filter_appconfig_request(self, message):
+    def filter_appconfig_request(message):
         # Filtrar requisições para o Azure App Configuration
         return 'azappconfigengagement.azconfig.io' not in message
 
     @staticmethod
-    def filter_appconfig_response(self, message):
+    def filter_appconfig_response(message):
         # Filtrar mensagens de resposta do Key Vault
         if 'Response status: 200' in message and 'application/vnd.microsoft.appconfig.kv+json' in message:
             return False
