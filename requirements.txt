@@ -28,4 +28,3 @@ azure-mgmt-sql
 pyOpenSSL>=22.0.0
 cryptography==37.0.4
 PGPy
-gnupg

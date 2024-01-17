@@ -4,19 +4,29 @@ import pyodbc
 from datetime import datetime, timedelta
 from . import azure
 from . import logger, LogLevel
+import inspect
 
 class Database:
     def __init__(self):
         self.logger = logger
-
+        
+        self.frame = inspect.currentframe().f_back
+        self.module_name = inspect.getmodule(self.frame).__name__
+        self.class_name = self.frame.f_globals.get('__qualname__')
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+        
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 
-        self.logger.log(LogLevel.DEBUG, f"[database] Obter dados de conexão com o banco.")
+        self.logger.log(self.caller_info, LogLevel.DEBUG, f"[database] Obter dados de conexão com o banco.")
         conn_str_orig = azure_client.get_key_vault_secret('SqlConnectionString')
         self.conn_str = self._transform_connection_string(conn_str_orig)
 
     def _transform_connection_string(self, original_conn_str):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         # Extrair os componentes da string de conexão original
         server_match = re.search(r"Server=tcp:([a-zA-Z0-9.-]+),(\d+);", original_conn_str)
         database_match = re.search(r"Initial Catalog=([a-zA-Z0-9]+);", original_conn_str)
@@ -46,12 +56,15 @@ class Database:
         return pyodbc_conn_str
                               
     def connect(self):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         try:
-            self.logger.log(LogLevel.DEBUG, f"[database] Conectando com o banco.")
+            self.logger.log(self.caller_info, LogLevel.DEBUG, f"[database] Conectando com o banco.")
             return pyodbc.connect(self.conn_str)
         except pyodbc.Error as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
             raise
 
     def get_badge_template(self, badge_id):
@@ -62,10 +75,13 @@ class Database:
                 return cursor.fetchone()[0]
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_image(self, badge_guid):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
@@ -73,7 +89,7 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def validate_badge(self, badge_guid, owner_name, issuer_name):
@@ -84,10 +100,13 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_user_badges(self, user_id):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
@@ -95,10 +114,13 @@ class Database:
                 return cursor.fetchall()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_holders(self, badge_name):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
@@ -106,10 +128,13 @@ class Database:
                 return cursor.fetchall()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao obter detentores do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao obter detentores do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def get_badge_info_for_post(self, badge_guid):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
@@ -117,22 +142,25 @@ class Database:
                 return cursor.fetchone()
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def insert_badge(self, badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64):
+        function_name = self.frame.f_code.co_name
+        self.caller_info = f"{self.module_name}.{self.class_name}.{function_name}"
+
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
-                self.logger.log(LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
+                self.logger.log(self.caller_info, LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
                 cursor.execute(
                     "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     badge_guid, badge_hash, badge_base64, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash)
                 )
-                self.logger.log(LogLevel.DEBUG, f"[database] Comitando dados .")
+                self.logger.log(Lself.caller_info, ogLevel.DEBUG, f"[database] Comitando dados .")
                 conn.commit()
             return True
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(LogLevel.ERROR, f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(self.caller_info, LogLevel.ERROR, f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
             return False

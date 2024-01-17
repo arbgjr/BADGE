@@ -33,11 +33,16 @@ class Logger:
         custom_filter = CustomLogFilter()
         self.logger.addFilter(custom_filter)
 
-    def log(self, level, message):
+    def log(self, caller_info, level, message):
         if not isinstance(level, LogLevel):
-            self.logger.log(LogLevel.INFO.value, f"Nível de log inválido: {level}, configurado para INFO. {message}")
+            frame = inspect.currentframe().f_back
+            module_name = inspect.getmodule(frame).__name__
+            class_name = frame.f_globals.get('__qualname__')
+            function_name = frame.f_code.co_name
+            caller_info = f"{module_name}.{class_name}.{function_name}"
+
+            self.logger.log(caller_info, LogLevel.INFO.value, f"Nível de log inválido: {level}, configurado para INFO. {message}")
         else:
-            caller_info = self._get_caller_info()
             formatted_message = f"{caller_info} - {message}"
             self.logger.log(level.value, formatted_message)
         self.flush_logs()
