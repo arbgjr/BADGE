@@ -120,14 +120,14 @@ class Database:
             self.logger.log(LogLevel.ERROR, f"Erro ao obter informações do badge para postagem: {e}\nStack Trace:\n{stack_trace}")
             return None
 
-    def insert_badge(self, badge_guid, badge_hash, badge_data, owner_name, issuer_name, signed_hash, badge_base64):
+    def insert_badge(self, badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64):
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
                 self.logger.log(LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
                 cursor.execute(
-                    "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    badge_guid, badge_hash, badge_data, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
+                    "INSERT INTO Badges (GUID, BadgeHash, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    badge_guid, badge_hash, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
                 )
                 self.logger.log(LogLevel.DEBUG, f"[database] Comitando dados .")
                 conn.commit()

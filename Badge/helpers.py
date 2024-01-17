@@ -185,6 +185,7 @@ def process_badge_image(badge_template, issuer_name):
         badge_hash = generate_image_hash(badge_with_exif)
         badge_base64 = base64.b64encode(badge_bytes_io.getvalue()).decode('utf-8')
 
+        # TODO: Mudar para PGPy
         # Assinar o hash
         gpg = gnupg.GPG()
         signed_hash = gpg.sign(badge_hash)
