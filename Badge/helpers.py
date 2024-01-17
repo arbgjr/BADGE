@@ -9,14 +9,10 @@ import re
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
-import gnupg
 import requests
 from . import azure
 from . import logger, LogLevel
 from pgpy import PGPKey, PGPMessage
-import warnings
-from cryptography.utils import CryptographyDeprecationWarning
-
 
 # Configuração do cliente Azure
 azure_client = azure.Azure()
