@@ -282,16 +282,6 @@ def insert_exif(image, exif_data):
         logger.log(LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        logger.log(LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
-        return None
-
-    finally:
-        # Limpar a imagem temporária, se existir
-        if os.path.exists(temp_img_path):
-            os.remove(temp_img_path)
-
 def validar_url_https(url):
     pattern = r'^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$'
     return re.match(pattern, url) is not None
