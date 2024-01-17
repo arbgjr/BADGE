@@ -13,12 +13,10 @@ from . import logger, LogLevel
 # Configuração do cliente Azure
 azure_client = azure.Azure()
 
-frame = inspect.currentframe().f_back
-module_name = inspect.getmodule(frame).__name__
-class_name = frame.f_globals.get('__qualname__')
-
-           
 def get_configs():
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -57,9 +55,11 @@ def get_configs():
         stack_trace = traceback.format_exc()
         logger.log(caller_info, LogLevel.ERROR, f"Erro ao recuperar informações: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
-    
         
 def generate_badge(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -153,6 +153,9 @@ def generate_badge(data):
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_image(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -179,6 +182,9 @@ def badge_image(data):
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_valid(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -226,6 +232,9 @@ def badge_valid(data):
         return {"error": "Erro interno no servidor"}, 500
      
 def badge_list(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -264,6 +273,9 @@ def badge_list(data):
         return {"error": "Erro interno no servidor"}, 500
 
 def badge_holder(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -291,6 +303,9 @@ def badge_holder(data):
         return {"error": "Erro interno no servidor"}, 500
 
 def linkedin_post(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 

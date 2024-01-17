@@ -17,18 +17,19 @@ import inspect
 # Configuração do cliente Azure
 azure_client = azure.Azure()
 
-frame = inspect.currentframe().f_back
-module_name = inspect.getmodule(frame).__name__
-class_name = frame.f_globals.get('__qualname__')
- 
-
 def gera_guid_badge():
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
     return str(uuid.uuid4())
 
 def format_pgp_key(raw_key, type):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -54,6 +55,9 @@ def format_pgp_key(raw_key, type):
     return formatted_key
 
 def get_pgp_private_key():
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -62,6 +66,9 @@ def get_pgp_private_key():
     return format_pgp_key(private_key, "pvt")
 
 def get_pgp_public_key():
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -70,6 +77,9 @@ def get_pgp_public_key():
     return format_pgp_key(public_key, "pub")
 
 def sign_data(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -96,6 +106,9 @@ def sign_data(data):
     return str(signature)
 
 def decrypt_data(encrypted_data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -123,6 +136,9 @@ def decrypt_data(encrypted_data):
     return str(decrypted_message.message)
 
 def encrypt_data(data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -147,6 +163,9 @@ def encrypt_data(data):
     return encrypted_phrase
 
 def load_image_from_base64(base64_img):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -176,6 +195,9 @@ def load_image_from_base64(base64_img):
     return None
 
 def add_text_to_badge(badge_template, owner_name, issuer_name):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -201,6 +223,9 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         return None
 
 def create_qr_code(data, base_url, box_size=3, border=1):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -226,6 +251,9 @@ def create_qr_code(data, base_url, box_size=3, border=1):
         return None
 
 def process_badge_image(badge_template, issuer_name):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -256,6 +284,9 @@ def process_badge_image(badge_template, issuer_name):
         return None, None, None
 
 def load_font_from_google_fonts(css_url, size):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -287,6 +318,9 @@ def load_font_from_google_fonts(css_url, size):
     return None
 
 def load_font(font_path, size):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -305,6 +339,9 @@ def load_font(font_path, size):
     return None
 
 def generate_image_hash(image):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -325,6 +362,9 @@ def generate_image_hash(image):
         return None
 
 def insert_exif(image, exif_data):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
@@ -365,6 +405,9 @@ def insert_exif(image, exif_data):
         return None
 
 def validar_url_https(url):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
     function_name = frame.f_code.co_name
     caller_info = f"{module_name}.{class_name}.{function_name}"
 
