@@ -70,8 +70,10 @@ class CustomLogFilter(logging.Filter):
 
     @staticmethod
     def filter_keyvault_response(self, message):
-        # Filtrar respostas do Azure Key Vault
-        return 'x-ms-keyvault-region' not in message
+        # Filtrar mensagens de resposta do Key Vault
+        if 'Response status: 200' in message and 'x-ms-keyvault-region' in message:
+            return False
+        return True
 
     @staticmethod
     def filter_appconfig_request(self, message):
@@ -80,8 +82,10 @@ class CustomLogFilter(logging.Filter):
 
     @staticmethod
     def filter_appconfig_response(self, message):
-        # Filtrar respostas do Azure App Configuration
-        return 'Content-Type': 'application/vnd.microsoft.appconfig.kv+json' not in message
+        # Filtrar mensagens de resposta do Key Vault
+        if 'Response status: 200' in message and 'application/vnd.microsoft.appconfig.kv+json' in message:
+            return False
+        return True
 
     def filter(self, record):
         message = record.getMessage()
