@@ -54,7 +54,6 @@ class Logger:
         return f"{module_name}.{class_name}.{function_name}"
 
 class CustomLogFilter(logging.Filter):
-    @staticmethod
     def filter_conditions(self):
         return [
             self.filter_keyvault_response,
