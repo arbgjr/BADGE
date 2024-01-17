@@ -174,11 +174,12 @@ def process_badge_image(badge_template, issuer_name):
 
         # Verificar se a imagem foi retornada corretamente
         if badge_with_exif is None:
-            raise ValueError("Falha ao inserir dados EXIF na imagem.")
+            logger.log(LogLevel.ERROR, "Falha ao inserir dados EXIF na imagem.")
+            return None, None, None
 
         # Salvar a imagem em um buffer de bytes
         badge_bytes_io = io.BytesIO()
-        badge_with_exif.save(badge_bytes_io, format='JPEG')
+        badge_with_exif.save(badge_bytes_io, format='PNG')
 
         # Gerar hash da imagem e converter para base64
         badge_hash = generate_image_hash(badge_with_exif)
@@ -189,9 +190,10 @@ def process_badge_image(badge_template, issuer_name):
         signed_hash = gpg.sign(badge_hash)
 
         return badge_hash, badge_base64, signed_hash
+
     except Exception as e:
-        # Tratamento de erro apropriado
-        pass
+        logger.log(LogLevel.ERROR, f"Erro ao processar a imagem do badge: {e}")
+        return None, None, None
 
 def load_font_from_google_fonts(css_url, size):
     try:
@@ -264,6 +266,7 @@ def insert_exif(image, exif_data):
             logger.log(LogLevel.ERROR, "Os dados EXIF fornecidos não estão no formato de dicionário.")
             return None
 
+        # Preparar os dados EXIF para inserção
         exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": None}
         for key, value in exif_data.items():
             exif_dict[key] = value
@@ -272,7 +275,13 @@ def insert_exif(image, exif_data):
 
         # Salvar a imagem em um buffer de memória com os dados EXIF
         img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='JPEG', exif=exif_bytes)
+        if image.format == 'PNG':
+            image.save(img_byte_arr, format='PNG')
+        else:
+            if image.mode == 'RGBA':
+                image = image.convert('RGB')
+            image.save(img_byte_arr, format='JPEG', exif=exif_bytes)
+
         img_byte_arr.seek(0)
 
         # Reabrir a imagem do buffer de memória
@@ -280,7 +289,7 @@ def insert_exif(image, exif_data):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {e}\nStack Trace:\n{stack_trace}")
         return None
 
 def validar_url_https(url):

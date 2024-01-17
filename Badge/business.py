@@ -102,7 +102,7 @@ def generate_badge(data):
         
         logger.log(LogLevel.DEBUG, f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
         concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
-        encrypted_data = helpers.encrypt_data(concatenated_data)
+        encrypted_data = str(helpers.encrypt_data(concatenated_data))
 
         logger.log(LogLevel.DEBUG, f"[business] Adicionando texto ao Badge.")
         badge_template = helpers.add_text_to_badge(badge_template, owner_name, issuer_name)
@@ -119,13 +119,13 @@ def generate_badge(data):
         logger.log(LogLevel.DEBUG, f"[business] Inerindo Qrcode no Badge.")
         badge_template.paste(qr_code_img, (10, 50))
 
-        logger.log(LogLevel.DEBUG, f"[business] Inserindo dados EXIF do Badge.")
+        logger.log(LogLevel.DEBUG, "[business] Inserindo dados EXIF no Badge.")
         result = helpers.process_badge_image(badge_template, issuer_name)
         if result is not None:
             badge_hash, badge_base64, signed_hash = result
         else:
-            logger.log(LogLevel.ERROR, "Falha ao editar exif do badge. ")
-            return {"error": "Falha ao editar badge."}, 500 
+            logger.log(LogLevel.ERROR, "Falha ao editar EXIF do badge.")
+            return {"error": "Falha ao editar badge."}, 500
 
         logger.log(LogLevel.DEBUG, f"[business] Gravando Badge no banco.")
         success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
