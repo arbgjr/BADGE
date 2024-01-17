@@ -126,8 +126,8 @@ class Database:
                 cursor = conn.cursor()
                 self.logger.log(LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
                 cursor.execute(
-                    "INSERT INTO Badges (GUID, BadgeHash, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature, BadgeBase64) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    badge_guid, badge_hash, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash), badge_base64
+                    "INSERT INTO Badges (GUID, BadgeHash, BadgeData, CreationDate, ExpiryDate, OwnerName, IssuerName, PgpSignature) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    badge_guid, badge_hash, badge_base64, datetime.now(), datetime.now() + timedelta(days=365), owner_name, issuer_name, str(signed_hash)
                 )
                 self.logger.log(LogLevel.DEBUG, f"[database] Comitando dados .")
                 conn.commit()
