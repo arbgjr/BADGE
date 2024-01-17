@@ -29,9 +29,9 @@ class Logger:
         self.handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
         self.logger.addHandler(self.handler)
 
-        # Adicionar um filtro personalizado ao handler
+        # Adicionar um filtro personalizado ao logger
         custom_filter = CustomLogFilter()
-        self.handler.addFilter(custom_filter)
+        self.logger.addFilter(custom_filter)
 
     def log(self, level, message):
         if not isinstance(level, LogLevel):
@@ -64,9 +64,10 @@ class CustomLogFilter(logging.Filter):
 
     @staticmethod
     def filter_keyvault_request(message):
-        # Filtrar requisições para o Azure Key Vault
-        return 'vault.azure.net' not in message
-
+        result = 'vault.azure.net' not in message
+        print(f"filter_keyvault_request: {message} -> {result}")
+        return result
+    
     @staticmethod
     def filter_keyvault_response(message):
         # Filtrar mensagens de resposta do Key Vault
