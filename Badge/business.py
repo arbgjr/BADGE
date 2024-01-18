@@ -128,8 +128,11 @@ def generate_badge(data):
             logger.log(caller_info, LogLevel.ERROR, "Falha ao gerar QR Code. ")
             return {"error": "Falha ao editar badge."}, 500 
 
-        logger.log(caller_info, LogLevel.DEBUG, f"[business] Inerindo Qrcode no Badge.")
-        badge_template.paste(qr_code_img, (10, 50))
+        logger.log(caller_info, LogLevel.DEBUG, f"[business] Inerindo QRCode no Badge.")
+        badge_template = helpers.colar_qr_code(badge_template, qr_code_img)
+        if badge_template is None:
+            logger.log(caller_info, LogLevel.ERROR, "Falha ao inserir QRCode. ")
+            return {"error": "Falha ao editar badge."}, 500 
 
         logger.log(caller_info, LogLevel.DEBUG, "[business] Inserindo dados EXIF no Badge.")
         result = helpers.process_badge_image(badge_template, issuer_name)

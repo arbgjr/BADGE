@@ -259,8 +259,7 @@ def process_badge_image(badge_template, issuer_name):
 
     try:
         # Adicionar dados EXIF à imagem
-        exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
-        badge_with_exif = insert_exif(badge_template, exif_data)
+        badge_with_exif = insert_exif(badge_template, issuer_name)
 
         # Verificar se a imagem foi retornada corretamente
         if badge_with_exif is None:
@@ -311,10 +310,10 @@ def load_font_from_google_fonts(css_url, size):
         return font
     except requests.RequestException as e:
         stack_trace = traceback.format_exc()
-        print(f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
+        logger.log(caller_info, LogLevel.ERROR, f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
     except Exception as e:
         stack_trace = traceback.format_exc()
-        print(f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
+        logger.log(caller_info, LogLevel.ERROR, f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
     return None
 
 def load_font(font_path, size):
@@ -361,7 +360,7 @@ def generate_image_hash(image):
         logger.log(caller_info, LogLevel.ERROR, f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
-def insert_exif(image, exif_data):
+def insert_exif(image, issuer_name):
     frame = inspect.currentframe().f_back
     module_name = inspect.getmodule(frame).__name__
     class_name = frame.f_globals.get('__qualname__')
@@ -374,6 +373,7 @@ def insert_exif(image, exif_data):
             logger.log(caller_info, LogLevel.ERROR, "O objeto fornecido não é uma imagem válida.")
             return None
 
+        exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
         if not isinstance(exif_data, dict):
             logger.log(caller_info, LogLevel.ERROR, "Os dados EXIF fornecidos não estão no formato de dicionário.")
             return None
@@ -413,4 +413,59 @@ def validar_url_https(url):
 
     pattern = r'^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$'
     return re.match(pattern, url) is not None
+
+def colar_qr_code(badge_img, qr_code_img, espaco_extra=0):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
+    function_name = frame.f_code.co_name
+    caller_info = f"{module_name}.{class_name}.{function_name}"
+
+    badge_width, badge_height = badge_img.size
+    qr_width, qr_height = qr_code_img.size
+
+    # Altura total da nova imagem (badge + espaço extra + altura do QR Code)
+    nova_altura = badge_height + espaco_extra + qr_height
+
+    # Criar uma nova imagem com a altura estendida e fundo transparente
+    nova_imagem = Image.new('RGBA', (badge_width, nova_altura), (255, 255, 255, 0))
+
+    # Colar o badge na parte superior da nova imagem
+    nova_imagem.paste(badge_img, (0, 0), badge_img)
+
+    # Calcular posição horizontal do QR Code (centralizar)
+    x_position = (badge_width - qr_width) // 2
+
+    # Posição vertical do QR Code (abaixo do badge)
+    y_position = badge_height + espaco_extra
+
+    # Colar o QR Code na nova imagem
+    nova_imagem.paste(qr_code_img, (x_position, y_position))
+
+    return nova_imagem
+
+def png_to_jpeg(png_image, background_color=(255, 255, 255)):
+    frame = inspect.currentframe().f_back
+    module_name = inspect.getmodule(frame).__name__
+    class_name = frame.f_globals.get('__qualname__')
+    function_name = frame.f_code.co_name
+    caller_info = f"{module_name}.{class_name}.{function_name}"
+
+    try:
+        # Verificar se o objeto é uma imagem
+        if not isinstance(png_image, Image.Image):
+            raise ValueError("O objeto fornecido não é uma imagem válida.")
+
+        # Criar uma nova imagem com fundo na cor especificada, do mesmo tamanho da imagem PNG
+        background = Image.new('RGB', png_image.size, background_color)
+
+        # Colar a imagem PNG no fundo
+        background.paste(png_image, (0, 0), png_image)
+
+        # Retornar a imagem resultante como JPEG
+        return background
+
+    except Exception as e:
+        logger.log(caller_info, LogLevel.ERROR, f"Erro ao converter a imagem: {e}")
+        return None
 
