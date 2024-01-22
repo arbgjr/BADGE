@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request 
 import traceback
 from flask_restx import Resource, Api, fields, reqparse
-import inspect
 
 # Criação da aplicação Flask
 application = Flask(__name__)
@@ -88,7 +87,7 @@ class Configs(Resource):
 
 api.add_resource(Configs, "/configs")
 
-
+# TODO: Payload compactado
 # Modelo de dados para a documentação Swagger
 badge_model = api.model('BadgeData', {
     'owner_name': fields.String(required=True, description='Nome do proprietário do badge'),
@@ -107,12 +106,7 @@ class EmitBadge(Resource):
     @api.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
-        frame = inspect.currentframe().f_back
-        module_name = inspect.getmodule(frame).__name__
-        class_name = frame.f_globals.get('__qualname__')
-        function_name = frame.f_code.co_name
-        caller_info = f"{module_name}.{class_name}.{function_name}"
-        logger.log(caller_info, LogLevel.DEBUG, f"[app] Endpoint para emitir um novo badge.")
+        logger.log(LogLevel.DEBUG, f"[app] Endpoint para emitir um novo badge.")
         data = request.json
         result = business.generate_badge(data)
         return jsonify(result)

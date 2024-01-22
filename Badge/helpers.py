@@ -12,27 +12,14 @@ import requests
 from . import azure
 from . import logger, LogLevel
 from pgpy import PGPKey, PGPMessage
-import inspect
 
 # Configuração do cliente Azure
 azure_client = azure.Azure()
 
 def gera_guid_badge():
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     return str(uuid.uuid4())
 
 def format_pgp_key(raw_key, type):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     if type == "pub":
       header = "-----BEGIN PGP PUBLIC KEY BLOCK-----"
       footer = "-----END PGP PUBLIC KEY BLOCK-----"
@@ -55,34 +42,16 @@ def format_pgp_key(raw_key, type):
     return formatted_key
 
 def get_pgp_private_key():
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     private_key_name = azure_client.get_app_config_setting('PGPPrivateKeyName')
     private_key = azure_client.get_key_vault_secret(private_key_name)
     return format_pgp_key(private_key, "pvt")
 
 def get_pgp_public_key():
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
     public_key = azure_client.get_key_vault_secret(public_key_name)
     return format_pgp_key(public_key, "pub")
 
 def sign_data(data):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     private_key_str = get_pgp_private_key()
     passphrase = azure_client.get_key_vault_secret("PGPPassphrase")
 
@@ -106,12 +75,6 @@ def sign_data(data):
     return str(signature)
 
 def decrypt_data(encrypted_data):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     private_key_str = get_pgp_private_key()
     passphrase = azure_client.get_key_vault_secret("PGPPassphrase")
 
@@ -136,15 +99,9 @@ def decrypt_data(encrypted_data):
     return str(decrypted_message.message)
 
 def encrypt_data(data):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
-    logger.log(caller_info, LogLevel.DEBUG, f"Mensagem: {data}")
+    logger.log(LogLevel.DEBUG, f"Mensagem: {data}")
     public_key_str = get_pgp_public_key()
-    logger.log(caller_info, LogLevel.DEBUG, f"PGP Public Key: {public_key_str}")
+    logger.log(LogLevel.DEBUG, f"PGP Public Key: {public_key_str}")
 
     # Carregar a chave pública
     pubkey, _ = PGPKey.from_blob(public_key_str)
@@ -158,21 +115,15 @@ def encrypt_data(data):
 
     # Criptografar a mensagem com a chave pública
     encrypted_phrase = pubkey.encrypt(message)
-    logger.log(caller_info, LogLevel.DEBUG, f"Mensagem criptografada: {encrypted_phrase}")
+    logger.log(LogLevel.DEBUG, f"Mensagem criptografada: {encrypted_phrase}")
 
     return encrypted_phrase
 
 def load_image_from_base64(base64_img):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Verificar se a entrada é uma string
         if not isinstance(base64_img, str):
-            logger.log(caller_info, LogLevel.ERROR, "Dados de entrada não são uma string base64 válida.")
+            logger.log(LogLevel.ERROR, "Dados de entrada não são uma string base64 válida.")
             return None
 
         # Decodificar dados base64
@@ -184,23 +135,17 @@ def load_image_from_base64(base64_img):
 
     except base64.binascii.Error:
         # Erro específico para problemas relacionados à decodificação base64
-        logger.log(caller_info, LogLevel.ERROR, "Erro na decodificação dos dados base64.")
+        logger.log(LogLevel.ERROR, "Erro na decodificação dos dados base64.")
     except IOError:
         # Erro específico para problemas relacionados à I/O ao abrir a imagem
-        logger.log(caller_info, LogLevel.ERROR, "Não foi possível abrir a imagem a partir dos dados base64.")
+        logger.log(LogLevel.ERROR, "Não foi possível abrir a imagem a partir dos dados base64.")
     except Exception as e:
         stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def add_text_to_badge(badge_template, owner_name, issuer_name):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         draw = ImageDraw.Draw(badge_template)
         css_url = 'https://fonts.googleapis.com/css2?family=Rubik&display=swap'
@@ -208,7 +153,7 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
         font = load_font_from_google_fonts(css_url, font_size)
 
         if font is None:
-            logger.log(caller_info, LogLevel.ERROR, "Falha ao carregar a fonte Rubik.")
+            logger.log(LogLevel.ERROR, "Falha ao carregar a fonte Rubik.")
             return None
 
         # Adicionar texto à imagem
@@ -219,18 +164,12 @@ def add_text_to_badge(badge_template, owner_name, issuer_name):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def create_qr_code(data, base_url, box_size=3, border=1):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     if not data or not base_url:
-        logger.log(caller_info, LogLevel.ERROR, "Dados ou URL base não fornecidos para o QR Code.")
+        logger.log(LogLevel.ERROR, "Dados ou URL base não fornecidos para o QR Code.")
         return None
 
     try:
@@ -247,23 +186,17 @@ def create_qr_code(data, base_url, box_size=3, border=1):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def process_badge_image(badge_template, issuer_name):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Adicionar dados EXIF à imagem
         badge_with_exif = insert_exif(badge_template, issuer_name)
 
         # Verificar se a imagem foi retornada corretamente
         if badge_with_exif is None:
-            logger.log(caller_info, LogLevel.ERROR, "Falha ao inserir dados EXIF na imagem.")
+            logger.log(LogLevel.ERROR, "Falha ao inserir dados EXIF na imagem.")
             return None, None, None
 
         # Salvar a imagem em um buffer de bytes
@@ -279,16 +212,10 @@ def process_badge_image(badge_template, issuer_name):
         return badge_hash, badge_base64, signed_hash
 
     except Exception as e:
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao processar a imagem do badge: {e}")
+        logger.log(LogLevel.ERROR, f"Erro ao processar a imagem do badge: {e}")
         return None, None, None
 
 def load_font_from_google_fonts(css_url, size):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Baixar o CSS da fonte
         response = requests.get(css_url)
@@ -310,19 +237,13 @@ def load_font_from_google_fonts(css_url, size):
         return font
     except requests.RequestException as e:
         stack_trace = traceback.format_exc()
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
     return None
 
 def load_font(font_path, size):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Carregar a fonte
         font = ImageFont.truetype(font_path, size)
@@ -330,24 +251,18 @@ def load_font(font_path, size):
     except IOError:
         stack_trace = traceback.format_exc()
         # Erro específico para problemas relacionados à I/O, como arquivo de fonte não encontrado
-        logger.log(caller_info, LogLevel.ERROR, f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
     except Exception as e:
         stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def generate_image_hash(image):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Validar os dados de entrada
         if not isinstance(image, Image.Image):
-            logger.log(caller_info, LogLevel.ERROR, "O objeto fornecido não é uma imagem válida.")
+            logger.log(LogLevel.ERROR, "O objeto fornecido não é uma imagem válida.")
             return None
 
         # Geração do hash da imagem usando SHA-3
@@ -357,25 +272,19 @@ def generate_image_hash(image):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def insert_exif(image, issuer_name):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Validação dos dados de entrada
         if not isinstance(image, Image.Image):
-            logger.log(caller_info, LogLevel.ERROR, "O objeto fornecido não é uma imagem válida.")
+            logger.log(LogLevel.ERROR, "O objeto fornecido não é uma imagem válida.")
             return None
 
         exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
         if not isinstance(exif_data, dict):
-            logger.log(caller_info, LogLevel.ERROR, "Os dados EXIF fornecidos não estão no formato de dicionário.")
+            logger.log(LogLevel.ERROR, "Os dados EXIF fornecidos não estão no formato de dicionário.")
             return None
 
         # Preparar os dados EXIF para inserção
@@ -401,16 +310,10 @@ def insert_exif(image, issuer_name):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {e}\nStack Trace:\n{stack_trace}")
+        logger.log(LogLevel.ERROR, f"Erro ao inserir dados EXIF na imagem: {e}\nStack Trace:\n{stack_trace}")
         return None
 
 def validar_url_https(url):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     pattern = r'^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$'
     return re.match(pattern, url) is not None
 
@@ -451,12 +354,6 @@ def colar_qr_code(badge_img, qr_code_img, espaco_extra=0):
     return nova_imagem
 
 def png_to_jpeg(png_image, background_color=(255, 255, 255)):
-    frame = inspect.currentframe().f_back
-    module_name = inspect.getmodule(frame).__name__
-    class_name = frame.f_globals.get('__qualname__')
-    function_name = frame.f_code.co_name
-    caller_info = f"{module_name}.{class_name}.{function_name}"
-
     try:
         # Verificar se o objeto é uma imagem
         if not isinstance(png_image, Image.Image):
@@ -472,6 +369,6 @@ def png_to_jpeg(png_image, background_color=(255, 255, 255)):
         return background
 
     except Exception as e:
-        logger.log(caller_info, LogLevel.ERROR, f"Erro ao converter a imagem: {e}")
+        logger.log(LogLevel.ERROR, f"Erro ao converter a imagem: {e}")
         return None
 
