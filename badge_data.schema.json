@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "badgeId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "issuer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "contactInfo": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "email",
+            "phone"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "contactInfo"
+      ]
+    },
+    "holder": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "email"
+      ]
+    },
+    "category": {
+      "type": "object",
+      "properties": {
+        "mainCategory": {
+          "type": "string"
+        },
+        "subCategory": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mainCategory",
+        "subCategory"
+      ]
+    },
+    "generatedBadge": {
+      "type": "object",
+      "properties": {
+        "badgeImageUrl": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "issuedDate": {
+              "type": "string"
+            },
+            "expiryDate": {
+              "type": "string"
+            },
+            "additionalInfo": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "issuedDate",
+            "expiryDate",
+            "additionalInfo"
+          ]
+        }
+      },
+      "required": [
+        "badgeImageUrl",
+        "metadata"
+      ]
+    },
+    "verificationLink": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "badgeId",
+    "name",
+    "description",
+    "issuer",
+    "holder",
+    "category",
+    "generatedBadge",
+    "verificationLink"
+  ]
+}
