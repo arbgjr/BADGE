@@ -56,7 +56,7 @@ def generate_badge(data):
         logger.log(LogLevel.DEBUG, f"[business] Endpoint para emitir um novo badge.")
         if 'owner_name' not in data or 'issuer_name' not in data or 'area_name' not in data:
             logger.log(LogLevel.ERROR, "Dados de entrada faltando: 'owner_name' ou 'issuer_name' ou 'area_name'")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge."}, 400
 
         owner_name = data['owner_name']
         issuer_name = data['issuer_name']
