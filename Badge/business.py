@@ -69,11 +69,11 @@ def generate_badge(data):
         logger.log(LogLevel.DEBUG, f"[business] URL de verificação do Badge: {base_url}.")
         if not base_url:
             logger.log(LogLevel.ERROR, "Falha ao carregar a URL de verificação do badge.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.1"}, 418
         
         if not helpers.validar_url_https(base_url):
             logger.log(LogLevel.ERROR, "URL de verificação do badge inválida.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.2"}, 418
  
         logger.log(LogLevel.DEBUG, f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
@@ -88,7 +88,7 @@ def generate_badge(data):
         badge_template_info  = db.get_badge_template(issuer_name, area_name)
         if not badge_template_info:
             logger.log(LogLevel.ERROR, "Template de badge não encontrado.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.3"}, 418
 
         blob_url = badge_template_info.get('BlobUrl')
 
@@ -96,7 +96,7 @@ def generate_badge(data):
         badge_template = azure_client.return_blob_as_image(blob_url)
         if not badge_template:
             logger.log(LogLevel.ERROR, "Falha ao carregar template de badge.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.4"}, 418
 
         logger.log(LogLevel.DEBUG, f"[business] Convertendo para JPG com fundo branco.")
         badge_template = helpers.convert_image_to_jpg(badge_template)
@@ -136,19 +136,19 @@ def generate_badge(data):
         badge_template = helpers.add_text_to_badge(badge_template, text_data_json)
         if badge_template is None:
             logger.log(LogLevel.ERROR, "Falha ao editar badge. ")
-            return {"error": "Falha ao gerar badge."}, 418 
+            return {"error": "Falha ao gerar badge.5"}, 418 
 
         logger.log(LogLevel.DEBUG, f"[business] Gerando QRCode do Badge.")
         qr_code_img = helpers.create_qr_code(badge_guid, base_url, box_size=10, border=4)
         if qr_code_img is None:
             logger.log(LogLevel.ERROR, "Falha ao gerar QR Code. ")
-            return {"error": "Falha ao gerar badge."}, 418 
+            return {"error": "Falha ao gerar badge.6"}, 418 
 
         logger.log(LogLevel.DEBUG, f"[business] Inserindo QRCode no Badge.")
         badge_template = helpers.colar_qr_code(badge_template, qr_code_img)
         if badge_template is None:
             logger.log(LogLevel.ERROR, "Falha ao inserir QRCode.")
-            return {"error": "Falha ao gerar badge."}, 418 
+            return {"error": "Falha ao gerar badge.7"}, 418 
 
         logger.log(LogLevel.DEBUG, "[business] Inserindo dados EXIF no Badge.")
         result = helpers.process_badge_image(badge_template, issuer_name)
@@ -156,25 +156,25 @@ def generate_badge(data):
             badge_hash, badge_base64, signed_hash, badge_template = result
         else:
             logger.log(LogLevel.ERROR, "Falha ao editar EXIF do badge.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.8"}, 418
 
         logger.log(LogLevel.DEBUG, f"[business] Upload do Badge para o Azure")
         container_name = azure_client.get_app_config_setting('BadgeContainerName')
         if not container_name:
             logger.log(LogLevel.ERROR, "Falha ao obter nome do container do Azure.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.9"}, 418
         
         blob_name = f"{badge_guid}.jpg"
         success = azure_client.upload_blob(container_name, blob_name, badge_template)
         if not success:
             logger.log(LogLevel.ERROR, "Falha ao enviar o badge para storage.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.10"}, 418
 
         logger.log(LogLevel.DEBUG, f"[business] Gerando URL do Badge.")
         badge_url = azure_client.generate_sas_url(container_name, blob_name)
         if not badge_url:
             logger.log(LogLevel.ERROR, "Falha ao gerar URL do badge.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.11"}, 418
 
         logger.log(LogLevel.DEBUG, f"[business] Gerando JSON do Badge.")
         badge_json = {}
@@ -203,14 +203,14 @@ def generate_badge(data):
         success = db.insert_badge(badge_guid, badge_data)
         if not success:
             logger.log(LogLevel.ERROR, "Falha ao inserir o badge no banco de dados.")
-            return {"error": "Falha ao gerar badge."}, 418
+            return {"error": "Falha ao gerar badge.12"}, 418
 
         return {"guid": badge_guid, "hash": badge_hash}
 
     except Exception as e:
         stack_trace = traceback.format_exc()
         logger.log(LogLevel.ERROR, f"Erro ao gerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor"}, 418
+        return {"error": "Erro interno no servidor. 13"}, 500
 
 def badge_image(data):
     try:

@@ -21,7 +21,7 @@ class LogLevel(Enum):
     ERROR = logging.ERROR
 
 class Logger:
-    def __init__(self, logger_name, default_level=LogLevel.INFO):
+    def __init__(self, logger_name, default_level=logging.DEBUG):
         self.logger = logging.getLogger(logger_name)
         self.default_level = default_level
         self.handler = None
