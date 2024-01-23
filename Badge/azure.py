@@ -5,10 +5,12 @@ from azure.identity import DefaultAzureCredential
 from azure.appconfiguration import AzureAppConfigurationClient
 from azure.mgmt.sql import SqlManagementClient
 from azure.keyvault.secrets import SecretClient
+from azure.storage.blob import BlobServiceClient, BlobClient, generate_blob_sas, BlobSasPermissions
+from datetime import datetime, timedelta
 import re
+from PIL import Image
+import io
 from . import logger, LogLevel
-from azure.cosmos import CosmosClient
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
 
 # Classe principal
@@ -19,6 +21,7 @@ class Azure:
         self.credential = DefaultAzureCredential()
         self.app_config_client = self._initialize_app_config_client()
         self.secret_client = self._initialize_key_vault_client()
+        self.blob_service_client = self._initialize_blob_service_client()
 
         # Atualizar a regra de firewall para Azure SQL
         #self.update_firewall_rule()
@@ -153,51 +156,136 @@ class Azure:
 
     def _initialize_blob_service_client(self):
         try:
-            storage_connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+            storage_connection_string = self.get_key_vault_secret('BlobConnectionString') 
             if not storage_connection_string:
-                raise ValueError("AZURE_STORAGE_CONNECTION_STRING não está definida.")
+                raise ValueError("BlobConnectionString não está definida.")
             return BlobServiceClient.from_connection_string(storage_connection_string)
         except Exception as e:
             self.logger.log(self.LogLevel.ERROR, f"Erro ao inicializar o Blob Service Client: {str(e)}")
             raise
 
+    def generate_sas_url(self, container_name, blob_name):
+        try:
+            container_client = self.blob_service_client.get_container_client(container_name)
+            blob_client = container_client.get_blob_client(blob_name)
+
+            # Define a data de expiração para 31 de dezembro do ano corrente às 23:59:59
+            expiration_date = datetime(datetime.now().year, 12, 31, 23, 59, 59)
+            
+            # Define as permissões da URL SAS (leitura)
+            sas_permissions = BlobSasPermissions(read=True)
+
+            # Gera a URL SAS
+            sas_url = generate_blob_sas(
+                blob_client.account_name,
+                blob_client.container_name,
+                blob_client.blob_name,
+                account_key=blob_client.credential.account_key,
+                permission=sas_permissions,
+                expiry=expiration_date
+            )
+
+            # Monta a URL completa
+            full_url = f"{blob_client.url}?{sas_url}"
+            return full_url
+        except Exception as e:
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao gerar URL SAS: {str(e)}")
+            raise
+        
+    def _create_container_if_not_exists(self, container_name):
+        try:
+            container_client = self.blob_service_client.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except Exception as e:
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao criar o contêiner: {str(e)}")
+            raise
+
     def upload_blob(self, container_name, blob_name, file_path):
         try:
-            blob_service_client = self._initialize_blob_service_client()
-            blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            self._create_container_if_not_exists(container_name)  # Verifica e cria o contêiner se não existir
+            
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
             with open(file_path, "rb") as data:
                 blob_client.upload_blob(data)
+            
+            return True
         except Exception as e:
             self.logger.log(self.LogLevel.ERROR, f"Erro ao fazer upload do blob: {str(e)}")
             raise
 
+    def upload_blob(self, container_name, blob_name, binary_data):
+        try:
+            self._create_container_if_not_exists(container_name)  # Verifica e cria o contêiner se não existir
+            container_client = self.blob_service_client.get_container_client(container_name)
+            container_client.upload_blob(blob_name, binary_data)
+            
+            return True
+        except Exception as e:
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao fazer upload do blob: {str(e)}")
+            raise
+
+    def _container_exists(self, container_name):
+        try:
+            container_client = self.blob_service_client.get_container_client(container_name)
+            return container_client.exists()
+        except Exception as e:
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao verificar a existência do contêiner: {str(e)}")
+            return False  # Em caso de erro, assume-se que o contêiner não existe
+
     def download_blob(self, container_name, blob_name, file_path):
         try:
-            blob_service_client = self._initialize_blob_service_client()
-            blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            if not self._container_exists(container_name):  # Verifica se o contêiner existe
+                self.logger.log(self.LogLevel.ERROR, f"O contêiner '{container_name}' não existe.")
+                return  # Sai da função se o contêiner não existe
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
             with open(file_path, "wb") as download_file:
                 download_file.write(blob_client.download_blob().readall())
         except Exception as e:
             self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar o blob: {str(e)}")
             raise
 
-    def _initialize_cosmos_client(self):
+    def return_blob_as_image(self, blob_url):
         try:
-            cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
-            cosmos_key = os.getenv("COSMOS_KEY")
-            if not cosmos_endpoint or not cosmos_key:
-                raise ValueError("COSMOS_ENDPOINT ou COSMOS_KEY não estão definidos.")
-            return CosmosClient(cosmos_endpoint, credential=cosmos_key)
+            # Faça uma solicitação HTTP para a URL SAS
+            response = requests.get(blob_url)
+
+            # Verifique se a solicitação foi bem-sucedida (código 200)
+            if response.status_code == 200:
+                # Lê o conteúdo da resposta e o converte em uma imagem PIL
+                blob_data = response.content
+                image = Image.open(io.BytesIO(blob_data))
+                return image
+            else:
+                self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar o blob. Código de resposta: {response.status_code}")
+                return None
         except Exception as e:
-            self.logger.log(self.LogLevel.ERROR, f"Erro ao inicializar o Cosmos Client: {str(e)}")
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar o blob: {str(e)}")
             raise
 
-    def create_cosmos_document(self, database_name, container_name, document_data):
+    def return_blob_as_binary(self, blob_url):
         try:
-            cosmos_client = self._initialize_cosmos_client()
-            database = cosmos_client.get_database_client(database_name)
-            container = database.get_container_client(container_name)
-            container.upsert_item(document_data)
+            response = requests.get(blob_url)
+            if response.status_code == 200:
+                font_data = response.content
+                return io.BytesIO(font_data)
+            else:
+                self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar a fonte. Código de resposta: {response.status_code}")
+                return None
         except Exception as e:
-            self.logger.log(self.LogLevel.ERROR, f"Erro ao criar documento no Cosmos DB: {str(e)}")
-            raise
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar a fonte: {str(e)}")
+            return None
+        
+    def return_blob_as_text(self, blob_url):
+        try:
+            response = requests.get(blob_url)
+            if response.status_code == 200:
+                data = response.content.decode('utf-8')  # Decodifica os bytes como texto UTF-8
+                return data
+            else:
+                self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar o blob. Código de resposta: {response.status_code}")
+                return None
+        except Exception as e:
+            self.logger.log(self.LogLevel.ERROR, f"Erro ao baixar o blob: {str(e)}")
+            return None
+

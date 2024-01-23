@@ -12,6 +12,7 @@ import requests
 from . import azure
 from . import logger, LogLevel
 from pgpy import PGPKey, PGPMessage
+from pilmoji import Pilmoji
 
 # Configuração do cliente Azure
 azure_client = azure.Azure()
@@ -145,20 +146,94 @@ def load_image_from_base64(base64_img):
         logger.log(LogLevel.ERROR, f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
-def add_text_to_badge(badge_template, owner_name, issuer_name):
+def convert_image_to_jpg(input_image):
+    try:
+        print("Verificando o formato da imagem")
+        # Verifica o formato da imagem
+        if input_image.format != "JPEG":
+            logger.log(LogLevel.DEBUG, f"Convertendo {input_image.format} para JPG com fundo branco")
+            width, height = input_image.size
+            white_background_image = Image.new('RGB', (width, height), 'white')
+            white_background_image.paste(input_image.convert('RGBA'), (0, 0), input_image.convert('RGBA'))
+
+            # Salva a imagem em um buffer em memória no formato JPG
+            buffer = io.BytesIO()
+            white_background_image.save(buffer, 'JPEG')
+            buffer.seek(0)
+
+            logger.log(LogLevel.DEBUG, "Convertido para JPG com fundo branco")
+            return Image.open(buffer)  # Retorna o objeto da imagem em memória
+        else:
+            # Se já for JPG, não precisa de conversão
+            logger.log(LogLevel.ERROR, "A imagem já está em formato JPG")
+            return input_image
+    except Exception as e:
+        logger.log(LogLevel.ERROR, f"Erro ao converter a imagem para JPG com fundo branco: {str(e)}")
+        return None
+
+def generate_image_with_emoji(emoji_string, font_data, font_size=70, background_color=(255, 255, 255), text_color=(0, 0, 0)):
+    try:
+        # Estimativa inicial do tamanho da imagem
+        estimated_size = (font_size, font_size) 
+
+        image = Image.new('RGB', estimated_size, background_color)
+        font = ImageFont.truetype(font_data, font_size)
+
+        with Pilmoji(image) as pilmoji:
+            # Renderiza o emoji
+            pilmoji.text((0, 0), emoji_string.strip(), text_color, font)
+
+            # Encontrar a área ocupada pelo emoji
+            bbox = image.getbbox()
+            if bbox:
+                # Cortar a imagem para o tamanho do conteúdo
+                image = image.crop(bbox)
+
+        return image  # Retorna a imagem cortada para o tamanho do emoji
+    except Exception as e:
+        logger.log(LogLevel.ERROR, f"Erro ao gerar imagem com emoji: {str(e)}")
+        return None
+
+def add_text_to_badge(badge_template, text_data_json):
     try:
         draw = ImageDraw.Draw(badge_template)
-        css_url = 'https://fonts.googleapis.com/css2?family=Rubik&display=swap'
-        font_size = 15
-        font = load_font_from_google_fonts(css_url, font_size)
 
-        if font is None:
-            logger.log(LogLevel.ERROR, "Falha ao carregar a fonte Rubik.")
-            return None
+        for text_item in text_data_json:
+            content = text_item.get("content", "")
+            position = text_item.get("position", (0, 0))
+            font_data = azure_client.return_blob_as_binary(text_item.get("font", ""))
+            font_size = text_item.get("size", 20)
+            color = tuple(text_item.get("color", (0, 0, 0)))
 
-        # Adicionar texto à imagem
-        draw.text((10, 10), f"De: {owner_name}", font=font, fill=(0, 0, 0))
-        draw.text((10, 30), f"Por: {issuer_name}", font=font, fill=(0, 0, 0))
+            if any(ord(char) > 256 for char in content):  # Tratar como emoji
+                emoji_image = generate_image_with_emoji(content, font_data, font_size)
+                if position[0] == "center":
+                    image_width = badge_template.size[0]
+                    x = (image_width - emoji_image.size[0]) / 2
+                else:
+                    x = position[0]
+                y = position[1]
+
+                if badge_template.mode != 'RGB':
+                    badge_template = badge_template.convert('RGB')
+
+                badge_template.paste(emoji_image, (int(x), int(y)))
+                
+            else:  # Tratar como texto normal
+                try:
+                    font = ImageFont.truetype(font_data, font_size)
+                    text_bbox = draw.textbbox((0, 0), content, font=font)
+                    text_width = text_bbox[2] - text_bbox[0]
+                    if position[0] == "center":
+                        image_width = badge_template.size[0]
+                        x = (image_width - text_width) / 2
+                    else:
+                        x = position[0]
+                    y = position[1]
+                    draw.text((x, y), content, font=font, fill=color)
+                except IOError:
+                    logger.log(LogLevel.ERROR, f"Fonte não encontrada. Usando fonte padrão.")
+                    font = ImageFont.load_default()
 
         return badge_template
 
@@ -209,7 +284,7 @@ def process_badge_image(badge_template, issuer_name):
 
         signed_hash = sign_data(badge_hash)
 
-        return badge_hash, badge_base64, signed_hash
+        return badge_hash, badge_base64, signed_hash, badge_with_exif
 
     except Exception as e:
         logger.log(LogLevel.ERROR, f"Erro ao processar a imagem do badge: {e}")
@@ -372,3 +447,22 @@ def png_to_jpeg(png_image, background_color=(255, 255, 255)):
         logger.log(LogLevel.ERROR, f"Erro ao converter a imagem: {e}")
         return None
 
+def insert_data_into_json_schema(json_schema, data):
+    try:
+        import jsonschema
+
+        # Valide os dados em relação ao esquema para garantir que estejam em conformidade
+        jsonschema.validate(instance=data, schema=json_schema)
+
+        # Se a validação for bem-sucedida, os dados estão em conformidade com o esquema
+        # Você pode simplesmente mesclar os dados no esquema original
+        json_schema.update(data)
+
+        return json_schema
+    except jsonschema.ValidationError as ve:
+        print(f"Erro de validação do esquema JSON: {ve}")
+        return None
+    except Exception as e:
+        print(f"Erro ao inserir dados no esquema JSON: {str(e)}")
+        return None
+    

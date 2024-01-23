@@ -2,6 +2,7 @@ import traceback
 import pyodbc
 import os
 import re
+import datetime
 
 from .database import Database
 from . import helpers
@@ -53,89 +54,156 @@ def generate_badge(data):
     try:
         # Validação e análise dos dados recebidos
         logger.log(LogLevel.DEBUG, f"[business] Endpoint para emitir um novo badge.")
-        if 'owner_name' not in data or 'issuer_name' not in data:
-            logger.log(LogLevel.ERROR, "Dados de entrada faltando: 'owner_name' ou 'issuer_name'")
-            return {"error": "Dados de entrada inválidos"}, 400
+        if 'owner_name' not in data or 'issuer_name' not in data or 'area_name' not in data:
+            logger.log(LogLevel.ERROR, "Dados de entrada faltando: 'owner_name' ou 'issuer_name' ou 'area_name'")
+            return {"error": "Falha ao gerar badge."}, 500
 
         owner_name = data['owner_name']
         issuer_name = data['issuer_name']
+        area_name = data['area_name']
 
         logger.log(LogLevel.DEBUG, f"Gerando badge para {owner_name} emitido por {issuer_name}")
-
-        db = Database()
-
-        # Carregar template de imagem
-        logger.log(LogLevel.DEBUG, f"[business] Recuperando template do Badge em base64.")
-        template_id = int(azure_client.get_app_config_setting('BadgeTemplateBase64'))
-        logger.log(LogLevel.DEBUG, f"[business] Template do Badge em base64: {template_id}.")
-        if not template_id:
-            logger.log(LogLevel.ERROR, "Falha ao carregar id do template do badge.")
-            return {"error": "Falha ao carregar id do template do badge"}, 500
-        
-        badge_template_base64  = db.get_badge_template(template_id)
-        #logger.log(LogLevel.DEBUG, f"[business] Template do Badge em base64: {badge_template_base64}.")  
-        if not badge_template_base64:
-            logger.log(LogLevel.ERROR, "Template de badge não encontrado.")
-            return {"error": "Template de badge não encontrado"}, 500
-
-        logger.log(LogLevel.DEBUG, f"[business] Carregar template de imagem.")
-        badge_template = helpers.load_image_from_base64(badge_template_base64)
-        logger.log(LogLevel.DEBUG, f"[business] Template do Badge: {badge_template}.")
-        if not badge_template:
-            logger.log(LogLevel.ERROR, "Falha ao carregar template de badge.")
-            return {"error": "Falha ao carregar template de badge"}, 500
 
         logger.log(LogLevel.DEBUG, f"[business] Carregar URL de verificação do Badge.")
         base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         logger.log(LogLevel.DEBUG, f"[business] URL de verificação do Badge: {base_url}.")
         if not base_url:
             logger.log(LogLevel.ERROR, "Falha ao carregar a URL de verificação do badge.")
-            return {"error": "Falha ao carregar url de verificação do badge"}, 500
+            return {"error": "Falha ao gerar badge."}, 500
         
         if not helpers.validar_url_https(base_url):
             logger.log(LogLevel.ERROR, "URL de verificação do badge inválida.")
-            return {"error": "URL de verificação do badge inválida."}, 500
+            return {"error": "Falha ao gerar badge."}, 500
  
         logger.log(LogLevel.DEBUG, f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
         
         logger.log(LogLevel.DEBUG, f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
-        concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}"
+        concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}|{area_name}"
         encrypted_data = str(helpers.encrypt_data(concatenated_data))
 
-        # TODO: Converter imagem para JPEG
-        
+        db = Database()
+
+        # Carregar template de imagem
+        badge_template_info  = db.get_badge_template(issuer_name, area_name)
+        if not badge_template_info:
+            logger.log(LogLevel.ERROR, "Template de badge não encontrado.")
+            return {"error": "Falha ao gerar badge."}, 500
+
+        blob_url = badge_template_info.get('BlobUrl')
+
+        logger.log(LogLevel.DEBUG, f"[business] Carregar template de imagem.")
+        badge_template = azure_client.return_blob_as_image(blob_url)
+        if not badge_template:
+            logger.log(LogLevel.ERROR, "Falha ao carregar template de badge.")
+            return {"error": "Falha ao gerar badge."}, 500
+
+        logger.log(LogLevel.DEBUG, f"[business] Convertendo para JPG com fundo branco.")
+        badge_template = helpers.convert_image_to_jpg(badge_template)
+
+        logger.log(LogLevel.DEBUG, f"[business] Recuperado informações de header do Badge.")
+        header_info = azure_client.get_app_config_setting('BadgeHeaderInfo')
+        owner_namer_position = tuple(header_info[0].get("position"))
+        owner_name_font_url = header_info[0].get("font")
+        owner_name_font_size = tuple(header_info[0].get("size"))
+        owner_name_color = tuple(header_info[0].get("color"))
+
+        issuer_name_position = tuple(header_info[1].get("position"))
+        issuer_name_font_url = header_info[1].get("font")
+        issuer_name_font_size = tuple(header_info[1].get("size"))
+        issuer_name_color = tuple(header_info[1].get("color"))
+
+        area_font_url = badge_template_info["AreaDetails"]["FontPath"]
+        area_font_size = tuple(badge_template_info["AreaDetails"]["Size"])
+        area_position = tuple(badge_template_info["AreaDetails"]["Position"])
+        area_color = tuple(badge_template_info["AreaDetails"]["Color"])  # Converter a lista em uma tupla
+
+        icon = badge_template_info["ContentDetails"]["Content"]
+        icon_font_url = badge_template_info["ContentDetails"]["FontPath"]
+        icon_size = tuple(badge_template_info["ContentDetails"]["Size"])
+        icon_position = tuple(badge_template_info["ContentDetails"]["Position"])
+        icon_color = tuple(badge_template_info["ContentDetails"]["Color"])  # Converter a lista em uma tupla
+
+        logger.log(LogLevel.DEBUG, f"[business] Gerando dados a serem escritos no Badge.")
+        text_data_json = [
+            {"content": f"Detentor: {owner_name}", "position": owner_namer_position, "font": owner_name_font_url, "size": owner_name_font_size, "color": owner_name_color},
+            {"content": f"Emissor: {issuer_name}", "position": issuer_name_position, "font": issuer_name_font_url, "size": issuer_name_font_size, "color": issuer_name_color},
+            {"content": area_name, "position": area_position, "font": area_font_url, "size": area_font_size, "color": area_color},
+            {"content": icon, "position": icon_position, "font": icon_font_url, "size": icon_size, "color": icon_color}
+        ]
+
         logger.log(LogLevel.DEBUG, f"[business] Adicionando texto ao Badge.")
-        badge_template = helpers.add_text_to_badge(badge_template, owner_name, issuer_name)
+        badge_template = helpers.add_text_to_badge(badge_template, text_data_json)
         if badge_template is None:
             logger.log(LogLevel.ERROR, "Falha ao editar badge. ")
-            return {"error": "Falha ao editar badge."}, 500 
+            return {"error": "Falha ao gerar badge."}, 500 
 
         logger.log(LogLevel.DEBUG, f"[business] Gerando QRCode do Badge.")
-        qr_code_img = helpers.create_qr_code(encrypted_data, base_url, box_size=10, border=4)
+        qr_code_img = helpers.create_qr_code(badge_guid, base_url, box_size=10, border=4)
         if qr_code_img is None:
             logger.log(LogLevel.ERROR, "Falha ao gerar QR Code. ")
-            return {"error": "Falha ao editar badge."}, 500 
+            return {"error": "Falha ao gerar badge."}, 500 
 
-        logger.log(LogLevel.DEBUG, f"[business] Inerindo QRCode no Badge.")
+        logger.log(LogLevel.DEBUG, f"[business] Inserindo QRCode no Badge.")
         badge_template = helpers.colar_qr_code(badge_template, qr_code_img)
         if badge_template is None:
-            logger.log(LogLevel.ERROR, "Falha ao inserir QRCode. ")
-            return {"error": "Falha ao editar badge."}, 500 
+            logger.log(LogLevel.ERROR, "Falha ao inserir QRCode.")
+            return {"error": "Falha ao gerar badge."}, 500 
 
         logger.log(LogLevel.DEBUG, "[business] Inserindo dados EXIF no Badge.")
         result = helpers.process_badge_image(badge_template, issuer_name)
         if result is not None:
-            badge_hash, badge_base64, signed_hash = result
+            badge_hash, badge_base64, signed_hash, badge_template = result
         else:
             logger.log(LogLevel.ERROR, "Falha ao editar EXIF do badge.")
-            return {"error": "Falha ao editar badge."}, 500
+            return {"error": "Falha ao gerar badge."}, 500
+
+        logger.log(LogLevel.DEBUG, f"[business] Upload do Badge para o Azure")
+        container_name = azure_client.get_app_config_setting('BadgeContainerName')
+        if not container_name:
+            logger.log(LogLevel.ERROR, "Falha ao obter nome do container do Azure.")
+            return {"error": "Falha ao gerar badge."}, 500
+        
+        blob_name = f"{badge_guid}.jpg"
+        success = azure_client.upload_blob(container_name, blob_name, badge_template)
+        if not success:
+            logger.log(LogLevel.ERROR, "Falha ao enviar o badge para storage.")
+            return {"error": "Falha ao gerar badge."}, 500
+
+        logger.log(LogLevel.DEBUG, f"[business] Gerando URL do Badge.")
+        badge_url = azure_client.generate_sas_url(container_name, blob_name)
+        if not badge_url:
+            logger.log(LogLevel.ERROR, "Falha ao gerar URL do badge.")
+            return {"error": "Falha ao gerar badge."}, 500
+
+        logger.log(LogLevel.DEBUG, f"[business] Gerando JSON do Badge.")
+        badge_json = {}
+        badge_json["badgeId"] = badge_guid
+        badge_json["name"] = "Champion da Engenharia"
+        badge_json["description"] = "Concedido por ser referência na sua área."
+        badge_json["issuer"]["name"] = issuer_name
+        badge_json["issuer"]["contactInfo"]["email"] = ""
+        badge_json["issuer"]["contactInfo"]["phone"] = ""
+        badge_json["holder"]["name"] = owner_name
+        badge_json["holder"]["email"] = ""
+        badge_json["category"]["mainCategory"] = "Engenharia"
+        badge_json["category"]["subCategory"] = area_name
+        badge_json["generatedBadge"]["badgeImageUrl"] = badge_url
+        badge_json["generatedBadge"]["metadata"]["issuedDate"] = datetime.datetime.now()
+        badge_json["generatedBadge"]["metadata"]["expiryDate"] = ""
+        badge_json["generatedBadge"]["metadata"]["additionalInfo"] = ""
+        badge_json["verificationLink"] = ""
+
+        badge_db_schema_url  = azure_client.get_app_config_setting('BadgeDBSchemaURL')
+        badge_db_schema  = azure_client.return_blob_as_text(badge_db_schema_url)
+        badge_data = helpers.insert_data_into_json_schema(badge_db_schema, badge_json)
+
 
         logger.log(LogLevel.DEBUG, f"[business] Gravando Badge no banco.")
-        success = db.insert_badge(badge_guid, badge_hash, owner_name, issuer_name, signed_hash, badge_base64)
+        success = db.insert_badge(badge_guid, badge_data)
         if not success:
             logger.log(LogLevel.ERROR, "Falha ao inserir o badge no banco de dados.")
-            return {"error": "Falha ao inserir o badge no banco de dados"}, 500
+            return {"error": "Falha ao gerar badge."}, 500
 
         return {"guid": badge_guid, "hash": badge_hash}
 

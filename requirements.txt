@@ -30,3 +30,5 @@ cryptography==37.0.4
 PGPy
 azure-cosmos
 azure-storage-blob
+pymongo
+pilmoji
