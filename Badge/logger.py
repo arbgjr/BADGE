@@ -8,8 +8,6 @@ import sys
 import threading
 from datetime import datetime
 import pytz
-
-
 class LogLevel(Enum):
     INFO = logging.INFO
     WARNING = logging.INFO

@@ -20,6 +20,11 @@ def get_configs():
 
         logger.log(LogLevel.DEBUG, f"[business] Endpoint para recuperar configurações.")
         data = {}
+        data['Ambiente'] = {}
+        data['AzAppConfig'] = {}
+        data['AzKeyVault'] = {}
+        data['Database'] = {}
+        
         data['Ambiente']['APPINSIGHTS_INSTRUMENTATIONKEY'] = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
         data['Ambiente']['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
         data['Ambiente']['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
