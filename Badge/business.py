@@ -3,6 +3,7 @@ import pyodbc
 import os
 import re
 import datetime
+import json
 
 from .database import Database
 from . import helpers
@@ -126,6 +127,8 @@ def generate_badge(data):
 
         logger.log(LogLevel.DEBUG, f"[business] Recuperado informações de header do Badge.")
         header_info = azure_client.get_app_config_setting('BadgeHeaderInfo')
+        header_info = json.loads(header_info)
+        
         owner_namer_position = tuple(header_info[0].get("position"))
         owner_name_font_url = header_info[0].get("font")
         owner_name_font_size = tuple(header_info[0].get("size"))
