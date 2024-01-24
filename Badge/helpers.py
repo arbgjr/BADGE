@@ -454,9 +454,9 @@ def insert_data_into_json_schema(json_schema, data):
 
         return json_schema
     except jsonschema.ValidationError as ve:
-        print(f"Erro de validação do esquema JSON: {ve}")
+        logger.log(LogLevel.ERROR, f"Erro de validação do esquema JSON: {ve}")
         return None
     except Exception as e:
-        print(f"Erro ao inserir dados no esquema JSON: {str(e)}")
+        logger.log(LogLevel.ERROR, f"Erro ao inserir dados no esquema JSON: {str(e)}")
         return None
     
