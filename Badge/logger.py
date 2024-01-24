@@ -34,7 +34,7 @@ class Logger:
             self._configure_logger(appinsights_key)
 
     def _configure_logger(self, appinsights_key):
-        self.handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
+        #self.handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
         formatter = logging.Formatter(
             fmt='%(asctime)s [Thread %(thread)d] %(module)s.%(funcName)s - %(levelname)s - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S %Z'
