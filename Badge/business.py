@@ -20,44 +20,41 @@ def get_configs():
 
         logger.log(LogLevel.DEBUG, f"[business] Endpoint para recuperar configurações.")
         data = {}
-        data["Environment"]['APPINSIGHTS_INSTRUMENTATIONKEY'] = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
-        data["Environment"]['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
-        data["Environment"]['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
+        data['Ambiente']['APPINSIGHTS_INSTRUMENTATIONKEY'] = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
+        data['Ambiente']['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
+        data['Ambiente']['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
         conexao = os.getenv("CUSTOMCONNSTR_AppConfigConnectionString")
         conexao = re.sub(r"Id=[^;]+", "Id=***", conexao)
         conexao = re.sub(r"Secret=[^;]+", "Secret=***", conexao)
-        data["Environment"]['AppConfigConnectionString'] = conexao
-        data["Environment"]['RGAzFunction'] = azure_client.get_resource_group()
-
-
-        data["AzAppConfig"]['AzKVURI'] = azure_client.get_app_config_setting("AzKVURI")
-        data["AzAppConfig"]['BadgeVerificationUrl'] = azure_client.get_app_config_setting('BadgeVerificationUrl')
-        data["AzAppConfig"]['PGPPrivateKeyName'] = azure_client.get_app_config_setting('PGPPrivateKeyName')
-        public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
-        data["AzAppConfig"]['PGPPublicKeyName'] = public_key_name
-        data["AzAppConfig"]['LinkedInPost'] = azure_client.get_app_config_setting('LinkedInPost')
-        data["AzAppConfig"]['header_info'] = azure_client.get_app_config_setting('BadgeHeaderInfo')
-        data["AzAppConfig"]['container_name'] = azure_client.get_app_config_setting('BadgeContainerName')
-        data["AzAppConfig"]['badge_db_schema_url'] = azure_client.get_app_config_setting('BadgeDBSchemaURL')
-
-        data["Diversos"]['pyodbcDrivers'] = pyodbc.drivers()
-
-        data["Diversos"]['IPAzFunction'] = azure_client.get_function_ip()
+        data['Ambiente']['AppConfigConnectionString'] = conexao
+        data['Ambiente']['RGAzFunction'] = azure_client.get_resource_group()
+        data['Ambiente']['pyodbcDrivers'] = pyodbc.drivers()
+        data['Ambiente']['IPAzFunction'] = azure_client.get_function_ip()
         
-        data["AzKeyVault"]['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
-        data["AzKeyVault"]['Palavra'] = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
+        data['AzAppConfig']['AzKVURI'] = azure_client.get_app_config_setting("AzKVURI")
+        data['AzAppConfig']['BadgeVerificationUrl'] = azure_client.get_app_config_setting('BadgeVerificationUrl')
+        data['AzAppConfig']['PGPPrivateKeyName'] = azure_client.get_app_config_setting('PGPPrivateKeyName')
+        public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
+        data['AzAppConfig']['PGPPublicKeyName'] = public_key_name
+        data['AzAppConfig']['LinkedInPost'] = azure_client.get_app_config_setting('LinkedInPost')
+        data['AzAppConfig']['header_info'] = azure_client.get_app_config_setting('BadgeHeaderInfo')
+        data['AzAppConfig']['container_name'] = azure_client.get_app_config_setting('BadgeContainerName')
+        data['AzAppConfig']['badge_db_schema_url'] = azure_client.get_app_config_setting('BadgeDBSchemaURL')
+
+        data['AzKeyVault']['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
+        data['AzKeyVault']['Palavra'] = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
         PalavraCriptada = helpers.encrypt_data(data['Palavra'])
-        data["AzKeyVault"]['PalavraCriptada'] = str(PalavraCriptada)
-        data["AzKeyVault"]['PalavraDescriptada'] = helpers.decrypt_data(PalavraCriptada)
+        data['AzKeyVault']['PalavraCriptada'] = str(PalavraCriptada)
+        data['AzKeyVault']['PalavraDescriptada'] = helpers.decrypt_data(PalavraCriptada)
         
         conexao = azure_client.get_key_vault_secret('CosmosDBConnectionString')
         conexao = re.sub(r"User ID=[^;]+", "User ID=***", conexao)
         conexao = re.sub(r"Password=[^;]+", "Password=***", conexao)
-        data["AzKeyVault"]['CosmosDBConnectionString'] = conexao
+        data['AzKeyVault']['CosmosDBConnectionString'] = conexao
 
         db = Database()
         badge_template_info  = db.get_badge_template(issuer_name, area_name)
-        data["Database"]['badge_template_info'] = badge_template_info
+        data['Database']['badge_template_info'] = badge_template_info
 
 #        badge_template = azure_client.return_blob_as_image(blob_url)
 #        data['badge_template'] = badge_template
