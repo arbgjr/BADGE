@@ -396,35 +396,29 @@ def colar_qr_code(badge_img, qr_code_img, espaco_extra=0):
     badge_width, badge_height = badge_img.size
     qr_width, qr_height = qr_code_img.size
 
-    # Verificar se a largura do QR Code é maior que a do badge
-    if qr_width > badge_width:
-        # Largura da nova imagem é a largura do QR Code
-        nova_largura = qr_width
-
-        # Centralizar o badge horizontalmente
-        badge_x_position = (qr_width - badge_width) // 2
-    else:
-        # Largura da nova imagem é a largura do badge
-        nova_largura = badge_width
-        badge_x_position = 0
-
     # Altura total da nova imagem (badge + espaço extra + altura do QR Code)
     nova_altura = badge_height + espaco_extra + qr_height
 
-    # Criar uma nova imagem com a largura ajustada e fundo transparente
-    nova_imagem = Image.new('RGBA', (nova_largura, nova_altura), (255, 255, 255, 0))
+    # Criar uma nova imagem com a altura estendida e fundo branco (RGB)
+    nova_imagem = Image.new('RGB', (badge_width, nova_altura), (255, 255, 255))
 
     # Colar o badge na parte superior da nova imagem
-    nova_imagem.paste(badge_img, (badge_x_position, 0), badge_img)
+    # Se badge_img tiver canal alfa, converter para 'RGB'
+    if badge_img.mode == 'RGBA':
+        badge_img = badge_img.convert('RGB')
+    nova_imagem.paste(badge_img, (0, 0))
 
     # Calcular posição horizontal do QR Code (centralizar)
-    qr_x_position = (nova_largura - qr_width) // 2
+    x_position = (badge_width - qr_width) // 2
 
     # Posição vertical do QR Code (abaixo do badge)
     y_position = badge_height + espaco_extra
 
     # Colar o QR Code na nova imagem
-    nova_imagem.paste(qr_code_img, (qr_x_position, y_position))
+    # Se qr_code_img tiver canal alfa, converter para 'RGB'
+    if qr_code_img.mode == 'RGBA':
+        qr_code_img = qr_code_img.convert('RGB')
+    nova_imagem.paste(qr_code_img, (x_position, y_position))
 
     return nova_imagem
 
