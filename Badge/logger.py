@@ -21,17 +21,26 @@ class LogLevel(Enum):
     ERROR = logging.INFO
 
 class Logger:
-    def __init__(self, logger_name, default_level=logging.DEBUG):
+    def __init__(self, logger_name, default_level=logging.DEBUG, use_default_config=True):
         self.logger = logging.getLogger(logger_name)
         self.default_level = default_level
         self.handler = None
+        self.use_default_config = use_default_config
 
         # Executor assíncrono para operações de logging
         self.executor = ThreadPoolExecutor(max_workers=1)
 
-        appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
-        if appinsights_key:
-            self._configure_logger(appinsights_key)
+        if self.use_default_config:
+            appinsights_key = os.environ.get("APPINSIGHTS_INSTRUMENTATIONKEY")
+            if appinsights_key:
+                self._configure_logger(appinsights_key)
+
+    def set_level(self, level):
+        """Define o nível de log para o logger."""
+        if isinstance(level, LogLevel):
+            self.logger.setLevel(level.value)
+        else:
+            self.logger.setLevel(level)
 
     def _configure_logger(self, appinsights_key):
         self.handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')

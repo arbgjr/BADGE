@@ -4,12 +4,6 @@ from flask import jsonify
 from .logger import LogLevel, Logger
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s %(module)s.%(funcName)s:%(lineno)d - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-
 logging.log(logging.INFO,"[__init__.py] Iniciando")
 
 # Crie uma instância do Logger com um nome específico
