@@ -52,8 +52,8 @@ class Logger:
         self.logger.addHandler(self.handler)
 
         # Adicionar um filtro personalizado ao logger
-        #custom_filter = CustomLogFilter()
-        #self.logger.addFilter(custom_filter)
+        custom_filter = CustomLogFilter()
+        self.logger.addFilter(custom_filter)
 
     def log(self, level, message):
         caller_info = self._get_caller_info()
