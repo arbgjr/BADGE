@@ -11,7 +11,7 @@ class Database:
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 
-        self.logger.log(self.logger.LogLevel.DEBUG, f"[database] Obter dados de conexão com o banco.")
+        self.logger.log(LogLevel.DEBUG, f"[database] Obter dados de conexão com o banco.")
         conn_str_orig = azure_client.get_key_vault_secret('CosmosDBConnectionString')
         self.conn_str = self._transform_connection_string(conn_str_orig)
 
@@ -21,12 +21,12 @@ class Database:
                               
     def connect(self):
         try:
-            self.logger.log(self.logger.LogLevel.DEBUG, f"[database] Conectando com o banco.")
+            self.logger.log(LogLevel.DEBUG, f"[database] Conectando com o banco.")
             client = MongoClient(self.conn_str)
             return client
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(self.logger.LogLevel.ERROR, f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(LogLevel.ERROR, f"Erro de conexão com o banco de dados: {e}\nStack Trace:\n{stack_trace}")
             raise
 
     def get_badge_template(self, issuer_name, area_name):
@@ -51,11 +51,11 @@ class Database:
                     }
                     return template_info
                 else:
-                    self.logger.log(self.logger.LogLevel.WARNING, f"Nenhum template encontrado para o emissor '{issuer_name}' na área '{area_name}'.")
+                    self.logger.log(LogLevel.WARNING, f"Nenhum template encontrado para o emissor '{issuer_name}' na área '{area_name}'.")
                     return None
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(self.logger.LogLevel.ERROR, f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(LogLevel.ERROR, f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
         
     def get_badge_image(self, badge_guid):
@@ -66,7 +66,7 @@ class Database:
                 return badges_collection.find_one({"GUID": badge_guid})["BadgeData"]
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(self.logger.LogLevel.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(LogLevel.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def insert_badge(self, badge_guid, badge_data):
@@ -74,12 +74,12 @@ class Database:
             with self.connect() as client:
                 db = client['dbBadges']
                 badges_collection = db['Badges']
-                self.logger.log(self.logger.LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
+                self.logger.log(LogLevel.DEBUG, f"[database] Inserindo dados no banco.")
                 badges_collection.insert_one(badge_data)
             return True
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(self.logger.LogLevel.ERROR, f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(LogLevel.ERROR, f"Erro ao inserir badge no banco de dados: {e}\nStack Trace:\n{stack_trace}")
             return False
 
     def insert_badge_json(self, badge_json):
@@ -97,7 +97,7 @@ class Database:
                     return None
         except Exception as e:
             stack_trace = traceback.format_exc()
-            self.logger.log(self.logger.LogLevel.ERROR, f"Erro ao inserir JSON da insígnia no banco de dados: {e}\nStack Trace:\n{stack_trace}")
+            self.logger.log(LogLevel.ERROR, f"Erro ao inserir JSON da insígnia no banco de dados: {e}\nStack Trace:\n{stack_trace}")
             return None
 
     def create_badge_json_v1(self, badge_id, name, description, issuer_id, issuer_name, issuer_email, issuer_phone, holder_id, holder_name, holder_email, category_main, category_sub, template_id, template_url, badge_image_url, issued_date, expiry_date, additional_info, verification_link):
