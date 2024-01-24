@@ -7,7 +7,7 @@ import logging
 logging.log(logging.INFO,"[__init__.py] Iniciando")
 
 # Crie uma instância do Logger com um nome específico
-logger = Logger("AzFuncBadges", default_level=LogLevel.DEBUG, log_to_console=False)
+logger = Logger("AzFuncBadges", LogLevel.DEBUG, False)
 
 from .app import application
 
