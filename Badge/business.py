@@ -191,7 +191,7 @@ def generate_badge(data):
             return {"error": "Falha ao gerar badge.9"}, 418
         
         blob_name = f"{badge_guid}.jpg"
-        success = azure_client.upload_blob(container_name, blob_name, badge_template)
+        success = azure_client.upload_blob_image(container_name, blob_name, badge_template)
         if not success:
             logger.log(LogLevel.ERROR, "Falha ao enviar o badge para storage.")
             return {"error": "Falha ao gerar badge.10"}, 418

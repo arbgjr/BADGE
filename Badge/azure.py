@@ -201,7 +201,7 @@ class Azure:
             self.logger.log(LogLevel.ERROR, f"Erro ao criar o contêiner: {str(e)}")
             raise
 
-    def upload_blob(self, container_name, blob_name, file_path):
+    def upload_blob_from_disk(self, container_name, blob_name, file_path):
         try:
             self._create_container_if_not_exists(container_name)  # Verifica e cria o contêiner se não existir
             
@@ -214,7 +214,7 @@ class Azure:
             self.logger.log(LogLevel.ERROR, f"Erro ao fazer upload do blob: {str(e)}")
             raise
 
-    def upload_blob(self, container_name, blob_name, binary_data):
+    def upload_blob_image(self, container_name, blob_name, binary_data):
         try:
             self._create_container_if_not_exists(container_name)  # Verifica e cria o contêiner se não existir
             container_client = self.blob_service_client.get_container_client(container_name)
@@ -233,7 +233,7 @@ class Azure:
             self.logger.log(LogLevel.ERROR, f"Erro ao verificar a existência do contêiner: {str(e)}")
             return False  # Em caso de erro, assume-se que o contêiner não existe
 
-    def download_blob(self, container_name, blob_name, file_path):
+    def download_blob_to_disk(self, container_name, blob_name, file_path):
         try:
             if not self._container_exists(container_name):  # Verifica se o contêiner existe
                 self.logger.log(LogLevel.ERROR, f"O contêiner '{container_name}' não existe.")
