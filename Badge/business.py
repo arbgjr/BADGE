@@ -210,7 +210,7 @@ def generate_badge(data):
     except Exception as e:
         stack_trace = traceback.format_exc()
         logger.log(LogLevel.ERROR, f"Erro ao gerar badge: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor. 13"}, 500
+        return {"error": f"Erro interno no servidor: {str(e)}\nStack Trace:\n{stack_trace}"}, 500
 
 def badge_image(data):
     try:
