@@ -214,10 +214,21 @@ class Azure:
             self.logger.log(LogLevel.ERROR, f"Erro ao fazer upload do blob: {str(e)}")
             raise
 
-    def upload_blob_image(self, container_name, blob_name, binary_data):
+    def upload_blob_image(self, container_name, blob_name, image_data):
         try:
             self._create_container_if_not_exists(container_name)  # Verifica e cria o contêiner se não existir
             container_client = self.blob_service_client.get_container_client(container_name)
+
+            # Verifica se image_data é um objeto Image e o converte para BytesIO
+            if isinstance(image_data, Image.Image):
+                buffer = io.BytesIO()
+                image_data.save(buffer, format='JPEG')
+                buffer.seek(0)
+                binary_data = buffer
+            else:
+                binary_data = image_data
+
+            # Fazendo o upload do blob
             container_client.upload_blob(blob_name, binary_data)
             
             return True
