@@ -68,7 +68,7 @@ def get_configs():
     except Exception as e:
         stack_trace = traceback.format_exc()
         logger.log(LogLevel.ERROR, f"Erro ao recuperar informações: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor"}, 418
+        return {"error": f"Erro interno no servidor: {str(e)}\nStack Trace:\n{stack_trace}"}, 418
         
 def generate_badge(data):
     try:
