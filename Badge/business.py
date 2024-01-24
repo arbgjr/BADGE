@@ -128,26 +128,26 @@ def generate_badge(data):
         logger.log(LogLevel.DEBUG, f"[business] Recuperado informações de header do Badge.")
         header_info = azure_client.get_app_config_setting('BadgeHeaderInfo')
         header_info = json.loads(header_info)
-        
+
         owner_namer_position = tuple(header_info[0].get("position"))
         owner_name_font_url = header_info[0].get("font")
-        owner_name_font_size = tuple(header_info[0].get("size"))
+        owner_name_font_size = header_info[0].get("size")
         owner_name_color = tuple(header_info[0].get("color"))
 
         issuer_name_position = tuple(header_info[1].get("position"))
         issuer_name_font_url = header_info[1].get("font")
-        issuer_name_font_size = tuple(header_info[1].get("size"))
+        issuer_name_font_size = header_info[1].get("size")
         issuer_name_color = tuple(header_info[1].get("color"))
 
-        area_font_url = badge_template_info["AreaDetails"]["FontPath"]
-        area_font_size = tuple(badge_template_info["AreaDetails"]["Size"])
         area_position = tuple(badge_template_info["AreaDetails"]["Position"])
+        area_font_url = badge_template_info["AreaDetails"]["FontPath"]
+        area_font_size = badge_template_info["AreaDetails"]["Size"]
         area_color = tuple(badge_template_info["AreaDetails"]["Color"])  # Converter a lista em uma tupla
 
         icon = badge_template_info["ContentDetails"]["Content"]
-        icon_font_url = badge_template_info["ContentDetails"]["FontPath"]
-        icon_size = tuple(badge_template_info["ContentDetails"]["Size"])
         icon_position = tuple(badge_template_info["ContentDetails"]["Position"])
+        icon_font_url = badge_template_info["ContentDetails"]["FontPath"]
+        icon_size = badge_template_info["ContentDetails"]["Size"]
         icon_color = tuple(badge_template_info["ContentDetails"]["Color"])  # Converter a lista em uma tupla
 
         logger.log(LogLevel.DEBUG, f"[business] Gerando dados a serem escritos no Badge.")
