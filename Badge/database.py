@@ -94,7 +94,7 @@ class Database:
                 if result.inserted_id:
                     return str(result.inserted_id)
                 else:
-                    return None
+                    return result
         except Exception as e:
             stack_trace = traceback.format_exc()
             self.logger.log(LogLevel.ERROR, f"Erro ao inserir JSON da insígnia no banco de dados: {e}\nStack Trace:\n{stack_trace}")
