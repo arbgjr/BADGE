@@ -24,7 +24,7 @@ def get_configs():
         data['AzAppConfig'] = {}
         data['AzKeyVault'] = {}
         data['Database'] = {}
-        
+
         data['Ambiente']['APPINSIGHTS_INSTRUMENTATIONKEY'] = os.environ["APPINSIGHTS_INSTRUMENTATIONKEY"]
         data['Ambiente']['AzFunctionName'] = os.getenv('WEBSITE_SITE_NAME')
         data['Ambiente']['AZURE_SUBSCRIPTION_ID'] = os.environ["AZURE_SUBSCRIPTION_ID"]
@@ -47,8 +47,9 @@ def get_configs():
         data['AzAppConfig']['badge_db_schema_url'] = azure_client.get_app_config_setting('BadgeDBSchemaURL')
 
         data['AzKeyVault']['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
-        data['AzKeyVault']['Palavra'] = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
-        PalavraCriptada = helpers.encrypt_data(data['Palavra'])
+        Palavra = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
+        data['AzKeyVault']['Palavra'] = Palavra
+        PalavraCriptada = helpers.encrypt_data(Palavra)
         data['AzKeyVault']['PalavraCriptada'] = str(PalavraCriptada)
         data['AzKeyVault']['PalavraDescriptada'] = helpers.decrypt_data(PalavraCriptada)
         
