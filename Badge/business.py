@@ -233,12 +233,12 @@ def generate_badge(data):
 
 
         logger.log(LogLevel.DEBUG, f"[business] Gravando Badge no banco.")
-        success = db.insert_badge(badge_guid, badge_data)
-        if not success:
+        result_id = db.insert_badge_json(badge_data)
+        if result_id is None:
             logger.log(LogLevel.ERROR, "Falha ao inserir o badge no banco de dados.")
             return {"error": "Falha ao gerar badge.12"}, 418
 
-        return {"guid": badge_guid, "hash": badge_hash}
+        return {"badge_guid": badge_guid, "document_id": result_id}
 
     except Exception as e:
         stack_trace = traceback.format_exc()

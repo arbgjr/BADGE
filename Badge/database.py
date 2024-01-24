@@ -86,7 +86,7 @@ class Database:
         try:
             with self.connect() as client:
                 db = client['dbBadges']
-                badges_collection = db['Badges']  # Substitua 'Badges' pelo nome da coleção no seu CosmosDB
+                badges_collection = db['Badges'] 
 
                 # Insira o JSON diretamente na coleção
                 result = badges_collection.insert_one(badge_json)
