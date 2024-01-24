@@ -12,13 +12,13 @@ import pytz
 
 class LogLevel(Enum):
     INFO = logging.INFO
-    WARNING = logging.WARNING
+    WARNING = logging.INFO
     DEBUG = logging.INFO
-    CRITICAL = logging.CRITICAL
-    EXCEPTION = logging.ERROR
-    FATAL = logging.FATAL
-    TRACE = logging.DEBUG
-    ERROR = logging.ERROR
+    CRITICAL = logging.INFO
+    EXCEPTION = logging.INFO
+    FATAL = logging.INFO
+    TRACE = logging.INFO
+    ERROR = logging.INFO
 
 class Logger:
     def __init__(self, logger_name, default_level=logging.DEBUG):
