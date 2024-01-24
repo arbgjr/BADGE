@@ -204,6 +204,13 @@ def generate_badge(data):
 
         logger.log(LogLevel.DEBUG, f"[business] Gerando JSON do Badge.")
         badge_json = {}
+        badge_json["issuer"] = {}
+        badge_json["issuer"]["contactInfo"] = {}
+        badge_json["holder"] = {}
+        badge_json["category"] = {}
+        badge_json["generatedBadge"] = {}
+        badge_json["generatedBadge"]["metadata"] = {}
+
         badge_json["badgeId"] = badge_guid
         badge_json["name"] = "Champion da Engenharia"
         badge_json["description"] = "Concedido por ser referência na sua área."
