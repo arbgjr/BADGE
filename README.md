@@ -58,6 +58,7 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 - **Criar ou escolher um grupo de recursos no Azure para organização dos recursos que seão criados**: Siga o [passo a passo indicado no site da Microsoft](https://learn.microsoft.com/pt-br/cli/azure/manage-azure-groups-azure-cli#create-a-resource-group). Guarde o nome da grupo de recursos criado.
 
 Ex.:
+
 ´´´powershell
 $tagValue="Badge"
 $randomIdentifier = Get-Random -Maximum 1000000
@@ -70,6 +71,7 @@ az group create --name $resourceGroupName --location "$location"
   - Para utilizar a Storage Account mais barata, recomendo que seja utilizado o parametro **--sku Standard_LRS**
 
 Ex.:
+
 ´´´powershell
 $storageAccountName="blob-badges-$randomIdentifier"
 $skuStorage="Standard_LRS"
@@ -79,6 +81,7 @@ az storage account create --name $storageAccountName --location "$location" --re
 - **Recuperar a connection string com o Storage Blob**.
 
 Ex.:
+
 ´´´powershell
 $blobConnectionString = az storage account show-connection-string --name $storageaccountName --resource-group $resourceGroupName --query "connectionString" -o tsv
 ´´´
@@ -86,6 +89,7 @@ $blobConnectionString = az storage account show-connection-string --name $storag
 - **Criar os containers para fonts e badges**:
 
 Ex.:
+
 ´´´powershell
 $BadgeContainerName="badges"
 $FontsContainerName="fonts"
@@ -96,6 +100,7 @@ az storage container create --name $BadgeContainerName --account-name $storageAc
 - **Criar uma Azure Function Python**: Siga o [passo a passo indicado no site da Microsoft](https://learn.microsoft.com/pt-br/azure/azure-functions/scripts/functions-cli-create-serverless-python). Guarde o nome da Function criada.
 
 Ex.:
+
 ´´´powershell
 $functionAppName="func-badges-$randomIdentifier"
 $functionsVersion="4"
@@ -106,6 +111,7 @@ az functionapp create --name $functionAppName --storage-account $storageAccountN
 - **Ativar a Identidade Gerenciada para a Azure Function**:
 
 Ex.:
+
 ´´´powershell
 az functionapp identity assign --name $functionAppName --resource-group $resourceGroupName
 $AzFuncPrincipalId = $(az functionapp identity show --name $functionAppName --resource-group $resourceGroupName --query "principalId" -o tsv)
@@ -114,6 +120,7 @@ $AzFuncPrincipalId = $(az functionapp identity show --name $functionAppName --re
 - **Criar uma instância de um CosmosDB no Azure com compatibilidade do MongoDB**.
 
 Ex.:
+
 ´´´powershell
 $nosqlDBName="nosql-badges-$randomIdentifier"
 az cosmosdb create --name $nosqlDBName --resource-group $resourceGroupName --default-consistency-level Session  --locations regionName="$location" failoverPriority=0 isZoneRedundant=False --kind MongoDB
@@ -122,6 +129,7 @@ az cosmosdb create --name $nosqlDBName --resource-group $resourceGroupName --def
 - **Criar um banco MongoDB com nome "dbBadges" no CosmosDB**.
 
 Ex.:
+
 ´´´powershell
 $databaseName="dbBadges"
 az cosmosdb mongodb database create --account-name $nosqlDBName --name $databaseName --resource-group $resourceGroupName
@@ -130,6 +138,7 @@ az cosmosdb mongodb database create --account-name $nosqlDBName --name $database
 - **Recuperar a connection string com o "dbBadges"**.
 
 Ex.:
+
 ´´´powershell
 $keys = az cosmosdb keys list --name $nosqlDBName --resource-group $resourceGroupName --query "primaryMasterKey" -o tsv
 $nosqlConnectionString = "mongodb://$nosqlDBName:`$keys@${nosqlDBName}.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${nosqlDBName}@"
@@ -138,6 +147,7 @@ $nosqlConnectionString = "mongodb://$nosqlDBName:`$keys@${nosqlDBName}.mongo.cos
 - **Criar um Azure AppConfig**:
 
 Ex.:
+
 ´´´powershell
 $azappconfigName="appconfig-badges-$randomIdentifier"
 az appconfig create --location "$location" --name $azappconfigName --resource-group $resourceGroupName
@@ -146,6 +156,7 @@ az appconfig create --location "$location" --name $azappconfigName --resource-gr
 - **Recuperar a connection string com o Azure AppConfig**:
 
 Ex.:
+
 ´´´powershell
 $appconfigConnectionString = az appconfig credential list --name $appconfigName --resource-group $resourceGroupName --query "[0].connectionString" -o tsv
 ´´´
@@ -160,6 +171,7 @@ az role assignment create --assignee $AzFuncPrincipalId --role "Contributor" --s
 - **Criar um Azure Key Vault**:
 
 Ex.:
+
 ´´´powershell
 $keyVaultName = "kv-badges-$randomIdentifier"
 az keyvault create --name $keyVaultName --resource-group $resourceGroupName --location $location
@@ -169,6 +181,7 @@ $AzKVUri = "https://$keyVaultName.vault.azure.net/"
 - **Definir permissões no Azure Key Vault para a Identidade Gerenciada do Azure Function**:
 
 Ex.:
+
 ´´´powershell
 az keyvault set-policy --name $keyVaultName --object-id $AzFuncPrincipalId --secret-permissions get list set delete --key-permissions get create delete list update --certificate-permissions get list update create delete
 ´´´
@@ -176,6 +189,7 @@ az keyvault set-policy --name $keyVaultName --object-id $AzFuncPrincipalId --sec
 - **Adicionar a string de conexão do App Config as configurações de connection string da Azure Function**:
 
 Ex.:
+
 ´´´powershell
 $appSettings = Get-AzWebApp -ResourceGroupName $resourceGroupName -Name $functionAppName
 $connectionStringName = "AppConfigConnectionString"
@@ -186,6 +200,7 @@ Set-AzWebApp -ResourceGroupName $resourceGroupName -Name $functionAppName -AppSe
 - **Fazer upload do template do Badge**: O template do Badge não pode ter fundo transparente, utilizo a premissa de fundo branco.
 
 Ex.:
+
 ´´´powershell
 az storage blob upload --container-name $BadgeContainerName --file "CaminhoDoTemplateDoBadge\template_badge.png" --name "template_badge.png" --account-name $storageAccountName
 ´´´
@@ -197,6 +212,7 @@ az storage blob upload --container-name $BadgeContainerName --file "CaminhoDoTem
 - **Fazer upload dos arquivos para o blob storage**: Considero que o comando abaixo está sendo executado de dentro da pasta local do repo do BADGE
 
 Ex.:
+
 ´´´powershell
 $blobUploadParameters = @(
     @{ContainerName=$BadgeContainerName; LocalFilePath="CaminhoDoTemplateDoBadge\template_badge.png"; BlobName="template_badge.png"},
@@ -214,6 +230,7 @@ $blobUploadParameters | ForEach-Object {
 - **Gerar URL SAS dos arquivos enviados para o Blob Storage**:
 
 Ex.:
+
 ´´´powershell
 $blobFiles = @(
     @{ContainerName=$BadgeContainerName; BlobName='template_badge.png'; BlobUrlVariableName='blobUrlTemplateBadge'},
@@ -233,6 +250,7 @@ $blobFiles | ForEach-Object {
 - **Atualizar arquivos com configurações padrão**: Caso queira
 
 Ex.:
+
 ´´´powershell
 $issuerName="Acme Industries"
 $areaName="AsPoNe"
@@ -254,6 +272,7 @@ $arquivosEValores | ForEach-Object {
 - **Adicionar configurações ao App Config**:
 
 Ex.:
+
 ´´´powershell
 $BadgeVerificationUrl="https://www.qualquerurl.com"
 $LinkedInPost=""Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}!\r\nEsta conquista representa {additional_info}.\r\nVocê pode verificar a autenticidade do meu badge aqui: {validation_url}\r\n#Conquista #Badge #DesenvolvimentoProfissional"
@@ -274,6 +293,7 @@ az appconfig kv set --name $azappconfigName --key BadgeHeaderInfo --value $conte
 - **Adicionar configurações ao Key Vault**:
 
 Ex.:
+
 ´´´powershell
 $keyVaultSecretParameters = @(
     @{SecretName="BlobConnectionString"; SecretValue=$blobConnectionString; ContentType="text/plain; charset=utf-8"},
@@ -288,6 +308,7 @@ $keyVaultSecretParameters | ForEach-Object {
 - **Inserir no nosql os dados que serão inseridos no template**: Sugiro você recuperar o conteudo do arquivo Template.json e inserir diretamente no CosmosDB criado. O nome da Collection deve ser: Templates. E ela deve ficar dentro do dbBadges. A opção do script abaixo é passível de erros.
 
 Ex.:
+
 ´´´powershell
 $verb = "POST"
 $resourceType = "docs"
