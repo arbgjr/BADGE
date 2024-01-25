@@ -101,9 +101,9 @@ def decrypt_data(encrypted_data):
     return str(decrypted_message.message)
 
 def encrypt_data(data):
-    logging.log(logging.INFO, f"Mensagem: {data}")
+    logging.log(logging.INFO, f"[helpers] Mensagem: {data}")
     public_key_str = get_pgp_public_key()
-    logging.log(logging.INFO, f"PGP Public Key: {public_key_str}")
+    logging.log(logging.INFO, f"[helpers] PGP Public Key: {public_key_str}")
 
     # Carregar a chave pública
     pubkey, _ = PGPKey.from_blob(public_key_str)
@@ -117,7 +117,7 @@ def encrypt_data(data):
 
     # Criptografar a mensagem com a chave pública
     encrypted_phrase = pubkey.encrypt(message)
-    logging.log(logging.INFO, f"Mensagem criptografada: {encrypted_phrase}")
+    logging.log(logging.INFO, f"[helpers] Mensagem criptografada: {encrypted_phrase}")
 
     return encrypted_phrase
 
@@ -442,7 +442,7 @@ def png_to_jpeg(png_image, background_color=(255, 255, 255)):
         logging.log(logging.ERROR, f"Erro ao converter a imagem: {e}")
         return None
 
-def insert_data_into_json_schema(json_schema, data):
+def validate_data_into_json_schema(json_schema, data):
     try:
         import jsonschema
 
@@ -453,29 +453,20 @@ def insert_data_into_json_schema(json_schema, data):
         # Detalhes do erro de validação
         error_message = f"Erro de validação do esquema JSON: {ve.message}"
         error_path = " -> ".join([str(path) for path in ve.path])
-        logging.log(logging.ERROR, f"{error_message}\nLocalização do erro: {error_path}")
-        return None
+        logging.log(logging.WARNING, f"{error_message}\nLocalização do erro: {error_path}")
+        return False
 
     except jsonschema.SchemaError as se:
         # Erro no esquema em si (por exemplo, esquema malformado)
-        logging.log(logging.ERROR, f"Erro no esquema JSON: {se}")
-        return None
+        logging.log(logging.WARNING, f"Erro no esquema JSON: {se}")
+        return False
 
     except Exception as e:
         # Outros erros inesperados
-        logging.log(logging.ERROR, f"Erro inesperado ao validar dados: {str(e)}")
-        return None
+        logging.log(logging.WARNING, f"Erro inesperado ao validar dados: {str(e)}")
+        return False
 
-    # Se a validação for bem-sucedida, os dados estão em conformidade com o esquema
-    # Você pode simplesmente mesclar os dados no esquema original
-    try:
-        json_schema.update(data)
-    except Exception as e:
-        # Erro ao atualizar o esquema com os dados
-        logging.log(logging.ERROR, f"Erro ao atualizar o esquema com os dados: {str(e)}")
-        return None
-
-    return json_schema
+    return True
 
 
     

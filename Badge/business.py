@@ -229,9 +229,9 @@ def generate_badge(data):
 
         badge_db_schema_url  = azure_client.get_app_config_setting('BadgeDBSchemaURL')
         badge_db_schema  = azure_client.return_blob_as_text(badge_db_schema_url)
-        badge_data = helpers.insert_data_into_json_schema(badge_db_schema, badge_json)
+        badge_data = helpers.validate_data_into_json_schema(badge_db_schema, badge_json)
         if badge_data is None:
-            logging.log(logging.ERROR, f"[business] Deu ruim na analise do schema.")
+            logging.log(logging.WARNING, f"[business] Deu ruim na analise do schema.")
 
         logging.log(logging.INFO, f"[business] Gravando Badge no banco.")
         result = db.insert_badge_json(badge_json)
