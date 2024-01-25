@@ -9,7 +9,6 @@ import logging
 from .database import Database
 from . import helpers
 from . import azure
-#from . import logger
 
 
 # Configuração do cliente Azure

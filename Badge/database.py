@@ -5,12 +5,9 @@ from pilmoji import Pilmoji
 import logging
 
 from . import azure
-#from . import logger
 
 class Database:
     def __init__(self):
-        self.logger = logger
-        
         # Configuração do cliente Azure
         azure_client = azure.Azure()
 

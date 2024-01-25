@@ -1,13 +1,10 @@
 import traceback
 import azure.functions as func
 from flask import jsonify
-#from .logger import Logger
+
 import logging
 
 logging.log(logging.INFO,"[__init__.py] Iniciando")
-
-# Crie uma instância do Logger com um nome específico
-logger = Logger("AzFuncBadges", logging.INFO, False)
 
 from .app import application
 

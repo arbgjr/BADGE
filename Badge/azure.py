@@ -13,14 +13,11 @@ import io
 from pilmoji import Pilmoji
 import logging
 
-#from . import logger
 
 
 # Classe principal
 class Azure:
     def __init__(self):
-        self.logger = logger
-
         self.credential = DefaultAzureCredential()
         self.app_config_client = self._initialize_app_config_client()
         self.secret_client = self._initialize_key_vault_client()

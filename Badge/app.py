@@ -35,7 +35,6 @@ application.config['PROPAGATE_EXCEPTIONS'] = True
 # doc='/doc/' habilita a documentação Swagger em /doc/
 api = Api(application, doc='/doc/')
 
-#from . import logger
 from . import business
 
 @api.route("/hello")

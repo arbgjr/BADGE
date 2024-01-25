@@ -13,7 +13,6 @@ import logging
 from pilmoji import Pilmoji
 
 from . import azure
-#from . import logger
 from pgpy import PGPKey, PGPMessage
 
 # Configuração do cliente Azure
