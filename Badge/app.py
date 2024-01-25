@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request 
 import traceback
 from flask_restx import Resource, Api, fields, reqparse
+import logging
 
 # Criação da aplicação Flask
 application = Flask(__name__)
@@ -23,7 +24,7 @@ def format_exception(e):
 def handle_exception(e):
     formatted_error = format_exception(e)
     response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
-    response.status_code = 500
+    response.status_code = 400
     return response
 
 # Configurações da aplicação
@@ -34,7 +35,7 @@ application.config['PROPAGATE_EXCEPTIONS'] = True
 # doc='/doc/' habilita a documentação Swagger em /doc/
 api = Api(application, doc='/doc/')
 
-from . import logger, LogLevel
+from . import logger
 from . import business
 
 @api.route("/hello")
@@ -63,7 +64,7 @@ class Ping(Resource):
         description="Verifica se a API está ativa e respondendo.",
         responses={
             200: "API ativa",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     def get(self):
@@ -77,7 +78,7 @@ class Configs(Resource):
         description="Recupera configurações para verificação se estão ok.",
         responses={
             200: "Retorno ok",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     def get(self):
@@ -100,13 +101,13 @@ class EmitBadge(Resource):
         responses={
             200: "Badge emitido com sucesso",
             400: "Erro de validação",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     @api.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
-        logger.log(LogLevel.DEBUG, f"[app] Endpoint para emitir um novo badge.")
+        logger.log(logging.INFO, f"[app] Endpoint para emitir um novo badge.")
         data = request.json
         result = business.generate_badge(data)
         return jsonify(result)
@@ -126,7 +127,7 @@ class GetBadgeImage(Resource):
             200: "Badge encontrado",
             400: "Dados inválidos",
             404: "Badge não encontrado",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     @api.expect(badge_image_model, validate=True)
@@ -151,7 +152,7 @@ class ValidateBadge(Resource):
             200: "Badge válido",
             400: "Falha na descriptografia ou dados inválidos",
             404: "Badge não encontrado ou informações não correspondem",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     @api.expect(validate_badge_model, validate=True)
@@ -176,7 +177,7 @@ class GetUserBadges(Resource):
             200: "Lista de badges retornada com sucesso",
             400: "Dados inválidos",
             404: "Usuário não encontrado",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     @api.expect(user_badges_model, validate=True)
@@ -201,7 +202,7 @@ class GetBadgeHolders(Resource):
             200: "Lista de detentores do badge retornada com sucesso",
             400: "Dados inválidos",
             404: "Badge não encontrado",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     @api.expect(badge_holders_model, validate=True)
@@ -226,7 +227,7 @@ class GetLinkedInPost(Resource):
             200: "Postagem gerada com sucesso",
             400: "Dados inválidos",
             404: "Badge não encontrado",
-            500: "Erro interno do servidor"
+            418: "Erro interno da aplicação"
         }
     )
     @api.expect(linkedin_post_model, validate=True)

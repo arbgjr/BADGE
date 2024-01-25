@@ -7,10 +7,7 @@
       }
   }, 
   "logging": {
-    "logLevel": {
-            "default": "Debug"
-    }, 
-    "applicationInsights": {
+   "applicationInsights": {
       "samplingSettings": {
         "isEnabled": true,
         "excludedTypes": "Request"

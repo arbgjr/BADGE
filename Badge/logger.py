@@ -1,25 +1,14 @@
 import logging
 import os
 from opencensus.ext.azure.log_exporter import AzureLogHandler
-from enum import Enum
 import inspect
 from concurrent.futures import ThreadPoolExecutor
 import sys
 import threading
 from datetime import datetime
-import pytz
-class LogLevel(Enum):
-    INFO = logging.INFO
-    WARNING = logging.INFO
-    DEBUG = logging.INFO
-    CRITICAL = logging.INFO
-    EXCEPTION = logging.INFO
-    FATAL = logging.INFO
-    TRACE = logging.INFO
-    ERROR = logging.INFO
 
 class Logger:
-    def __init__(self, logger_name, default_level=logging.DEBUG, use_default_config=True):
+    def __init__(self, logger_name, default_level=logging.INFO, use_default_config=True):
         self.logger = logging.getLogger(logger_name)
         self.default_level = default_level
         self.handler = None
@@ -35,10 +24,7 @@ class Logger:
 
     def set_level(self, level):
         """Define o nível de log para o logger."""
-        if isinstance(level, LogLevel):
-            self.logger.setLevel(level.value)
-        else:
-            self.logger.setLevel(level)
+        self.logger.setLevel(level)
 
     def _configure_logger(self, appinsights_key):
         self.handler = FlushAzureLogHandler(connection_string=f'InstrumentationKey={appinsights_key}')
@@ -59,8 +45,8 @@ class Logger:
         self.executor.submit(self._log_message, caller_info, level, message)
 
     def _log_message(self, caller_info, level, message):
-        if not isinstance(level, LogLevel):
-            level = LogLevel.INFO
+        if not isinstance(level):
+            level = logging.INFO
         
         # Obter o ID da thread atual
         thread_id = threading.get_ident()
