@@ -11,6 +11,7 @@ import re
 from PIL import Image
 import io
 from pilmoji import Pilmoji
+import logging
 
 from . import logger
 

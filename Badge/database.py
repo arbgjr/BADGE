@@ -2,6 +2,7 @@ import traceback
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from pilmoji import Pilmoji
+import logging
 
 from . import azure
 from . import logger
