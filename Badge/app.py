@@ -35,7 +35,7 @@ application.config['PROPAGATE_EXCEPTIONS'] = True
 # doc='/doc/' habilita a documentação Swagger em /doc/
 api = Api(application, doc='/doc/')
 
-from . import logger
+#from . import logger
 from . import business
 
 @api.route("/hello")
@@ -107,7 +107,7 @@ class EmitBadge(Resource):
     @api.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
-        logger.log(logging.INFO, f"[app] Endpoint para emitir um novo badge.")
+        logging.log(logging.INFO, f"[app] Endpoint para emitir um novo badge.")
         data = request.json
         result = business.generate_badge(data)
         return jsonify(result)

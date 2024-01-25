@@ -13,7 +13,7 @@ import logging
 from pilmoji import Pilmoji
 
 from . import azure
-from . import logger
+#from . import logger
 from pgpy import PGPKey, PGPMessage
 
 # Configuração do cliente Azure
@@ -102,9 +102,9 @@ def decrypt_data(encrypted_data):
     return str(decrypted_message.message)
 
 def encrypt_data(data):
-    logger.log(logging.INFO, f"Mensagem: {data}")
+    logging.log(logging.INFO, f"Mensagem: {data}")
     public_key_str = get_pgp_public_key()
-    logger.log(logging.INFO, f"PGP Public Key: {public_key_str}")
+    logging.log(logging.INFO, f"PGP Public Key: {public_key_str}")
 
     # Carregar a chave pública
     pubkey, _ = PGPKey.from_blob(public_key_str)
@@ -118,7 +118,7 @@ def encrypt_data(data):
 
     # Criptografar a mensagem com a chave pública
     encrypted_phrase = pubkey.encrypt(message)
-    logger.log(logging.INFO, f"Mensagem criptografada: {encrypted_phrase}")
+    logging.log(logging.INFO, f"Mensagem criptografada: {encrypted_phrase}")
 
     return encrypted_phrase
 
@@ -126,7 +126,7 @@ def load_image_from_base64(base64_img):
     try:
         # Verificar se a entrada é uma string
         if not isinstance(base64_img, str):
-            logger.log(logging.ERROR, "Dados de entrada não são uma string base64 válida.")
+            logging.log(logging.ERROR, "Dados de entrada não são uma string base64 válida.")
             return None
 
         # Decodificar dados base64
@@ -138,14 +138,14 @@ def load_image_from_base64(base64_img):
 
     except base64.binascii.Error:
         # Erro específico para problemas relacionados à decodificação base64
-        logger.log(logging.ERROR, "Erro na decodificação dos dados base64.")
+        logging.log(logging.ERROR, "Erro na decodificação dos dados base64.")
     except IOError:
         # Erro específico para problemas relacionados à I/O ao abrir a imagem
-        logger.log(logging.ERROR, "Não foi possível abrir a imagem a partir dos dados base64.")
+        logging.log(logging.ERROR, "Não foi possível abrir a imagem a partir dos dados base64.")
     except Exception as e:
         stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.log(logging.ERROR, f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao carregar imagem de base64: {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def convert_image_to_jpg(input_image):
@@ -153,7 +153,7 @@ def convert_image_to_jpg(input_image):
         print("Verificando o formato da imagem")
         # Verifica o formato da imagem
         if input_image.format != "JPEG":
-            logger.log(logging.INFO, f"Convertendo {input_image.format} para JPG com fundo branco")
+            logging.log(logging.INFO, f"Convertendo {input_image.format} para JPG com fundo branco")
             width, height = input_image.size
             white_background_image = Image.new('RGB', (width, height), 'white')
             white_background_image.paste(input_image.convert('RGBA'), (0, 0), input_image.convert('RGBA'))
@@ -163,14 +163,14 @@ def convert_image_to_jpg(input_image):
             white_background_image.save(buffer, 'JPEG')
             buffer.seek(0)
 
-            logger.log(logging.INFO, "Convertido para JPG com fundo branco")
+            logging.log(logging.INFO, "Convertido para JPG com fundo branco")
             return Image.open(buffer)  # Retorna o objeto da imagem em memória
         else:
             # Se já for JPG, não precisa de conversão
-            logger.log(logging.ERROR, "A imagem já está em formato JPG")
+            logging.log(logging.ERROR, "A imagem já está em formato JPG")
             return input_image
     except Exception as e:
-        logger.log(logging.ERROR, f"Erro ao converter a imagem para JPG com fundo branco: {str(e)}")
+        logging.log(logging.ERROR, f"Erro ao converter a imagem para JPG com fundo branco: {str(e)}")
         return None
 
 def generate_image_with_emoji(emoji_string, font_data, font_size=70, background_color=(255, 255, 255), text_color=(0, 0, 0)):
@@ -193,7 +193,7 @@ def generate_image_with_emoji(emoji_string, font_data, font_size=70, background_
 
         return image  # Retorna a imagem cortada para o tamanho do emoji
     except Exception as e:
-        logger.log(logging.ERROR, f"Erro ao gerar imagem com emoji: {str(e)}")
+        logging.log(logging.ERROR, f"Erro ao gerar imagem com emoji: {str(e)}")
         return None
 
 def add_text_to_badge(badge_template, text_data_json):
@@ -234,19 +234,19 @@ def add_text_to_badge(badge_template, text_data_json):
                     y = position[1]
                     draw.text((x, y), content, font=font, fill=color)
                 except IOError:
-                    logger.log(logging.ERROR, f"Fonte não encontrada. Usando fonte padrão.")
+                    logging.log(logging.ERROR, f"Fonte não encontrada. Usando fonte padrão.")
                     font = ImageFont.load_default()
 
         return badge_template
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(logging.ERROR, f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao adicionar texto ao badge: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def create_qr_code(data, base_url, box_size=3, border=1):
     if not data or not base_url:
-        logger.log(logging.ERROR, "Dados ou URL base não fornecidos para o QR Code.")
+        logging.log(logging.ERROR, "Dados ou URL base não fornecidos para o QR Code.")
         return None
 
     try:
@@ -263,7 +263,7 @@ def create_qr_code(data, base_url, box_size=3, border=1):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(logging.ERROR, f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao criar QR Code: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def process_badge_image(badge_template, issuer_name):
@@ -273,7 +273,7 @@ def process_badge_image(badge_template, issuer_name):
 
         # Verificar se a imagem foi retornada corretamente
         if badge_with_exif is None:
-            logger.log(logging.ERROR, "Falha ao inserir dados EXIF na imagem.")
+            logging.log(logging.ERROR, "Falha ao inserir dados EXIF na imagem.")
             return None, None, None
 
         # Salvar a imagem em um buffer de bytes
@@ -289,7 +289,7 @@ def process_badge_image(badge_template, issuer_name):
         return badge_hash, badge_base64, signed_hash, badge_with_exif
 
     except Exception as e:
-        logger.log(logging.ERROR, f"Erro ao processar a imagem do badge: {e}")
+        logging.log(logging.ERROR, f"Erro ao processar a imagem do badge: {e}")
         return None, None, None
 
 def load_font_from_google_fonts(css_url, size):
@@ -314,10 +314,10 @@ def load_font_from_google_fonts(css_url, size):
         return font
     except requests.RequestException as e:
         stack_trace = traceback.format_exc()
-        logger.log(logging.ERROR, f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao baixar a fonte: {e}\nStack Trace:\n{stack_trace}")
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(logging.ERROR, f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao carregar a fonte: {e}\nStack Trace:\n{stack_trace}")
     return None
 
 def load_font(font_path, size):
@@ -328,18 +328,18 @@ def load_font(font_path, size):
     except IOError:
         stack_trace = traceback.format_exc()
         # Erro específico para problemas relacionados à I/O, como arquivo de fonte não encontrado
-        logger.log(logging.ERROR, f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Não foi possível carregar a fonte: {font_path}\nStack Trace:\n{stack_trace}")
     except Exception as e:
         stack_trace = traceback.format_exc()
         # Captura outros tipos de exceções
-        logger.log(logging.ERROR, f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao carregar a fonte ({font_path}): {str(e)}\nStack Trace:\n{stack_trace}")
     return None
 
 def generate_image_hash(image):
     try:
         # Validar os dados de entrada
         if not isinstance(image, Image.Image):
-            logger.log(logging.ERROR, "O objeto fornecido não é uma imagem válida.")
+            logging.log(logging.ERROR, "O objeto fornecido não é uma imagem válida.")
             return None
 
         # Geração do hash da imagem usando SHA-3
@@ -349,19 +349,19 @@ def generate_image_hash(image):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(logging.ERROR, f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao gerar o hash da imagem: {str(e)}\nStack Trace:\n{stack_trace}")
         return None
 
 def insert_exif(image, issuer_name):
     try:
         # Validação dos dados de entrada
         if not isinstance(image, Image.Image):
-            logger.log(logging.ERROR, "O objeto fornecido não é uma imagem válida.")
+            logging.log(logging.ERROR, "O objeto fornecido não é uma imagem válida.")
             return None
 
         exif_data = {"0th": {piexif.ImageIFD.Make: issuer_name.encode()}}
         if not isinstance(exif_data, dict):
-            logger.log(logging.ERROR, "Os dados EXIF fornecidos não estão no formato de dicionário.")
+            logging.log(logging.ERROR, "Os dados EXIF fornecidos não estão no formato de dicionário.")
             return None
 
         # Preparar os dados EXIF para inserção
@@ -387,7 +387,7 @@ def insert_exif(image, issuer_name):
 
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logger.log(logging.ERROR, f"Erro ao inserir dados EXIF na imagem: {e}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"Erro ao inserir dados EXIF na imagem: {e}\nStack Trace:\n{stack_trace}")
         return None
 
 def validar_url_https(url):
@@ -440,7 +440,7 @@ def png_to_jpeg(png_image, background_color=(255, 255, 255)):
         return background
 
     except Exception as e:
-        logger.log(logging.ERROR, f"Erro ao converter a imagem: {e}")
+        logging.log(logging.ERROR, f"Erro ao converter a imagem: {e}")
         return None
 
 def insert_data_into_json_schema(json_schema, data):
@@ -454,17 +454,17 @@ def insert_data_into_json_schema(json_schema, data):
         # Detalhes do erro de validação
         error_message = f"Erro de validação do esquema JSON: {ve.message}"
         error_path = " -> ".join([str(path) for path in ve.path])
-        logger.log(logging.ERROR, f"{error_message}\nLocalização do erro: {error_path}")
+        logging.log(logging.ERROR, f"{error_message}\nLocalização do erro: {error_path}")
         return None
 
     except jsonschema.SchemaError as se:
         # Erro no esquema em si (por exemplo, esquema malformado)
-        logger.log(logging.ERROR, f"Erro no esquema JSON: {se}")
+        logging.log(logging.ERROR, f"Erro no esquema JSON: {se}")
         return None
 
     except Exception as e:
         # Outros erros inesperados
-        logger.log(logging.ERROR, f"Erro inesperado ao validar dados: {str(e)}")
+        logging.log(logging.ERROR, f"Erro inesperado ao validar dados: {str(e)}")
         return None
 
     # Se a validação for bem-sucedida, os dados estão em conformidade com o esquema
@@ -473,7 +473,7 @@ def insert_data_into_json_schema(json_schema, data):
         json_schema.update(data)
     except Exception as e:
         # Erro ao atualizar o esquema com os dados
-        logger.log(logging.ERROR, f"Erro ao atualizar o esquema com os dados: {str(e)}")
+        logging.log(logging.ERROR, f"Erro ao atualizar o esquema com os dados: {str(e)}")
         return None
 
     return json_schema
