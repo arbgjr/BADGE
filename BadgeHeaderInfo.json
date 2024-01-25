@@ -1,0 +1,14 @@
+[
+    {
+        "position": [10, 10],
+        "font": "<blobUrlRubikRegular>",
+        "size": 15,
+        "color": [0, 0, 0]
+    },
+    {
+        "position": [10, 30],
+        "font": "<blobUrlRubikRegular>",
+        "size": 15,
+        "color": [0, 0, 0]
+    }
+]

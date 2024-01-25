@@ -47,12 +47,12 @@ def get_configs():
         data['AzAppConfig']['container_name'] = azure_client.get_app_config_setting('BadgeContainerName')
         data['AzAppConfig']['badge_db_schema_url'] = azure_client.get_app_config_setting('BadgeDBSchemaURL')
 
-        data['AzKeyVault']['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
-        Palavra = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
-        data['AzKeyVault']['Palavra'] = Palavra
-        PalavraCriptada = helpers.encrypt_data(Palavra)
-        data['AzKeyVault']['PalavraCriptada'] = str(PalavraCriptada)
-        data['AzKeyVault']['PalavraDescriptada'] = helpers.decrypt_data(PalavraCriptada)
+        #data['AzKeyVault']['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
+        #Palavra = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
+        #data['AzKeyVault']['Palavra'] = Palavra
+        #PalavraCriptada = helpers.encrypt_data(Palavra)
+        #data['AzKeyVault']['PalavraCriptada'] = str(PalavraCriptada)
+        #data['AzKeyVault']['PalavraDescriptada'] = helpers.decrypt_data(PalavraCriptada)
         
         conexao = azure_client.get_key_vault_secret('CosmosDBConnectionString')
         conexao = re.sub(r"User ID=[^;]+", "User ID=***", conexao)
@@ -102,9 +102,9 @@ def generate_badge(data):
         logging.log(logging.INFO, f"[business] Gerando GUID do Badge.")
         badge_guid = helpers.gera_guid_badge() 
         
-        logging.log(logging.INFO, f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
-        concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}|{area_name}"
-        encrypted_data = str(helpers.encrypt_data(concatenated_data))
+        #logging.log(logging.INFO, f"[business] Gerando dados de verificação do Badge: {badge_guid}.")
+        #concatenated_data = f"{badge_guid}|{owner_name}|{issuer_name}|{area_name}"
+        #encrypted_data = str(helpers.encrypt_data(concatenated_data))
 
         db = Database()
 
@@ -276,34 +276,34 @@ def badge_valid(data):
             logging.log(logging.ERROR, "Dados de entrada faltando: 'data'")
             return {"error": "Dados de entrada inválidos"}, 418
 
-        encrypted_data = data['data']
+        badge_guid = data['data']
                 
-        logging.log(logging.INFO, "Analisando dados enviados.")
+        #logging.log(logging.INFO, "Analisando dados enviados.")
 
-        if not encrypted_data:
-            logging.log(logging.ERROR, "Dados criptogtafados não informados.")
-            return {"error": "Dados criptografados são obrigatórios"}, 418
+        #if not encrypted_data:
+        #    logging.log(logging.ERROR, "Dados criptogtafados não informados.")
+        #    return {"error": "Dados criptografados são obrigatórios"}, 418
             
-        logging.log(logging.INFO, f"Descriptografando dados enviados: {encrypted_data}")
+        #logging.log(logging.INFO, f"Descriptografando dados enviados: {encrypted_data}")
 
-        decrypted_data = helpers.decrypt_data(encrypted_data)
-        if not decrypted_data:
-            logging.log(logging.ERROR, "Não foi possível descriptograr dados informados.")
-            return {"error": "Falha na descriptografia"}, 418 
+        #decrypted_data = helpers.decrypt_data(encrypted_data)
+        #if not decrypted_data:
+        #    logging.log(logging.ERROR, "Não foi possível descriptograr dados informados.")
+        #    return {"error": "Falha na descriptografia"}, 418 
 
-        logging.log(logging.INFO, f"Decodificando dados enviados: {encrypted_data}")
+        logging.log(logging.INFO, f"Dados enviados: {badge_guid}")
 
-        try:
-            badge_guid, owner_name, issuer_name = decrypted_data.data.split("|")
-            logging.log(logging.INFO, f"Validando badge {badge_guid} emitido por {issuer_name}")
+        #try:
+        #    badge_guid, owner_name, issuer_name = decrypted_data.data.split("|")
+        #    logging.log(logging.INFO, f"Validando badge {badge_guid}.")
 
-        except ValueError:
-            stack_trace = traceback.format_exc()
-            logging.log(logging.ERROR, "Não foi possível decodificar dados informados.")
-            return {"error": "Dados decodificados inválidos"}, 418
+        #except ValueError:
+        #    stack_trace = traceback.format_exc()
+        #    logging.log(logging.ERROR, "Não foi possível decodificar dados informados.")
+        #    return {"error": "Dados decodificados inválidos"}, 418
         
         db = Database()
-        badge = db.validate_badge(badge_guid, owner_name, issuer_name)
+        badge = db.validate_badge(badge_guid)
         if badge:
             return {"valid": True, "badge_info": badge}
         else:
