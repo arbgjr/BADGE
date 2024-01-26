@@ -157,6 +157,7 @@ class ValidateBadge(Resource):
     @api.expect(validate_badge_model, validate=True)
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
+        logging.log(logging.INFO, f"Endpoint para validar a autenticidade de um badge: {request.json}")
         data = request.json
         result = business.badge_valid(data)
         return jsonify(result)

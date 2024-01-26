@@ -279,7 +279,7 @@ def badge_valid(data):
             return {"error": "Dados de entrada inválidos"}, 400
 
         badge_guid = data['badge_guid']
-
+                
         #logging.log(logging.INFO, "Analisando dados enviados.")
 
         #if not encrypted_data:
@@ -306,6 +306,8 @@ def badge_valid(data):
         
         db = Database()
         badge = db.validate_badge(badge_guid)
+
+        logging.log(logging.INFO, f"Dados retornados: {badge}")
 
         if badge and badge.get("status") == "success":
             # O badge foi encontrado e as informações são válidas
@@ -414,7 +416,7 @@ def linkedin_post(data):
                 additional_info=additional_info,
                 validation_url=validation_url
             )
-            
+
         return {"linkedin_post": post_text}
 
     except Exception as e:
