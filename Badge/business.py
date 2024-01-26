@@ -252,23 +252,24 @@ def badge_image(data):
         # Validação e análise dos dados recebidos
         if 'badge_guid' not in data:
             logging.log(logging.ERROR, "Dados de entrada faltando: 'badge_guid'")
-            return {"error": "Dados de entrada inválidos"}, 418
+            return {"error": "Dados de entrada inválidos"}, 400
 
         badge_guid = data['badge_guid']
         
-        logging.log(logging.INFO, f"Recuperando badge para {badge_guid}.")
+        logging.log(logging.INFO, f"Recuperando imagem do badge para {badge_guid}.")
         
         db = Database()
-        row = db.get_badge_image(badge_guid)
-        if row:
-            return {"badge_image": row[0]}
+        badge_image_url = db.get_badge_image(badge_guid)
+        if badge_image_url:
+            return {"badge_image_url": badge_image_url}
         else:
-            logging.log(logging.ERROR, "Falha ao recuperar o badge no banco de dados.")
-            return {"error": "Badge não encontrado"}, 404
+            logging.log(logging.WARNING, "Badge não encontrado ou sem imagem associada.")
+            return {"error": "Badge não encontrado ou sem imagem associada"}, 404
+
     except Exception as e:
         stack_trace = traceback.format_exc()
-        logging.log(logging.ERROR, f"Erro ao recuperar badge: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor"}, 418
+        logging.log(logging.ERROR, f"Erro ao recuperar imagem do badge: {str(e)}\nStack Trace:\n{stack_trace}")
+        return {"error": "Erro interno no servidor"}, 500
 
 def badge_valid(data):
     try:

@@ -59,16 +59,25 @@ class Database:
             logging.log(logging.ERROR, f"Erro ao obter template do badge: {e}\nStack Trace:\n{stack_trace}")
             return None
         
-    def get_badge_image(self, badge_guid):
-        try:
-            with self.connect() as client:
-                db = client['dbBadges']
-                badges_collection = db['Badges']
-                return badges_collection.find_one({"GUID": badge_guid})["BadgeData"]
-        except Exception as e:
-            stack_trace = traceback.format_exc()
-            logging.log(logging.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
-            return None
+def get_badge_image(self, badge_guid):
+    try:
+        with self.connect() as client:
+            db = client['dbBadges']
+            badges_collection = db['Badges']
+            badge_document = badges_collection.find_one({"badgeId": badge_guid})
+
+            if badge_document:
+                # Extrai a URL da imagem do badge
+                badge_image_url = badge_document.get('generatedBadge', {}).get('badgeImageUrl', None)
+                return badge_image_url
+            else:
+                logging.log(logging.WARNING, f"Nenhum badge encontrado com GUID: {badge_guid}")
+                return None
+
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        logging.log(logging.ERROR, f"Erro ao obter imagem do badge: {e}\nStack Trace:\n{stack_trace}")
+        return None
 
     def insert_badge(self, badge_guid, badge_data):
         try:
