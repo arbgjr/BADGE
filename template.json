@@ -1,0 +1,32 @@
+{
+	"IssuerName" : "<issuerName>",
+	"AreaDetails" : {
+		"AreaName" : "<areaName>",
+		"Position" : [
+			"center",
+			175
+		],
+		"FontPath" : "<blobUrlRubikBold>",
+		"Size" : 60,
+		"Color" : [
+			0,
+			0,
+			0
+		]
+	},
+	"BlobUrl" : "<blobUrlTemplateBadge>",
+	"ContentDetails" : {
+		"Content" : "🚀",
+		"Position" : [
+			"center",
+			375
+		],
+		"FontPath" : "<blobUrlNotoColorEmoji>",
+		"Size" : 55,
+		"Color" : [
+			0,
+			0,
+			0
+		]
+	}
+}
