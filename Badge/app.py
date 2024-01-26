@@ -25,6 +25,7 @@ def handle_exception(e):
     formatted_error = format_exception(e)
     response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
     response.status_code = 400
+    logging.log(logging.ERROR, f"response: {response}")
     return response
 
 # Configurações da aplicação
