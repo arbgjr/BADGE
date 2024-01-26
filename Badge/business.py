@@ -274,12 +274,12 @@ def badge_image(data):
 def badge_valid(data):
     try:
         # Validação e análise dos dados recebidos
-        if 'data' not in data:
-            logging.log(logging.ERROR, "Dados de entrada faltando: 'data'")
-            return {"error": "Dados de entrada inválidos"}, 418
+        if 'badge_guid' not in data:
+            logging.log(logging.ERROR, "Dados de entrada faltando: 'badge_guid'")
+            return {"error": "Dados de entrada inválidos"}, 400
 
-        badge_guid = data['data']
-                
+        badge_guid = data['badge_guid']
+
         #logging.log(logging.INFO, "Analisando dados enviados.")
 
         #if not encrypted_data:
@@ -400,15 +400,21 @@ def linkedin_post(data):
 
         validation_url = f"{base_url}/validate?badge_guid={badge_guid}"
         
-        post_text = azure_client.get_app_config_setting('LinkedInPost').replace("\\r\\n", "\r\n")
-        if not post_text:
+        post_text_template = azure_client.get_app_config_setting('LinkedInPost').replace("\\r\\n", "\r\n")
+        if not post_text_template:
             post_text = (
                 f"Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}! "
                 f"Esta conquista representa {additional_info}. "
                 f"Você pode verificar a autenticidade do meu badge aqui: {validation_url} "
                 "#Conquista #Badge #DesenvolvimentoProfissional"
             )
-        
+        else:
+            post_text = post_text_template.format(
+                badge_name=badge_name,
+                additional_info=additional_info,
+                validation_url=validation_url
+            )
+            
         return {"linkedin_post": post_text}
 
     except Exception as e:
