@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 from pilmoji import Pilmoji
 import logging
+import urllib.parse
 
 from . import azure
 
@@ -45,7 +46,7 @@ class Database:
                 if template_data:
                     # Preparar os dados do template para retornar
                     template_info = {
-                        "BlobUrl": template_data.get("BlobUrl"),
+                        "BlobUrl": urllib.parse.unquote(template_data.get("BlobUrl")),
                         "AreaDetails": template_data.get("AreaDetails", {}),
                         "ContentDetails": template_data.get("ContentDetails", {})
                     }
@@ -138,3 +139,105 @@ class Database:
         }
 
         return badge_json
+
+    def validate_badge(self, badge_guid):
+        try:
+            with self.connect() as client:
+                db = client['dbBadges']
+                badges_collection = db['Badges']
+                
+                # Encontra o badge pelo GUID
+                badge = badges_collection.find_one({"badgeId": badge_guid})
+
+                # Verifica se o badge foi encontrado
+                if badge:
+                    # Retorna informações relevantes para validar a posse do badge
+                    holder_name = badge.get('holder', {}).get('name', 'Nome não disponível')
+                    issuer_name = badge.get('issuer', {}).get('name', 'Emissor não disponível')
+                    badge_name = badge.get('name', 'Badge não disponível')
+                    badge_image_url = badge.get('generatedBadge', {}).get('badgeImageUrl', 'URL da imagem não disponível')
+                    category = badge.get('category', {})
+                    badge_category = f"{category.get('mainCategory', 'Categoria não disponível')} - {category.get('subCategory', 'Subcategoria não disponível')}"
+                    emitido_em = badge.get('generatedBadge', {}).get('metadata', {}).get('issuedDate', 'Data não disponível')
+
+                    return {
+                        "holder_name": holder_name,
+                        "issuer_name": issuer_name,
+                        "badge_name": badge_name,
+                        "badge_image_url": badge_image_url,
+                        "badge_category": badge_category,
+                        "emitido_em": emitido_em,
+                        "status": "success"
+                    }
+                else:
+                    logging.log(logging.WARNING, f"Nenhum badge encontrado com GUID: {badge_guid}")
+                    return {"status": "error"}
+
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            logging.log(logging.ERROR, f"Erro ao validar badge: {e}\nStack Trace:\n{stack_trace}")
+            return None
+
+    def get_user_badges(self, user_id):
+        try:
+            with self.connect() as client:
+                db = client['dbBadges']
+                badges_collection = db['Badges']
+                
+                badges = badges_collection.find({
+                    "$or": [
+                        {"holder.name": user_id},
+                        {"holder.email": user_id}
+                    ]
+                })
+
+                return list(badges)
+                
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            logging.log(logging.ERROR, f"Erro ao obter badges do usuário: {e}\nStack Trace:\n{stack_trace}")
+            return None
+
+    def get_badge_holders(self, badge_name):
+        try:
+            with self.connect() as client:
+                db = client['dbBadges']
+                badges_collection = db['Badges']
+
+                # Encontrar todos os registros associados ao nome do badge
+                badge_holders = badges_collection.find({"name": badge_name})
+
+                # Criar uma lista com os detalhes dos detentores do badge
+                holders_list = []
+                for badge in badge_holders:
+                    holder_name = badge.get('holder', {}).get('name', 'Nome não disponível')
+                    holder_email = badge.get('holder', {}).get('email', 'E-mail não disponível')
+                    holders_list.append({"name": holder_name, "email": holder_email})
+
+                return holders_list
+
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            logging.log(logging.ERROR, f"Erro ao obter detentores do badge: {str(e)}\nStack Trace:\n{stack_trace}")
+            return None
+
+    def get_badge_info_for_post(self, badge_guid):
+        try:
+            with self.connect() as client:
+                db = client['dbBadges']
+                badges_collection = db['Badges']
+
+                # Encontra o badge pelo GUID
+                badge = badges_collection.find_one({"badgeId": badge_guid})
+
+                if badge:
+                    # Extrai as informações necessárias para a postagem
+                    badge_name = badge.get('name', 'Badge não disponível')
+                    additional_info = badge.get('description', 'Descrição não disponível')
+                    return badge_name, additional_info
+                else:
+                    return None
+        except Exception as e:
+            logging.log(logging.ERROR, f"Erro ao obter informações do badge para postagem: {str(e)}")
+            return None
+

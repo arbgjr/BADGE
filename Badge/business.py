@@ -5,6 +5,7 @@ import re
 import datetime
 import json
 import logging
+import urllib.parse
 
 from .database import Database
 from . import helpers
@@ -42,10 +43,10 @@ def get_configs():
         data['AzAppConfig']['PGPPrivateKeyName'] = azure_client.get_app_config_setting('PGPPrivateKeyName')
         public_key_name = azure_client.get_app_config_setting('PGPPublicKeyName') 
         data['AzAppConfig']['PGPPublicKeyName'] = public_key_name
-        data['AzAppConfig']['LinkedInPost'] = azure_client.get_app_config_setting('LinkedInPost')
-        data['AzAppConfig']['header_info'] = azure_client.get_app_config_setting('BadgeHeaderInfo')
+        data['AzAppConfig']['LinkedInPost'] = azure_client.get_app_config_setting('LinkedInPost').replace("\\r\\n", "\r\n")
+        data['AzAppConfig']['header_info'] = json.loads(azure_client.get_app_config_setting('BadgeHeaderInfo'))
         data['AzAppConfig']['container_name'] = azure_client.get_app_config_setting('BadgeContainerName')
-        data['AzAppConfig']['badge_db_schema_url'] = azure_client.get_app_config_setting('BadgeDBSchemaURL')
+        data['AzAppConfig']['badge_db_schema_url'] = urllib.parse.unquote(azure_client.get_app_config_setting('BadgeDBSchemaURL'))
 
         #data['AzKeyVault']['PGPPublicKey'] = azure_client.get_key_vault_secret(public_key_name)
         #Palavra = f'{badge_guid}|{owner_name}|{issuer_name}|{area_name}'
@@ -130,23 +131,23 @@ def generate_badge(data):
         header_info = json.loads(header_info)
 
         owner_namer_position = tuple(header_info[0].get("position"))
-        owner_name_font_url = header_info[0].get("font")
+        owner_name_font_url = urllib.parse.unquote(header_info[0].get("font"))
         owner_name_font_size = header_info[0].get("size")
         owner_name_color = tuple(header_info[0].get("color"))
 
         issuer_name_position = tuple(header_info[1].get("position"))
-        issuer_name_font_url = header_info[1].get("font")
+        issuer_name_font_url = urllib.parse.unquote(header_info[1].get("font"))
         issuer_name_font_size = header_info[1].get("size")
         issuer_name_color = tuple(header_info[1].get("color"))
 
         area_position = tuple(badge_template_info["AreaDetails"]["Position"])
-        area_font_url = badge_template_info["AreaDetails"]["FontPath"]
+        area_font_url = urllib.parse.unquote(badge_template_info["AreaDetails"]["FontPath"])
         area_font_size = badge_template_info["AreaDetails"]["Size"]
         area_color = tuple(badge_template_info["AreaDetails"]["Color"])  # Converter a lista em uma tupla
 
         icon = badge_template_info["ContentDetails"]["Content"]
         icon_position = tuple(badge_template_info["ContentDetails"]["Position"])
-        icon_font_url = badge_template_info["ContentDetails"]["FontPath"]
+        icon_font_url = urllib.parse.unquote(badge_template_info["ContentDetails"]["FontPath"])
         icon_size = badge_template_info["ContentDetails"]["Size"]
         icon_color = tuple(badge_template_info["ContentDetails"]["Color"])  # Converter a lista em uma tupla
 
@@ -227,7 +228,7 @@ def generate_badge(data):
         badge_json["generatedBadge"]["metadata"]["additionalInfo"] = ""
         badge_json["verificationLink"] = ""
 
-        badge_db_schema_url  = azure_client.get_app_config_setting('BadgeDBSchemaURL')
+        badge_db_schema_url  = urllib.parse.unquote(azure_client.get_app_config_setting('BadgeDBSchemaURL'))
         badge_db_schema  = azure_client.return_blob_as_text(badge_db_schema_url)
         badge_data = helpers.validate_data_into_json_schema(badge_db_schema, badge_json)
         if badge_data is None:
@@ -304,9 +305,12 @@ def badge_valid(data):
         
         db = Database()
         badge = db.validate_badge(badge_guid)
-        if badge:
+
+        if badge and badge.get("status") == "success":
+            # O badge foi encontrado e as informações são válidas
             return {"valid": True, "badge_info": badge}
         else:
+            # O badge não foi encontrado ou ocorreu um erro durante a validação
             return {"valid": False, "error": "Badge não encontrado ou informações não correspondem"}, 404
     except Exception as e:
         stack_trace = traceback.format_exc()
@@ -315,11 +319,10 @@ def badge_valid(data):
      
 def badge_list(data):
     try:
-        
         # Validação e análise dos dados recebidos
         if 'user_id' not in data:
             logging.log(logging.ERROR, "Dados de entrada faltando: 'user_id'")
-            return {"error": "Dados de entrada inválidos"}, 418
+            return {"error": "Dados de entrada inválidos"}, 400
 
         user_id = data['user_id']
 
@@ -332,12 +335,12 @@ def badge_list(data):
         base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.log(logging.ERROR, "Falha ao carregar a URL de verificação do badge.")
-            return {"error": "Falha ao carregar url de verificação do badge"}, 418
+            return {"error": "Falha ao carregar url de verificação do badge"}, 500
 
         badge_list = []
         for badge in badges:
-            badge_guid = badge[0]
-            badge_name = badge[1]
+            badge_guid = badge.get("badgeId", "")
+            badge_name = badge.get("name", "")
             validation_url = f"{base_url}/validate?badge_guid={badge_guid}"
             badge_list.append({"name": badge_name, "validation_url": validation_url})
 
@@ -346,15 +349,14 @@ def badge_list(data):
     except Exception as e:
         stack_trace = traceback.format_exc()
         logging.log(logging.ERROR, f"Erro ao listar badges: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor"}, 418
+        return {"error": "Erro interno no servidor"}, 500
 
 def badge_holder(data):
     try:
-      
         # Validação e análise dos dados recebidos
         if 'badge_name' not in data:
             logging.log(logging.ERROR, "Dados de entrada faltando: 'badge_name'")
-            return {"error": "Dados de entrada inválidos"}, 418
+            return {"error": "Dados de entrada inválidos"}, 400
 
         badge_name = data['badge_name']
 
@@ -364,21 +366,21 @@ def badge_holder(data):
         if not badge_holders:
             return {"error": "Nenhum detentor de badge encontrado para este nome de badge"}, 404
 
-        users = [user[0] for user in badge_holders]
+        # Criando a lista de usuários
+        users = [{'name': holder['name'], 'email': holder['email']} for holder in badge_holders]
         return users
 
     except Exception as e:
         stack_trace = traceback.format_exc()
         logging.log(logging.ERROR, f"Erro ao recuperar detentores do badge: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor"}, 418
+        return {"error": "Erro interno no servidor"}, 500
 
 def linkedin_post(data):
     try:
-      
         # Validação e análise dos dados recebidos
         if 'badge_guid' not in data:
             logging.log(logging.ERROR, "Dados de entrada faltando: 'badge_guid'")
-            return {"error": "Dados de entrada inválidos"}, 418
+            return {"error": "Dados de entrada inválidos"}, 400
 
         badge_guid = data['badge_guid']
 
@@ -393,26 +395,25 @@ def linkedin_post(data):
         base_url = azure_client.get_app_config_setting('BadgeVerificationUrl')
         if not base_url:
             logging.log(logging.ERROR, "Falha ao carregar a URL de verificação do badge.")
-            return {"error": "Falha ao carregar url de verificação do badge"}, 418
+            return {"error": "Falha ao carregar url de verificação do badge"}, 500
 
-        # URL de validação do badge
         validation_url = f"{base_url}/validate?badge_guid={badge_guid}"
         
-        # Texto sugerido para postagem
-        post_text = azure_client.get_app_config_setting('LinkedInPost')
+        post_text = azure_client.get_app_config_setting('LinkedInPost').replace("\\r\\n", "\r\n")
         if not post_text:
-          post_text = (
-            f"Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}! "
-            f"Esta conquista representa {additional_info}. "
-            f"Você pode verificar a autenticidade do meu badge aqui: {validation_url} "
-            "#Conquista #Badge #DesenvolvimentoProfissional"
-          )
+            post_text = (
+                f"Estou muito feliz em compartilhar que acabei de conquistar um novo badge: {badge_name}! "
+                f"Esta conquista representa {additional_info}. "
+                f"Você pode verificar a autenticidade do meu badge aqui: {validation_url} "
+                "#Conquista #Badge #DesenvolvimentoProfissional"
+            )
         
         return {"linkedin_post": post_text}
-        
+
     except Exception as e:
         stack_trace = traceback.format_exc()
         logging.log(logging.ERROR, f"Erro ao recuperar a mensagem do post do LinkedIn: {str(e)}\nStack Trace:\n{stack_trace}")
-        return {"error": "Erro interno no servidor"}, 418
+        return {"error": "Erro interno no servidor"}, 500
+
         
         

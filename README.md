@@ -27,6 +27,8 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 
 ## Instalação do BADGE
 
+Após ler o passo a passo abaixo você pode executar o arquivo install.ps1 que ele fará a criação dos recursos no Azure.
+
 ### Pré-Requisitos
 
 - **Windows 10 1709 (build 16299) ou posterior**: Caso possua sistema Linux ou MacOS, ainda é possível instalar o BADGE, basta verificar quais passos abaixo se aplicam e adapta-los a sua necessidade.
@@ -42,6 +44,9 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 - **Azure Functions Core Tools v3+**: Siga o [passo a passo indicado no site da Microsoft](https://learn.microsoft.com/pt-br/azure/azure-functions/functions-run-local?tabs=windows%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-powershell#install-the-azure-functions-core-tools)
 
 - **Azure PowerShell v11.2+**: Siga o [passo a passo indicado no site da Microsoft](https://learn.microsoft.com/pt-br/powershell/azure/install-azps-windows?view=azps-11.2.0&tabs=powershell&pivots=windows-psgallery)
+
+Install-Module -Name Az -AllowClobber -Scope CurrentUser
+
 
 - **git v2.43+**: Siga o [passo a passo indicado no site do git](https://git-scm.com/book/pt-br/v2/Come%C3%A7ando-Instalando-o-Git)
 
@@ -337,7 +342,26 @@ $response = Invoke-RestMethod -Method Post -Uri $uriCosmosDB -Body $conteudoJson
 $response
 ```
 
-- **Publicar a Function no Azure**: Siga o [passo a passo indicado no site da Microsoft](https://learn.microsoft.com/pt-br/azure/azure-functions/create-first-function-arc-cli?tabs=powershell%2Cwindows%2Cbrowser#deploy-the-function-project-to-azure)
+### Automatizando a instalação
+
+Após instalar os pré-requisitos basta seguir os passos abaixo:
+
+1. **Abrir PowerShell como Administrador**: Clique com o botão direito no menu Iniciar e selecione "Windows PowerShell (Admin)".
+2. **Baixe o script com o comando**:
+
+   ```powershell
+   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/install.ps1
+   ```
+
+3. Edite o arquivo install.ps1 onde estiver indicado.
+
+4. Execute o script abaixo é siga as instruções na tela:
+
+   ```powershell
+   .\install.ps1
+   ```
+
+- **Publicar a Function no Azure**: Caso o script acima tenha sido executado a functiona já terá sido publicada, caso contrário siga o [passo a passo indicado no site da Microsoft](https://learn.microsoft.com/pt-br/azure/azure-functions/create-first-function-arc-cli?tabs=powershell%2Cwindows%2Cbrowser#deploy-the-function-project-to-azure)
 
 ## Contribuições
 
