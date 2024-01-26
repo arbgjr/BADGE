@@ -7,7 +7,7 @@ name: Lint, Build and deploy Python project to Azure Function App - FuncBadges
 on:
   push:
     branches:
-      - dev
+      - main
   workflow_dispatch:
 
 env:
