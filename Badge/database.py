@@ -13,7 +13,7 @@ class Database:
         azure_client = azure.Azure()
 
         logging.log(logging.INFO, f"[database] Obter dados de conexão com o banco.")
-        conn_str_orig = azure_client.get_key_vault_secret('CosmosDBConnectionString')
+        conn_str_orig = urllib.parse.unquote(azure_client.get_key_vault_secret('CosmosDBConnectionString'))
         self.conn_str = self._transform_connection_string(conn_str_orig)
 
     def _transform_connection_string(self, original_conn_str):
