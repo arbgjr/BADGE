@@ -130,7 +130,8 @@ $arquivosEValores = @(
     @{Caminho=".\template.json"; ValorAntigo="<issuerName>"; ValorNovo=$issuerName},
     @{Caminho=".\template.json"; ValorAntigo="<areaName>"; ValorNovo=$areaName},
     @{Caminho=".\template.json"; ValorAntigo="<blobUrlRubikBold>"; ValorNovo=$blobUrlRubikBold},
-    @{Caminho=".\template.json"; ValorAntigo="<blobUrlNotoColorEmoji>"; ValorNovo=$blobUrlNotoColorEmoji}
+    @{Caminho=".\template.json"; ValorAntigo="<blobUrlNotoColorEmoji>"; ValorNovo=$blobUrlNotoColorEmoji},
+    @{Caminho=".\template.json"; ValorAntigo="<blobUrlTemplateBadge>"; ValorNovo=$blobUrlTemplateBadge}
 )
 $arquivosEValores | ForEach-Object {
     $conteudoDoArquivo = Get-Content -Path $_.Caminho -Raw
