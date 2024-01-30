@@ -350,7 +350,7 @@ Após instalar os pré-requisitos basta seguir os passos abaixo:
 2. **Baixe o script com o comando**:
 
    ```powershell
-   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/install.ps1
+   curl -L -o install.ps1 https://raw.githubusercontent.com/arbgjr/BADGE/main/install.ps1
    ```
 
 3. Edite o arquivo install.ps1 onde estiver indicado.
