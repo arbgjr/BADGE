@@ -27,7 +27,7 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 
 ## Instalação do BADGE
 
-Após ler o passo a passo abaixo você pode executar o arquivo install.ps1 que ele fará a criação dos recursos no Azure.
+Após ler o passo a passo abaixo você pode executar a [configuração/instalação automatizada](automatizando-a-instalação), que fará a conviguração do ambiente local e a criação dos recursos no Azure.
 
 ### Pré-Requisitos
 
@@ -365,8 +365,8 @@ Após instalar os pré-requisitos basta seguir os passos abaixo:
 
 ## Contribuições
 
-Contribuições são bem-vindas! Para contribuir, siga as diretrizes de contribuição no repositório.
+Contribuições são bem-vindas! Para contribuir, siga as [diretrizes de contribuição](https://github.com/arbgjr/BADGE/blob/main/CONTRIBUTING.md) no repositório. E sempre siga nosso [código de conduta](https://github.com/arbgjr/BADGE/blob/main/CODE_OF_CONDUCT.md).
 
 ## Licença
 
-Vide LICENSE.
+Vide [LICENSE](https://github.com/arbgjr/BADGE/blob/main/LICENSE).
