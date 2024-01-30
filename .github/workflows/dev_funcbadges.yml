@@ -6,11 +6,6 @@ name: Lint, Build and deploy Python project to Azure Function App - FuncBadges
 
 on:
   push:
-    branches:
-      - main
-      - dev
-    paths:
-      - '**/*.py'  
     paths-ignore:
       - 'LICENSE'
       - '**/*.ps1'
@@ -18,8 +13,6 @@ on:
       - '**/*.json'
       - '**/*.txt'
   pull_request:
-    paths:
-      - '**/*.py'
     paths-ignore:
       - 'LICENSE'
       - '**/*.ps1'
