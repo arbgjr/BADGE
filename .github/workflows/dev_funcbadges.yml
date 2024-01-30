@@ -65,6 +65,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.PAT }}
 
       - name: Increment Build Version
         run: |
@@ -96,14 +98,14 @@ jobs:
           git commit -m "Increment version number to $NEW_VERSION"
           git push
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          NEW_VERSION: ${{ env.NEW_VERSION }}
+          MY_PAT: ${{ secrets.PAT }}
       - name: Tag Release
         run: |
           git tag $NEW_VERSION
           git push --tags
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MY_PAT: ${{ secrets.PAT }}
   
   security_checks:
     runs-on: ubuntu-latest
