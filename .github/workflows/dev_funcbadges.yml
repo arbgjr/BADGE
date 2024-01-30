@@ -67,6 +67,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.PAT }}
+        env:
+          GIT_TERMINAL_PROMPT: 1
 
       - name: Increment Build Version
         run: |
