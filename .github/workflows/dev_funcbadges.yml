@@ -69,7 +69,7 @@ jobs:
       - name: Increment Build Version
         run: |
           # Lê a versão atual
-          VERSION=$(cat version.txt)
+          VERSION=$(cat /Badge/version.txt)
           echo "Versão atual: $VERSION"
           
           # Extrai partes da versão
@@ -86,7 +86,7 @@ jobs:
           echo "Nova versão: $NEW_VERSION"
           
           # Escreve a nova versão no arquivo
-          echo $NEW_VERSION > version.txt
+          echo $NEW_VERSION > /Badge/version.txt
 
       - name: Commit and Push Version Increment
         run: |
