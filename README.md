@@ -27,7 +27,7 @@ BADGE é um sistema inovador destinado a autenticar e classificar conquistas por
 
 ## Instalação do BADGE
 
-Após ler o passo a passo abaixo você pode executar a [configuração/instalação automatizada](automatizando-a-instalação), que fará a conviguração do ambiente local e a criação dos recursos no Azure.
+Após ler o passo a passo abaixo você pode executar a [configuração/instalação automatizada](#automatizando-a-instalação), que fará a conviguração do ambiente local e a criação dos recursos no Azure.
 
 ### Pré-Requisitos
 
