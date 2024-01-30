@@ -66,10 +66,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.PAT }}
-        env:
-          GIT_TERMINAL_PROMPT: 1
-
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+          fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination 
       - name: Increment Build Version
         run: |
           # Lê a versão atual
@@ -92,19 +90,27 @@ jobs:
           # Escreve a nova versão no arquivo
           echo $NEW_VERSION > Badge/version.txt
 
-      - name: Commit and Push Version Increment
+      - name: Commit Version Increment
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add Badge/version.txt
           git commit -m "Increment version number to $NEW_VERSION"
-          git push
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+         github_token: ${{ secrets.GITHUB_TOKEN }}
+         branch: ${{ github.ref }}      
         env:
           NEW_VERSION: ${{ env.NEW_VERSION }}
       - name: Tag Release
         run: |
           git tag $NEW_VERSION
-          git push --tags
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          force: true
+          tags: true          
   
   security_checks:
     runs-on: ubuntu-latest
