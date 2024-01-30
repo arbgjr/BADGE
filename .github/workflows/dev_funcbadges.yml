@@ -99,13 +99,10 @@ jobs:
           git push
         env:
           NEW_VERSION: ${{ env.NEW_VERSION }}
-          MY_PAT: ${{ secrets.PAT }}
       - name: Tag Release
         run: |
           git tag $NEW_VERSION
           git push --tags
-        env:
-          MY_PAT: ${{ secrets.PAT }}
   
   security_checks:
     runs-on: ubuntu-latest
