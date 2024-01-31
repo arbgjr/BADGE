@@ -96,8 +96,8 @@ badge_model = api.model('BadgeData', {
         418: "Erro interno da aplicação"
     }
 )
-@api.expect(badge_model, validate=True)
 class EmitBadge(Resource):
+    @api.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
         logging.log(logging.INFO, f"[app] Endpoint para emitir um novo badge.")
@@ -118,8 +118,8 @@ badge_image_model = api.model('BadgeImageRequest', {
         418: "Erro interno da aplicação"
     }
 )
-@api.expect(badge_image_model, validate=True)
 class GetBadgeImage(Resource):
+    @api.expect(badge_image_model, validate=True)
     def get(self):
         """Endpoint para obter a imagem de um badge específico."""
         data = request.json
@@ -141,8 +141,8 @@ validate_badge_model = api.model('ValidateBadgeRequest', {
         418: "Erro interno da aplicação"
     }
 )
-@api.expect(validate_badge_model, validate=True)
 class ValidateBadge(Resource):
+    @api.expect(validate_badge_model, validate=True)
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
         logging.log(logging.INFO, f"Endpoint para validar a autenticidade de um badge: {request.json}")
@@ -163,8 +163,8 @@ user_badges_model = api.model('UserBadgesRequest', {
         418: "Erro interno da aplicação"
     }
 )
-@api.expect(user_badges_model, validate=True)
 class GetUserBadges(Resource):
+    @api.expect(user_badges_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de badges de um usuário específico."""
         data = request.json
@@ -184,8 +184,8 @@ badge_holders_model = api.model('BadgeHoldersRequest', {
         418: "Erro interno da aplicação"
     }
 )
-@api.expect(badge_holders_model, validate=True)
 class GetBadgeHolders(Resource):
+    @api.expect(badge_holders_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de usuários que possuem um badge específico."""
         data = request.json
@@ -205,8 +205,8 @@ linkedin_post_model = api.model('LinkedInPostRequest', {
         418: "Erro interno da aplicação"
     }
 )
-@api.expect(linkedin_post_model, validate=True)
 class GetLinkedInPost(Resource):
+    @api.expect(linkedin_post_model, validate=True)
     def get(self):
         """Endpoint para gerar um texto sugerido para postagem no LinkedIn sobre um badge."""
         data = request.json
