@@ -214,5 +214,3 @@ class GetLinkedInPost(Resource):
         return jsonify(result)
 api.add_resource(GetLinkedInPost, '/get_linkedin_post')
 
-if __name__ == '__main__':
-    application.run(debug=True)
