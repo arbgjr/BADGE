@@ -160,7 +160,7 @@ jobs:
 
     # Define o ambiente com base na branch
     environment:
-      name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'dev' }}
+      name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}
       url: ${{ steps.deploy-to-function.outputs.webapp-url }}
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -176,16 +176,16 @@ jobs:
 
       - name: 'Publicando em'
         run: |
-          echo "App Name: ${{ (github.ref == 'refs/heads/main' && env.AZURE_FUNCTION_NAME) || format('{0}(dev)', env.AZURE_FUNCTION_NAME) }}"
-          echo "Slot Name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'dev' }}"
-          
+          echo "App Name: ${{ env.AZURE_FUNCTION_NAME }}
+          echo "Slot Name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}"
+
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
         id: deploy-to-function
         with:
-          app-name: ${{ (github.ref == 'refs/heads/main' && env.AZURE_FUNCTION_NAME) || format('{0}(dev)', env.AZURE_FUNCTION_NAME) }}
-          slot-name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'dev' }}
+          app-name: ${{ env.AZURE_FUNCTION_NAME }}
+          slot-name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           scm-do-build-during-deployment: true
           enable-oryx-build: true
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+          publish-profile: ${{ (github.ref == 'refs/heads/main' && secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FA245BE77EB9454BB6EF33416E7AE3CB) || secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5ABEAC1953814846AC62160672F4F821 }}
