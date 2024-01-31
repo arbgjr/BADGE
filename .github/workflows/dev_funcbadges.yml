@@ -160,7 +160,10 @@ jobs:
 
     # Define o ambiente com base na branch
     environment:
-      name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'Dev' }}
+      name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'dev' }}
+      url: ${{ steps.deploy-to-function.outputs.webapp-url }}
+    permissions:
+      id-token: write #This is required for requesting the JWT
     
     steps:
       - name: Download artifact from build job
@@ -171,11 +174,19 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip     
 
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3D3CC2CF954A495BBD72C4AB0C1E528F }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C76E42D95673489395CB7A927F824590 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4EDC029D4FF44F489F7A67605194455B }}
+
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
+        id: deploy-to-function
         with:
           app-name: ${{ env.AZURE_FUNCTION_NAME }}
-          slot-name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'Dev' }}
+          slot-name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'dev' }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           scm-do-build-during-deployment: true
           enable-oryx-build: true
