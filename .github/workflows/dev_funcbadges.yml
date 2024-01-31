@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
           fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination 
@@ -160,7 +160,10 @@ jobs:
 
     # Define o ambiente com base na branch
     environment:
-      name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'Dev' }}
+      name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}
+      url: ${{ steps.deploy-to-function.outputs.webapp-url }}
+    permissions:
+      id-token: write #This is required for requesting the JWT
     
     steps:
       - name: Download artifact from build job
@@ -171,12 +174,17 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip     
 
+      - name: 'Publicando em'
+        run: |
+          echo "App Name: ${{ env.AZURE_FUNCTION_NAME }}"
+          echo "Slot Name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}"
+
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTION_NAME }}
-          slot-name: ${{ (github.ref == 'refs/heads/main' && 'Prod') || 'Dev' }}
+          slot-name: ${{ github.ref == 'refs/heads/main' && 'Production' || 'dev' }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           scm-do-build-during-deployment: true
           enable-oryx-build: true
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+          publish-profile: ${{ github.ref == 'refs/heads/main' && secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FA245BE77EB9454BB6EF33416E7AE3CB || secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5ABEAC1953814846AC62160672F4F821 }}
