@@ -169,7 +169,17 @@ $keyVaultSecretParameters | ForEach-Object {
     az keyvault secret set --vault-name $keyVaultName --name $_.SecretName --value $_.SecretValue --content-type $_.ContentType
 }
 
-Write-Host "Para inserir os dados mínimos no CosmosDB $nosqlDBName.$databaseName pegue o conteúdo do arquivo .\template.json e insira no banco. OBRIGAORIAMENTE deve ser criada uma collection de nome Template. Sem esse valor inicial a function não funcionará corretamente." -ForegroundColor Magenta
+Write-Host "Criando Collections Badges e Template detro do $nosqlDBName.$databaseName" -ForegroundColor Green
+$collectionsParameters = @(
+    @{CollectionName="Template"},
+    @{CollectionName="Badges"}
+)
+
+$collectionsParameters | ForEach-Object {
+    az cosmosdb mongodb collection create --account-name $nosqlDBName --database-name $databaseName  --name $_.CollectionName  --resource-group $resourceGroupName  --shard "_id"  --throughput "400"
+}
+
+Write-Host "Para inserir os dados mínimos no CosmosDB $nosqlDBName.$databaseName pegue o conteúdo do arquivo .\template.json e insira no banco. OBRIGATORIAMENTE na collection de nome Template. Sem esse valor inicial a function não funcionará corretamente." -ForegroundColor Magenta
 
 Write-Host "Publicando function $functionAppName" -ForegroundColor Green
 func azure functionapp publish $functionAppName
