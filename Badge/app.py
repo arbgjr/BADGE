@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request 
+from flask_restx import Resource, Api, fields, reqparse, Namespace
 import traceback
-from flask_restx import Resource, Api, fields, reqparse
 import logging
 
 # Criação da aplicação Flask
@@ -28,39 +28,38 @@ def handle_exception(e):
     logging.log(logging.ERROR, f"response: {response}")
     return response
 
-# Configurações da aplicação
 # Ativar a propagação de exceções para garantir que os erros sejam tratados de maneira adequada
 application.config['PROPAGATE_EXCEPTIONS'] = True
 
-# Inicializar a API REST com Flask-RESTx
 # doc='/doc/' habilita a documentação Swagger em /doc/
 api = Api(application, doc='/doc/')
 
+# Criação de um namespace
+ns = api.namespace('badges', description='Operações relacionadas a Badges')
+
 from . import business
 
-@api.route("/hello")
+hello_model = api.model('Hello', {
+    'owner_name': fields.String(required=True, description='Nome do proprietário da requisição')
+})
+@ns.route("/hello")
 class Hello(Resource):
-    @api.doc(
-        params={'owner_name': 'Nome do proprietário da requisição'},
+    @ns.doc(
         responses={
             200: 'Success',
             400: 'Validation Error'
         }
     )
+    @ns.expect(hello_model)
     def get(self):
-        # Parser para parâmetros de consulta
-        parser = reqparse.RequestParser()
-        parser.add_argument('owner_name', required=True, help="Nome do proprietário não pode ser vazio")
-        args = parser.parse_args()
-
+        """Endpoint para dizer olá."""
+        args = request.args
         user = args['owner_name']
         return jsonify({"message": f"Hello Azure Function {user}"})
 
-api.add_resource(Hello, "/hello")
-
-
+@ns.route('/ping')
 class Ping(Resource):
-    @api.doc(
+    @ns.doc(
         description="Verifica se a API está ativa e respondendo.",
         responses={
             200: "API ativa",
@@ -69,12 +68,11 @@ class Ping(Resource):
     )
     def get(self):
         """Endpoint para verificar a saúde da API."""
-        return jsonify({"message": "back"}), 200
-
-api.add_resource(Ping, "/ping")
-
+        return jsonify({"message": "API ativa"}), 200
+    
+@ns.route('/configs')
 class Configs(Resource):
-    @api.doc(
+    @ns.doc(
         description="Recupera configurações para verificação se estão ok.",
         responses={
             200: "Retorno ok",
@@ -86,17 +84,16 @@ class Configs(Resource):
         result = business.get_configs()
         return jsonify(result)
 
-api.add_resource(Configs, "/configs")
+# TODO: #74 Payload compactado
 
-# TODO: Payload compactado
-# Modelo de dados para a documentação Swagger
-badge_model = api.model('BadgeData', {
+badge_model = ns.model('BadgeData', {
     'owner_name': fields.String(required=True, description='Nome do proprietário do badge'),
     'issuer_name': fields.String(required=True, description='Nome do emissor do badge')
 })
 
+@ns.route('/emit_badge')
 class EmitBadge(Resource):
-    @api.doc(
+    @ns.doc(
         description="Emitir um novo badge.",
         responses={
             200: "Badge emitido com sucesso",
@@ -104,7 +101,7 @@ class EmitBadge(Resource):
             418: "Erro interno da aplicação"
         }
     )
-    @api.expect(badge_model, validate=True)
+    @ns.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
         logging.log(logging.INFO, f"[app] Endpoint para emitir um novo badge.")
@@ -112,16 +109,13 @@ class EmitBadge(Resource):
         result = business.generate_badge(data)
         return jsonify(result)
 
-api.add_resource(EmitBadge, '/emit_badge')
-
-
-# Modelo de dados específico para GetBadgeImage
-badge_image_model = api.model('BadgeImageRequest', {
+badge_image_model = ns.model('BadgeImageRequest', {
     'badge_guid': fields.String(required=True, description='GUID do badge a ser buscado')
 })
 
+@ns.route('/get_badge_image')
 class GetBadgeImage(Resource):
-    @api.doc(
+    @ns.doc(
         description="Obter a imagem de um badge específico via JSON.",
         responses={
             200: "Badge encontrado",
@@ -130,23 +124,20 @@ class GetBadgeImage(Resource):
             418: "Erro interno da aplicação"
         }
     )
-    @api.expect(badge_image_model, validate=True)
+    @ns.expect(badge_image_model, validate=True)
     def get(self):
         """Endpoint para obter a imagem de um badge específico."""
         data = request.json
         result = business.badge_image(data)
         return jsonify(result)
 
-api.add_resource(GetBadgeImage, '/get_badge_image')
-
-
-# Modelo de dados para a documentação Swagger e validação
-validate_badge_model = api.model('ValidateBadgeRequest', {
+validate_badge_model = ns.model('ValidateBadgeRequest', {
     'data': fields.String(required=True, description='Dados criptografados do badge')
 })
 
+@ns.route('/validate_badge')
 class ValidateBadge(Resource):
-    @api.doc(
+    @ns.doc(
         description="Validar a autenticidade de um badge.",
         responses={
             200: "Badge válido",
@@ -155,24 +146,21 @@ class ValidateBadge(Resource):
             418: "Erro interno da aplicação"
         }
     )
-    @api.expect(validate_badge_model, validate=True)
+    @ns.expect(validate_badge_model, validate=True)
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
         logging.log(logging.INFO, f"Endpoint para validar a autenticidade de um badge: {request.json}")
         data = request.json
         result = business.badge_valid(data)
         return jsonify(result)
-    
-api.add_resource(ValidateBadge, '/validate_badge')
 
-
-# Modelo de dados para a documentação Swagger e validação
-user_badges_model = api.model('UserBadgesRequest', {
+user_badges_model = ns.model('UserBadgesRequest', {
     'user_id': fields.String(required=True, description='ID do usuário para o qual os badges serão buscados')
 })
 
+@ns.route('/get_user_badges')
 class GetUserBadges(Resource):
-    @api.doc(
+    @ns.doc(
         description="Obter a lista de badges de um usuário específico via JSON.",
         responses={
             200: "Lista de badges retornada com sucesso",
@@ -181,23 +169,20 @@ class GetUserBadges(Resource):
             418: "Erro interno da aplicação"
         }
     )
-    @api.expect(user_badges_model, validate=True)
+    @ns.expect(user_badges_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de badges de um usuário específico."""
         data = request.json
         result = business.badge_list(data)
         return jsonify(result)
 
-api.add_resource(GetUserBadges, '/get_user_badges')
-
-
-# Modelo de dados para a documentação Swagger e validação
-badge_holders_model = api.model('BadgeHoldersRequest', {
+badge_holders_model = ns.model('BadgeHoldersRequest', {
     'badge_name': fields.String(required=True, description='Nome do badge para buscar os detentores')
 })
 
+@ns.route('/get_badge_holders')
 class GetBadgeHolders(Resource):
-    @api.doc(
+    @ns.doc(
         description="Obter a lista de usuários que possuem um badge específico via JSON.",
         responses={
             200: "Lista de detentores do badge retornada com sucesso",
@@ -206,23 +191,20 @@ class GetBadgeHolders(Resource):
             418: "Erro interno da aplicação"
         }
     )
-    @api.expect(badge_holders_model, validate=True)
+    @ns.expect(badge_holders_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de usuários que possuem um badge específico."""
         data = request.json
         result = business.badge_holder(data)
         return jsonify(result)
 
-api.add_resource(GetBadgeHolders, '/get_badge_holders')
-
-
-# Modelo de dados para a documentação Swagger e validação
-linkedin_post_model = api.model('LinkedInPostRequest', {
+linkedin_post_model = ns.model('LinkedInPostRequest', {
     'badge_guid': fields.String(required=True, description='GUID do badge para gerar a postagem')
 })
 
+@ns.route('/get_linkedin_post')
 class GetLinkedInPost(Resource):
-    @api.doc(
+    @ns.doc(
         description="Gerar um texto sugerido para postagem no LinkedIn sobre um badge via JSON.",
         responses={
             200: "Postagem gerada com sucesso",
@@ -231,13 +213,10 @@ class GetLinkedInPost(Resource):
             418: "Erro interno da aplicação"
         }
     )
-    @api.expect(linkedin_post_model, validate=True)
+    @ns.expect(linkedin_post_model, validate=True)
     def get(self):
         """Endpoint para gerar um texto sugerido para postagem no LinkedIn sobre um badge."""
         data = request.json
         result = business.linkedin_post(data)
         return jsonify(result)
-
-api.add_resource(GetLinkedInPost, '/get_linkedin_post')
-
 
