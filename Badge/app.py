@@ -58,6 +58,20 @@ class Hello(Resource):
 
 api.add_resource(Hello, "/hello")
 
+@api.route("/version")
+class Version(Resource):
+    @api.doc(
+        description="Retorna versão da API.",
+        responses={
+            200: 'Success',
+            500: 'Internal Error'
+        }
+    )
+    def get(self):
+        version = business.get_api_version()
+        return jsonify({"version": version})
+
+api.add_resource(Version, "/version")
 
 class Ping(Resource):
     @api.doc(
@@ -89,7 +103,6 @@ class Configs(Resource):
 api.add_resource(Configs, "/configs")
 
 # TODO: Payload compactado
-# Modelo de dados para a documentação Swagger
 badge_model = api.model('BadgeData', {
     'owner_name': fields.String(required=True, description='Nome do proprietário do badge'),
     'issuer_name': fields.String(required=True, description='Nome do emissor do badge')
@@ -115,7 +128,6 @@ class EmitBadge(Resource):
 api.add_resource(EmitBadge, '/emit_badge')
 
 
-# Modelo de dados específico para GetBadgeImage
 badge_image_model = api.model('BadgeImageRequest', {
     'badge_guid': fields.String(required=True, description='GUID do badge a ser buscado')
 })
@@ -140,7 +152,6 @@ class GetBadgeImage(Resource):
 api.add_resource(GetBadgeImage, '/get_badge_image')
 
 
-# Modelo de dados para a documentação Swagger e validação
 validate_badge_model = api.model('ValidateBadgeRequest', {
     'data': fields.String(required=True, description='Dados criptografados do badge')
 })
@@ -166,7 +177,6 @@ class ValidateBadge(Resource):
 api.add_resource(ValidateBadge, '/validate_badge')
 
 
-# Modelo de dados para a documentação Swagger e validação
 user_badges_model = api.model('UserBadgesRequest', {
     'user_id': fields.String(required=True, description='ID do usuário para o qual os badges serão buscados')
 })
@@ -191,7 +201,6 @@ class GetUserBadges(Resource):
 api.add_resource(GetUserBadges, '/get_user_badges')
 
 
-# Modelo de dados para a documentação Swagger e validação
 badge_holders_model = api.model('BadgeHoldersRequest', {
     'badge_name': fields.String(required=True, description='Nome do badge para buscar os detentores')
 })
@@ -216,7 +225,6 @@ class GetBadgeHolders(Resource):
 api.add_resource(GetBadgeHolders, '/get_badge_holders')
 
 
-# Modelo de dados para a documentação Swagger e validação
 linkedin_post_model = api.model('LinkedInPostRequest', {
     'badge_guid': fields.String(required=True, description='GUID do badge para gerar a postagem')
 })

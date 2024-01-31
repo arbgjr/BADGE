@@ -424,5 +424,18 @@ def linkedin_post(data):
         logging.log(logging.ERROR, f"Erro ao recuperar a mensagem do post do LinkedIn: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
-        
+def get_api_version():
+    try:
+        with open('version.txt', 'r') as file:
+            version = file.read().strip() 
+            return version
+    except FileNotFoundError:
+        stack_trace = traceback.format_exc()
+        logging.log(logging.ERROR, f"version.txt não encontrado: {str(e)}\nStack Trace:\n{stack_trace}")
+        return {"error": "Erro interno no servidor"}, 500
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        logging.log(logging.ERROR, f"Erro ao ler version.txt: {str(e)}\nStack Trace:\n{stack_trace}")
+        return {"error": "Erro interno no servidor"}, 500
+
         
