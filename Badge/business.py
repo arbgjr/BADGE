@@ -431,7 +431,7 @@ def get_api_version():
             return version
     except FileNotFoundError:
         stack_trace = traceback.format_exc()
-        logging.log(logging.ERROR, f"version.txt não encontrado: {str(e)}\nStack Trace:\n{stack_trace}")
+        logging.log(logging.ERROR, f"version.txt não encontrado\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
     except Exception as e:
         stack_trace = traceback.format_exc()
