@@ -176,7 +176,7 @@ jobs:
 
       - name: 'Publicando em'
         run: |
-          echo "App Name: ${{ env.AZURE_FUNCTION_NAME }}
+          echo "App Name: ${{ env.AZURE_FUNCTION_NAME }}"
           echo "Slot Name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}"
 
       - name: 'Deploy to Azure Functions'
