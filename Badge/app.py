@@ -57,6 +57,21 @@ class Hello(Resource):
         user = args['owner_name']
         return jsonify({"message": f"Hello Azure Function {user}"})
 
+
+@ns.route("/version")
+class Version(Resource):
+    @ns.doc(
+        description="Retorna versão da API.",
+        responses={
+            200: 'Success',
+            500: 'Internal Error'
+        }
+    )
+    def get(self):
+        version = business.get_api_version()
+        return jsonify({"version": version})
+
+      
 @ns.route('/ping')
 class Ping(Resource):
     @ns.doc(
@@ -69,7 +84,8 @@ class Ping(Resource):
     def get(self):
         """Endpoint para verificar a saúde da API."""
         return jsonify({"message": "API ativa"}), 200
-    
+
+      
 @ns.route('/configs')
 class Configs(Resource):
     @ns.doc(
@@ -85,6 +101,7 @@ class Configs(Resource):
         return jsonify(result)
 
 # TODO: #74 Payload compactado
+
 
 badge_model = ns.model('BadgeData', {
     'owner_name': fields.String(required=True, description='Nome do proprietário do badge'),
@@ -109,6 +126,7 @@ class EmitBadge(Resource):
         result = business.generate_badge(data)
         return jsonify(result)
 
+      
 badge_image_model = ns.model('BadgeImageRequest', {
     'badge_guid': fields.String(required=True, description='GUID do badge a ser buscado')
 })
@@ -131,6 +149,7 @@ class GetBadgeImage(Resource):
         result = business.badge_image(data)
         return jsonify(result)
 
+      
 validate_badge_model = ns.model('ValidateBadgeRequest', {
     'data': fields.String(required=True, description='Dados criptografados do badge')
 })
@@ -154,6 +173,7 @@ class ValidateBadge(Resource):
         result = business.badge_valid(data)
         return jsonify(result)
 
+      
 user_badges_model = ns.model('UserBadgesRequest', {
     'user_id': fields.String(required=True, description='ID do usuário para o qual os badges serão buscados')
 })
@@ -176,6 +196,7 @@ class GetUserBadges(Resource):
         result = business.badge_list(data)
         return jsonify(result)
 
+      
 badge_holders_model = ns.model('BadgeHoldersRequest', {
     'badge_name': fields.String(required=True, description='Nome do badge para buscar os detentores')
 })
@@ -198,6 +219,7 @@ class GetBadgeHolders(Resource):
         result = business.badge_holder(data)
         return jsonify(result)
 
+      
 linkedin_post_model = ns.model('LinkedInPostRequest', {
     'badge_guid': fields.String(required=True, description='GUID do badge para gerar a postagem')
 })
