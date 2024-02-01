@@ -8,20 +8,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Criação da aplicação Flask
 application = Flask(__name__)
 
-def format_exception(e):
-    trace = traceback.format_exception(type(e), e, e.__traceback__)
-
-    formatted_trace = []
-    for line in trace:
-        if " File" in line or " ^" in line:
-            formatted_trace.append("\n" + line.strip())
-        else:
-            formatted_trace.append(line.strip())
-
-    pretty_exception = "".join(formatted_trace)
-
-    return pretty_exception
-
 @application.errorhandler(Exception)
 def handle_exception(e):
     # Mensagem de erro personalizada
@@ -32,14 +18,6 @@ def handle_exception(e):
     
     # Retorna uma resposta JSON com a mensagem de erro e um código de status HTTP 500
     return jsonify({"error": "Erro interno no servidor", "message": error_message}), 500
-
-# @application.errorhandler(Exception)
-# def handle_exception(e):
-#     formatted_error = format_exception(e)
-#     response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
-#     response.status_code = 400
-#     logging.error( f"response: {response}")
-#     return response
 
 # Ativar a propagação de exceções para garantir que os erros sejam tratados de maneira adequada
 application.config['PROPAGATE_EXCEPTIONS'] = True
@@ -90,19 +68,6 @@ class Ping(Resource):
     def get(self):
         return {"message": "API ativa"}, 200
       
-# @ns.route('/ping')
-# class Ping(Resource):
-#     @ns.doc(
-#         description="Verifica se a API está ativa e respondendo.",
-#         responses={
-#             200: "API ativa",
-#             418: "Erro interno da aplicação"
-#         }
-#     )
-#     def get(self):
-#         """Endpoint para verificar a saúde da API."""
-#         return jsonify({"message": "API ativa"}), 200
-
       
 @ns.route('/configs')
 class Configs(Resource):

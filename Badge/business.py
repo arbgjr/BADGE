@@ -426,9 +426,13 @@ def linkedin_post(data):
 
 def get_api_version():
     try:
+        cwd = os.getcwd()
+        logging.log(logging.INFO, f"Diretório atual: {cwd}")
+
         file_version = 'version.txt'
-        logging.log(logging.INFO, f"[business] Abrindo arquivo de versão: {file_version}.")
-        with open(file_version, 'r') as file:
+        fullpath_file_version = os.path.abspath(file_version)
+        logging.log(logging.INFO, f"[business] Abrindo arquivo de versão: {fullpath_file_version}.")
+        with open(fullpath_file_version, 'r') as file:
             logging.log(logging.INFO, f"[business] Lendo versão.")
             version = file.read().strip()
             if re.match(r'^\d+\.\d+\.\d+$', version):
