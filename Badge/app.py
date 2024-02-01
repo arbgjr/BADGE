@@ -68,6 +68,7 @@ class Version(Resource):
         }
     )
     def get(self):
+        logging.log(logging.INFO, f"[app] Endpoint para retornar a versão do badge.")
         version = business.get_api_version()
         return jsonify({"version": version})
 

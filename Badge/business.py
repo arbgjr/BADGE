@@ -426,8 +426,12 @@ def linkedin_post(data):
 
 def get_api_version():
     try:
-        with open('version.txt', 'r') as file:
+        file_version = 'version.txt'
+        logging.log(logging.INFO, f"[business] Abrindo arquivo de versão: {file_version}.")
+        with open(file_version, 'r') as file:
+            logging.log(logging.INFO, f"[business] Lendo versão.")
             version = file.read().strip()
+            logging.log(logging.INFO, f"[business] Versão: {version}.")
             return version
     except FileNotFoundError:
         stack_trace = traceback.format_exc()
