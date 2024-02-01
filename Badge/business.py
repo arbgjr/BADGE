@@ -431,8 +431,12 @@ def get_api_version():
         with open(file_version, 'r') as file:
             logging.log(logging.INFO, f"[business] Lendo versão.")
             version = file.read().strip()
-            logging.log(logging.INFO, f"[business] Versão: {version}.")
-            return version
+            if re.match(r'^\d+\.\d+\.\d+$', version):
+                logging.log(logging.INFO, f"[business] Versão: {version}.")
+                return version
+            else:
+                logging.log(logging.ERROR, f"Formato de versão inválido: {version}.")
+                return {"error": "Formato de versão inválido"}, 400
     except FileNotFoundError:
         stack_trace = traceback.format_exc()
         logging.log(logging.ERROR, f"version.txt não encontrado\nStack Trace:\n{stack_trace}")
@@ -442,4 +446,3 @@ def get_api_version():
         logging.log(logging.ERROR, f"Erro ao ler version.txt: {str(e)}\nStack Trace:\n{stack_trace}")
         return {"error": "Erro interno no servidor"}, 500
 
-        
