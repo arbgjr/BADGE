@@ -429,7 +429,7 @@ def get_api_version():
         cwd = os.getcwd()
         logging.log(logging.INFO, f"Diretório atual: {cwd}")
 
-        file_version = 'version.txt'
+        file_version = 'badge/version.txt'
         fullpath_file_version = os.path.abspath(file_version)
         logging.log(logging.INFO, f"[business] Abrindo arquivo de versão: {fullpath_file_version}.")
         with open(fullpath_file_version, 'r') as file:
