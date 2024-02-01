@@ -411,7 +411,8 @@ def linkedin_post(data):
                 "#Conquista #Badge #DesenvolvimentoProfissional"
             )
         else:
-            post_text = post_text_template.format(
+            formatter = helpers.SafeFormatter()
+            post_text = formatter.format(format,
                 badge_name=badge_name,
                 additional_info=additional_info,
                 validation_url=validation_url
