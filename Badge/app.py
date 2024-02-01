@@ -3,6 +3,8 @@ from flask_restx import Resource, Api, fields, reqparse, Namespace
 import traceback
 import logging
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 # Criação da aplicação Flask
 application = Flask(__name__)
 
@@ -22,11 +24,22 @@ def format_exception(e):
 
 @application.errorhandler(Exception)
 def handle_exception(e):
-    formatted_error = format_exception(e)
-    response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
-    response.status_code = 400
-    logging.log(logging.ERROR, f"response: {response}")
-    return response
+    # Mensagem de erro personalizada
+    error_message = f"Erro inesperado: {type(e).__name__} - {str(e)}"
+    
+    # Registra a mensagem de erro e o stack trace completo da exceção
+    logging.exception(error_message)
+    
+    # Retorna uma resposta JSON com a mensagem de erro e um código de status HTTP 500
+    return jsonify({"error": "Erro interno no servidor", "message": error_message}), 500
+
+# @application.errorhandler(Exception)
+# def handle_exception(e):
+#     formatted_error = format_exception(e)
+#     response = jsonify(message=str(e), formatted_error=formatted_error, type=type(e).__name__)
+#     response.status_code = 400
+#     logging.error( f"response: {response}")
+#     return response
 
 # Ativar a propagação de exceções para garantir que os erros sejam tratados de maneira adequada
 application.config['PROPAGATE_EXCEPTIONS'] = True
@@ -68,23 +81,27 @@ class Version(Resource):
         }
     )
     def get(self):
-        logging.log(logging.INFO, f"[app] Endpoint para retornar a versão do badge.")
+        logging.info(f"[app] Endpoint para retornar a versão do badge.")
         version = business.get_api_version()
         return jsonify({"version": version})
 
-      
 @ns.route('/ping')
 class Ping(Resource):
-    @ns.doc(
-        description="Verifica se a API está ativa e respondendo.",
-        responses={
-            200: "API ativa",
-            418: "Erro interno da aplicação"
-        }
-    )
     def get(self):
-        """Endpoint para verificar a saúde da API."""
-        return jsonify({"message": "API ativa"}), 200
+        return {"message": "API ativa"}, 200
+      
+# @ns.route('/ping')
+# class Ping(Resource):
+#     @ns.doc(
+#         description="Verifica se a API está ativa e respondendo.",
+#         responses={
+#             200: "API ativa",
+#             418: "Erro interno da aplicação"
+#         }
+#     )
+#     def get(self):
+#         """Endpoint para verificar a saúde da API."""
+#         return jsonify({"message": "API ativa"}), 200
 
       
 @ns.route('/configs')
@@ -122,7 +139,7 @@ class EmitBadge(Resource):
     @ns.expect(badge_model, validate=True)
     def post(self):
         """Endpoint para emitir um novo badge."""
-        logging.log(logging.INFO, f"[app] Endpoint para emitir um novo badge.")
+        logging.info(f"[app] Endpoint para emitir um novo badge.")
         data = request.json
         result = business.generate_badge(data)
         return jsonify(result)
@@ -146,9 +163,16 @@ class GetBadgeImage(Resource):
     @ns.expect(badge_image_model, validate=True)
     def get(self):
         """Endpoint para obter a imagem de um badge específico."""
-        data = request.json
-        result = business.badge_image(data)
-        return jsonify(result)
+        try:
+            if request.data:
+                data = request.get_json(silent=True)
+                result = business.badge_image(data)
+                return jsonify(result)
+            else:
+                return jsonify({"error": "Nenhum dado enviado"}), 400
+        except Exception as e:
+            logging.exception("Erro ao processar a solicitação:")
+            return jsonify({"error": "Erro interno no servidor"}), 500
 
       
 validate_badge_model = ns.model('ValidateBadgeRequest', {
@@ -169,10 +193,17 @@ class ValidateBadge(Resource):
     @ns.expect(validate_badge_model, validate=True)
     def get(self):
         """Endpoint para validar a autenticidade de um badge."""
-        logging.log(logging.INFO, f"Endpoint para validar a autenticidade de um badge: {request.json}")
-        data = request.json
-        result = business.badge_valid(data)
-        return jsonify(result)
+        logging.info(f"Endpoint para validar a autenticidade de um badge: {request.json}")
+        try:
+            if request.data:
+                data = request.get_json(silent=True)
+                result = business.badge_valid(data)
+                return jsonify(result)
+            else:
+                return jsonify({"error": "Nenhum dado enviado"}), 400
+        except Exception as e:
+            logging.exception("Erro ao processar a solicitação:")
+            return jsonify({"error": "Erro interno no servidor"}), 500
 
       
 user_badges_model = ns.model('UserBadgesRequest', {
@@ -193,9 +224,16 @@ class GetUserBadges(Resource):
     @ns.expect(user_badges_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de badges de um usuário específico."""
-        data = request.json
-        result = business.badge_list(data)
-        return jsonify(result)
+        try:
+            if request.data:
+                data = request.get_json(silent=True)
+                result = business.badge_list(data)
+                return jsonify(result)
+            else:
+                return jsonify({"error": "Nenhum dado enviado"}), 400
+        except Exception as e:
+            logging.exception("Erro ao processar a solicitação:")
+            return jsonify({"error": "Erro interno no servidor"}), 500
 
       
 badge_holders_model = ns.model('BadgeHoldersRequest', {
@@ -216,9 +254,16 @@ class GetBadgeHolders(Resource):
     @ns.expect(badge_holders_model, validate=True)
     def get(self):
         """Endpoint para obter a lista de usuários que possuem um badge específico."""
-        data = request.json
-        result = business.badge_holder(data)
-        return jsonify(result)
+        try:
+            if request.data:
+                data = request.get_json(silent=True)
+                result = business.badge_holder(data)
+                return jsonify(result)
+            else:
+                return jsonify({"error": "Nenhum dado enviado"}), 400
+        except Exception as e:
+            logging.exception("Erro ao processar a solicitação:")
+            return jsonify({"error": "Erro interno no servidor"}), 500
 
       
 linkedin_post_model = ns.model('LinkedInPostRequest', {
@@ -239,7 +284,13 @@ class GetLinkedInPost(Resource):
     @ns.expect(linkedin_post_model, validate=True)
     def get(self):
         """Endpoint para gerar um texto sugerido para postagem no LinkedIn sobre um badge."""
-        data = request.json
-        result = business.linkedin_post(data)
-        return jsonify(result)
-
+        try:
+            if request.data:
+                data = request.get_json(silent=True)
+                result = business.linkedin_post(data)
+                return jsonify(result)
+            else:
+                return jsonify({"error": "Nenhum dado enviado"}), 400
+        except Exception as e:
+            logging.exception("Erro ao processar a solicitação:")
+            return jsonify({"error": "Erro interno no servidor"}), 500
