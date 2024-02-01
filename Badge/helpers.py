@@ -11,6 +11,7 @@ import qrcode
 import requests
 import logging
 from pilmoji import Pilmoji
+from string import Formatter
 
 from . import azure
 from pgpy import PGPKey, PGPMessage
@@ -468,5 +469,9 @@ def validate_data_into_json_schema(json_schema, data):
 
     return True
 
-
+class SafeFormatter(Formatter):
+        def get_field(self, field_name, args, kwargs):
+            if '.' in field_name or '[' in field_name:
+                raise Exception('Invalid format string.')
+            return super().get_field(field_name,args,kwargs)
     

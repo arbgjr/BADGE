@@ -39,21 +39,25 @@ jobs:
         run: |
           # Lê a versão atual
           VERSION=$(cat Badge/version.txt)
-          echo "Versão atual: $VERSION"
           
           # Extrai partes da versão
           VV=$(echo $VERSION | cut -d'.' -f1)
           RR=$(echo $VERSION | cut -d'.' -f2)
           BBBB=$(echo $VERSION | cut -d'.' -f3)
           
-          # Incrementa o número de build
-          BBBB=$((BBBB + 1))
+          # Obtenha a lista de tags existentes
+          git fetch --tags
 
-          # Constrói a nova versão
+          # Loop até encontrar uma tag que não exista
+          while git rev-parse "$VV.$RR.$BBBB" >/dev/null 2>&1; do
+            echo "A tag $VV.$RR.$BBBB já existe. Incrementando a versão de build."
+            BBBB=$((BBBB + 1))
+          done
+
           NEW_VERSION="$VV.$RR.$BBBB"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Nova versão: $NEW_VERSION"
-          
+
           # Escreve a nova versão no arquivo
           echo $NEW_VERSION > Badge/version.txt
 
@@ -80,6 +84,7 @@ jobs:
          branch: ${{ github.ref }}      
         env:
           NEW_VERSION: ${{ env.NEW_VERSION }}
+
       - name: Tag Release
         run: |
           git tag $NEW_VERSION
@@ -94,11 +99,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -129,7 +134,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run PyCharm Security
-        uses: tonybaloney/pycharm-security@master
+        uses: tonybaloney/pycharm-security@1.25.1
         
   build:
     runs-on: ubuntu-latest
@@ -139,7 +144,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python version
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -157,7 +162,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
@@ -177,7 +182,7 @@ jobs:
     
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: python-app
 
