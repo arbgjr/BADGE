@@ -57,8 +57,14 @@ jobs:
           # Escreve a nova versão no arquivo
           echo $NEW_VERSION > Badge/version.txt
 
+      - name: Stash changes
+        run: git stash push -u
+
       - name: Sincronizar com repositório remoto
         run: git pull origin ${{ github.ref_name }} --rebase
+
+      - name: Pop stashed changes
+        run: git stash pop
 
       - name: Commit Version Increment
         run: |
@@ -66,6 +72,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git add Badge/version.txt
           git commit -m "Increment version number to $NEW_VERSION"
+
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
