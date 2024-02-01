@@ -1,5 +1,7 @@
 # BADGE (Badge Authentication and Dynamic Grading Engine)
 
+![Ultimo Build](https://github.com/arbgjr/BADGE/actions/workflows/lint_build_deploy_onpush.yml/badge.svg)
+
 ## Descrição
 
 BADGE é um sistema inovador destinado a autenticar e classificar conquistas por meio de badges digitais. Este sistema permite que empresas e instituições de ensino emitam badges para reconhecer e validar habilidades, realizações e progressos de indivíduos.
