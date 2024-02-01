@@ -1,0 +1,190 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure Functions: https://aka.ms/python-webapps-actions
+
+name: Lint, Build and deploy Python project to Azure Function App - FuncBadges
+
+on:
+  push:
+    paths-ignore:
+      - 'LICENSE'
+      - '**/*.ps1'
+      - '**/*.md'
+      - '**/*.json'
+      - '**/*.txt'
+  pull_request:
+    paths-ignore:
+      - 'LICENSE'
+      - '**/*.ps1'
+      - '**/*.md'
+      - '**/*.json'
+      - '**/*.txt'
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
+  AZURE_FUNCTION_NAME: 'ossbadgefunc'
+
+jobs:
+  increment_build_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+          fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination 
+      - name: Increment Build Version
+        run: |
+          # Lê a versão atual
+          VERSION=$(cat Badge/version.txt)
+          echo "Versão atual: $VERSION"
+          
+          # Extrai partes da versão
+          VV=$(echo $VERSION | cut -d'.' -f1)
+          RR=$(echo $VERSION | cut -d'.' -f2)
+          BBBB=$(echo $VERSION | cut -d'.' -f3)
+          
+          # Incrementa o número de build
+          BBBB=$((BBBB + 1))
+
+          # Constrói a nova versão
+          NEW_VERSION="$VV.$RR.$BBBB"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "Nova versão: $NEW_VERSION"
+          
+          # Escreve a nova versão no arquivo
+          echo $NEW_VERSION > Badge/version.txt
+
+      - name: Commit Version Increment
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Badge/version.txt
+          git commit -m "Increment version number to $NEW_VERSION"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+         github_token: ${{ secrets.GITHUB_TOKEN }}
+         branch: ${{ github.ref }}      
+        env:
+          NEW_VERSION: ${{ env.NEW_VERSION }}
+      - name: Tag Release
+        run: |
+          git tag $NEW_VERSION
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          force: true
+          tags: true          
+  
+  lint_python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Update pip and setuptools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools 
+      - run: pip install wemake-python-styleguide
+      - run: pip install bandit black codespell flake8 isort mypy pytest pyupgrade safety
+      - run: bandit --recursive --skip B101 . || true  # B101 is assert statements
+      - run: black --check . || true
+      - run: codespell || true  # --ignore-words-list="" --skip=""
+      - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --show-source --statistics
+      - run: isort --check-only --profile black . || true
+      - run: pip install -r requirements.txt || true
+      - run: mypy --install-types --non-interactive . || true
+      - run: pytest . || true
+      - run: pytest --doctest-modules . || true
+      - run: shopt -s globstar && pyupgrade --py36-plus **/*.py || true
+
+  security_checks:
+    runs-on: ubuntu-latest
+    needs: lint_python
+    name: Execute the pycharm-security action
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run PyCharm Security
+        uses: tonybaloney/pycharm-security@master
+        
+  build:
+    runs-on: ubuntu-latest
+    needs: [increment_build_version, lint_python] 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Optional: Add step to run tests here
+
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    # Define o ambiente com base na branch
+    environment:
+      name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}
+      url: ${{ steps.deploy-to-function.outputs.webapp-url }}
+    permissions:
+      id-token: write #This is required for requesting the JWT
+    
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: python-app
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip     
+
+      - name: 'Publicando em'
+        run: |
+          echo "App Name: ${{ env.AZURE_FUNCTION_NAME }}"
+          echo "Slot Name: ${{ (github.ref == 'refs/heads/main' && 'Production') || 'dev' }}"
+
+      - name: 'Deploy to Azure Functions'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTION_NAME }}
+          slot-name: ${{ github.ref == 'refs/heads/main' && 'Production' || 'dev' }}
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
+          publish-profile: ${{ github.ref == 'refs/heads/main' && secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FA245BE77EB9454BB6EF33416E7AE3CB || secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5ABEAC1953814846AC62160672F4F821 }}
